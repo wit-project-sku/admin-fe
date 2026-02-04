@@ -1,0 +1,118 @@
+@font-face {
+  font-family: 'NotoSans';
+  src:
+    local('NotoSans'),
+    url('../assets/font/NotoSans-VariableFont_wdth,wght.ttf') format('ttf');
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow-x: hidden;
+}
+
+html {
+  font-family: NotoSans, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    interpolate-size: allow-keywords;
+  }
+}
+
+body {
+  width: 100%;
+  height: 100%;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  margin: 0;
+  background-color: #ffffff;
+  color: #1c1b1a;
+}
+
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+input,
+button,
+textarea,
+select {
+  font: inherit;
+  all: unset;
+}
+
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  overflow-wrap: break-word;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  text-wrap: balance;
+}
+
+.slick-slide > div {
+  margin-inline: 15px;
+}
+
+.custom-bubble {
+  position: relative;
+  background-color: #58d748;
+  color: #ffffff;
+  padding: 8px 20px;
+  border-radius: 999px;
+  font-weight: bold;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+  max-width: calc(100vw - 40px);
+  white-space: nowrap;
+  opacity: 0;
+  transform: scale(1.5);
+  transition:
+    opacity 0.8s ease,
+    transform 0.8s ease;
+}
+
+.custom-bubble.show {
+  opacity: 1;
+  transform: scale(1.15);
+}
