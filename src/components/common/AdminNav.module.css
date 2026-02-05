@@ -1,0 +1,56 @@
+@font-face {
+  font-family: 'NotoSans';
+  src: url('../../assets/font/NotoSans-VariableFont_wdth,wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+}
+
+.nav {
+  font-family: 'NotoSans';
+  width: 300px;
+  height: 100%;
+  border-right: 1px solid #e5e5e5;
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 12px;
+  gap: 6px;
+}
+
+.menuItem {
+  font-family: 'NotoSans';
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 80px;
+  padding: 12px 16px;
+  margin: 0 8px;
+
+  font-size: 25px;
+  font-weight: 500;
+  color: #909dad; /* 기본 회색 */
+  text-decoration: none;
+  cursor: pointer;
+
+  border-bottom: none; /* 기존 구분선 제거 */
+  border-radius: 9999px; /* 캡슐 모양 */
+}
+
+.active {
+  font-family: 'NotoSans';
+  font-weight: 700;
+  color: #ffffff;
+  background-color: #0088ff;
+}
+
+.menuItem img,
+.menuItem svg {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+}
+
+.active img {
+  filter: brightness(0) invert(1); /* 활성 상태 아이콘을 흰색처럼 보이게 */
+}
