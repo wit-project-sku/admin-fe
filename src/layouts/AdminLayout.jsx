@@ -5,18 +5,18 @@ import styles from './AdminLayout.module.css';
 
 export default function AdminLayout() {
   const { pathname } = useLocation();
+  const isLogin = pathname === '/admin/login';
 
-  // 관리자 로그인 페이지에서는 헤더/네비게이션 숨김
-  const isAdminLogin = pathname === '/admin/login' || pathname.startsWith('/admin/login/');
+  if (isLogin) return <Outlet />;
 
   return (
-    <div className={styles.layoutContainer}>
+    <div className={styles.root}>
       <AdminHeader />
-      <div className={styles.bodyContainer}>
-        {!isAdminLogin && <AdminNav />}
-        <div className={styles.contentArea}>
+      <div className={styles.body}>
+        <AdminNav />
+        <main className={styles.main}>
           <Outlet />
-        </div>
+        </main>
       </div>
     </div>
   );

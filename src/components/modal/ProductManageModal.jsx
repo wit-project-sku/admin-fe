@@ -1,462 +1,183 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import styles from './ProductManageModal.module.css';
-import AdminModal from '@commons/AdminModal';
+import { useEffect, useState } from 'react';
+import styles from './Modal.module.css';
+import { createProduct, updateProduct, getProductDetail } from '@apis/productApi';
 import { getCategories } from '@apis/categoryApi';
 import { getKiosks } from '@apis/kioskApi';
-import { createProduct, updateProduct, getProductDetail } from '@apis/productApi';
 
-export default function ProductManageModal({ onClose, mode = 'create', initialProduct = null, onSuccess }) {
-  const fileInputRef = useRef(null);
-
-  const isEdit = mode === 'edit';
+export default function ProductManageModal({ open, mode, product, onClose, onSuccess }) {
+  const [categories, setCategories] = useState([]);
+  const [kiosks, setKiosks]         = useState([]);
+  const [loading, setLoading]       = useState(false);
+  const [saving, setSaving]         = useState(false);
 
   const [form, setForm] = useState({
-    name: '',
-    category: '',
-    price: '',
-    stock: '',
-    status: '판매중',
-    kiosks: [],
-    shortDesc: '',
-    longDesc: '',
-    files: [],
+    name: '', subTitle: '', categoryId: '', price: '', stock: '',
+    description: '', status: 'ON_SALE', kioskIds: [],
   });
-
-  const [categories, setCategories] = useState([]);
-  const [categoryLoading, setCategoryLoading] = useState(false);
-
-  const [kiosks, setKiosks] = useState([]);
-  const [kioskLoading, setKioskLoading] = useState(false);
-
-  const [submitting, setSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState(null);
-
-  const [detailLoading, setDetailLoading] = useState(false);
-  const [detailCategoryName, setDetailCategoryName] = useState('');
-  const [existingImages, setExistingImages] = useState('');
+  const [images, setImages] = useState([]);
+  const [previewUrls, setPreviewUrls] = useState([]);
 
   useEffect(() => {
-    if (!isEdit) return;
-    const productId = initialProduct?.id;
-    if (!productId) return;
+    if (!open) return;
+    getCategories().then((res) => setCategories(Array.isArray(res) ? res : res?.data ?? [])).catch(() => {});
+    getKiosks().then((res) => {
+      const list = Array.isArray(res) ? res : res?.data ?? [];
+      setKiosks(list);
+    }).catch(() => {});
 
-    const fetchDetail = async () => {
-      setDetailLoading(true);
-      try {
-        const res = await getProductDetail(productId);
-        // axios response 또는 response.data 형태 둘 다 대응
-        const wrapper = res?.data ?? res;
-        const payload = wrapper?.data ?? wrapper;
-
-        setDetailCategoryName(payload?.categoryName ?? '');
-        setExistingImages(Array.isArray(payload?.images) ? payload.images : []);
-
-        setForm((prev) => ({
-          ...prev,
-          name: payload?.name ?? '',
-          // category는 목록을 불러온 뒤 name으로 id를 찾아 매핑할 예정
-          price: String(payload?.price ?? ''),
-          stock: String(payload?.stock ?? ''),
-          status: mapStatusToLabel(payload?.status),
-          shortDesc: payload?.subTitle ?? '',
-          longDesc: payload?.description ?? '',
-          kiosks: Array.isArray(payload?.kioskIds) ? payload.kioskIds : [],
-          files: [],
-        }));
-      } catch (e) {
-        setSubmitError(e);
-      } finally {
-        setDetailLoading(false);
-      }
-    };
-
-    fetchDetail();
-  }, [isEdit, initialProduct?.id]);
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      setCategoryLoading(true);
-      try {
-        const res = await getCategories();
-        const list = Array.isArray(res) ? res : res?.data;
-        setCategories(Array.isArray(list) ? list : []);
-      } catch (e) {
-        console.log(e);
-        setCategories([]);
-      } finally {
-        setCategoryLoading(false);
-      }
-    };
-
-    fetchCategories();
-  }, []);
-
-  useEffect(() => {
-    if (!isEdit) return;
-    if (!detailCategoryName) return;
-    if (!Array.isArray(categories) || categories.length === 0) return;
-
-    const found = categories.find((c) => c?.name === detailCategoryName);
-    if (!found) return;
-
-    setForm((prev) => ({
-      ...prev,
-      category: String(found.id),
-    }));
-  }, [isEdit, detailCategoryName, categories]);
-
-  const statusOptions = useMemo(() => ['판매중', '품절', '숨김'], []);
-
-  const setField = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
-
-  const toggleKiosk = (kioskId) => {
-    setForm((prev) => {
-      const has = prev.kiosks.includes(kioskId);
-      const next = has ? prev.kiosks.filter((id) => id !== kioskId) : [...prev.kiosks, kioskId];
-      return { ...prev, kiosks: next };
-    });
-  };
-
-  const mapStatusToLabel = (status) => {
-    if (status === 'ON_SALE') return '판매중';
-    if (status === 'SOLD_OUT') return '품절';
-    if (status === 'HIDDEN') return '숨김';
-    return '판매중';
-  };
-
-  const mapStatusToEnum = (label) => {
-    if (label === '판매중') return 'ON_SALE';
-    if (label === '품절') return 'SOLD_OUT';
-    if (label === '숨김') return 'HIDDEN';
-    return 'ON_SALE';
-  };
-
-  const buildProductRequest = () => {
-    return {
-      name: form.name,
-      subTitle: form.shortDesc,
-      description: form.longDesc,
-      price: Number(form.price),
-      stock: Number(form.stock),
-      status: mapStatusToEnum(form.status),
-      categoryId: Number(form.category) || null,
-      kioskIds: form.kiosks,
-    };
-  };
-  useEffect(() => {
-    const fetchKiosks = async () => {
-      setKioskLoading(true);
-      try {
-        const res = await getKiosks();
-        const list = Array.isArray(res) ? res : res?.data;
-        setKiosks(Array.isArray(list) ? list : []);
-      } catch (e) {
-        console.log(e);
-        setKiosks([]);
-      } finally {
-        setKioskLoading(false);
-      }
-    };
-
-    fetchKiosks();
-  }, []);
-
-  useEffect(() => {
-    if (!isEdit) {
-      setExistingImages([]);
+    if (mode === 'edit' && product?.id) {
+      setLoading(true);
+      getProductDetail(product.id)
+        .then((res) => {
+          const d = res?.data?.data ?? res?.data ?? res;
+          setForm({
+            name:       d.name       ?? '',
+            subTitle:   d.subTitle   ?? '',
+            categoryId: d.category?.id ?? '',
+            price:      d.price      ?? '',
+            stock:      d.stock      ?? '',
+            description:d.description?? '',
+            status:     d.status     ?? 'ON_SALE',
+            kioskIds:   (d.kioskProducts ?? []).map((kp) => kp.kiosk?.id).filter(Boolean),
+          });
+          setPreviewUrls((d.images ?? []).map((img) => img.imageUrl ?? img.url ?? ''));
+        })
+        .catch(() => {})
+        .finally(() => setLoading(false));
+    } else {
+      setForm({ name:'', subTitle:'', categoryId:'', price:'', stock:'', description:'', status:'ON_SALE', kioskIds:[] });
+      setImages([]);
+      setPreviewUrls([]);
     }
-  }, [isEdit]);
+  }, [open, mode, product]);
 
-  const previewUrls = useMemo(() => {
-    return (form.files || []).map((file) => URL.createObjectURL(file));
-  }, [form.files]);
-
-  // 메모리 누수 방지
   useEffect(() => {
-    return () => {
-      previewUrls.forEach((url) => URL.revokeObjectURL(url));
-    };
-  }, [previewUrls]);
+    if (!open) return;
+    const h = (e) => { if (e.key === 'Escape') onClose?.(); };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, [open, onClose]);
+
+  if (!open) return null;
 
   const handleFileChange = (e) => {
-    const selectedFiles = Array.from(e.target.files || []);
-    if (isEdit && selectedFiles.length > 0) {
-      setExistingImages([]);
-    }
-    setForm((prev) => {
-      const merged = [...prev.files, ...selectedFiles];
-      return {
-        ...prev,
-        files: merged.slice(0, 4),
-      };
-    });
-    e.target.value = '';
+    const files = Array.from(e.target.files);
+    setImages((prev) => [...prev, ...files]);
+    setPreviewUrls((prev) => [...prev, ...files.map((f) => URL.createObjectURL(f))]);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    setSubmitting(true);
-    setSubmitError(null);
-
+    setSaving(true);
     try {
-      const productRequest = buildProductRequest();
-
-      if (!isEdit) {
-        // create
-        const categoryId = Number(form.category);
-        if (!categoryId) {
-          setSubmitError(new Error('카테고리를 선택해주세요.'));
-          return;
-        }
-
-        // 이미지 최소 1장, 최대 4장 (백엔드 제약)
-        if (!form.files || form.files.length === 0) {
-          setSubmitError(new Error('상품 이미지를 최소 1장 업로드해주세요.'));
-          return;
-        }
-
-        await createProduct(categoryId, productRequest, form.files);
+      const payload = {
+        name:       form.name,
+        subTitle:   form.subTitle,
+        price:      Number(form.price),
+        stock:      Number(form.stock),
+        description:form.description,
+        status:     form.status,
+        kioskIds:   form.kioskIds,
+      };
+      if (mode === 'create') {
+        await createProduct(form.categoryId, payload, images);
       } else {
-        // edit
-        const productId = initialProduct?.id;
-        if (!productId) {
-          setSubmitError(new Error('수정할 상품 정보가 없습니다.'));
-          return;
-        }
-
-        // 수정은 images가 optional이므로, 선택된 파일이 없으면 undefined로 보내서 파트 자체를 생략
-        const images = form.files && form.files.length > 0 ? form.files : undefined;
-        await updateProduct(productId, productRequest, images);
+        await updateProduct(product.id, payload, images);
       }
-
       onSuccess?.();
-      onClose?.();
-    } catch (err) {
-      setSubmitError(err);
-    } finally {
-      setSubmitting(false);
-    }
+    } catch { /* handle */ }
+    finally { setSaving(false); }
   };
 
+  const STATUS_OPTIONS = [
+    { value: 'ON_SALE',  label: '판매중' },
+    { value: 'SOLD_OUT', label: '품절' },
+    { value: 'HIDDEN',   label: '숨김' },
+  ];
+
   return (
-    <AdminModal
-      title={isEdit ? '상품 수정' : '상품 등록'}
-      onClose={onClose}
-      onSubmit={handleSubmit}
-      submitText={submitting ? (isEdit ? '수정 중...' : '추가 중...') : isEdit ? '수정' : '추가'}
-      cancelText='취소'
-      isSubmitting={submitting}
-      submitDisabled={submitting}
-    >
-      {submitError && (
-        <div className={styles.noData} role='alert'>
-          {isEdit ? '상품 수정에 실패했습니다.' : '상품 등록에 실패했습니다.'}
-        </div>
-      )}
-      {isEdit && detailLoading && (
-        <div className={styles.noData} role='status'>
-          상품 정보를 불러오는 중...
-        </div>
-      )}
-      {/* 상품명 */}
-      <div className={`${styles.field} ${styles.full}`}>
-        <label className={styles.label}>
-          상품명 <span className={styles.required}>*</span>
-        </label>
-        <input
-          className={styles.input}
-          value={form.name}
-          onChange={(e) => setField('name', e.target.value)}
-          placeholder='상품 이름을 작성해주세요'
-          required
-        />
-      </div>
-
-      <div className={styles.field}>
-        <label className={styles.label}>
-          카테고리 <span className={styles.required}>*</span>
-        </label>
-        <select
-          className={styles.select}
-          value={form.category}
-          onChange={(e) => setField('category', e.target.value)}
-          required
-          disabled={categoryLoading}
-        >
-          <option value=''>선택</option>
-          {categoryLoading && <option disabled>불러오는 중...</option>}
-          {!categoryLoading &&
-            categories.map((c) => (
-              <option key={c.id ?? c} value={c.id ?? c}>
-                {c.name ?? c}
-              </option>
-            ))}
-        </select>
-      </div>
-
-      <div className={styles.field}>
-        <label className={styles.label}>
-          가격 <span className={styles.required}>*</span>
-        </label>
-        <div className={styles.currencyBox}>
-          <span className={styles.currency}>₩</span>
-          <input
-            className={styles.input}
-            type='number'
-            min='0'
-            value={form.price}
-            onChange={(e) => setField('price', e.target.value)}
-            placeholder='10,000'
-            required
-          />
-        </div>
-      </div>
-
-      {/* 현재 재고 / 상태 */}
-      <div className={styles.field}>
-        <label className={styles.label}>
-          현재 재고 <span className={styles.required}>*</span>
-        </label>
-        <input
-          className={styles.input}
-          type='number'
-          min='0'
-          value={form.stock}
-          onChange={(e) => setField('stock', e.target.value)}
-          placeholder='100'
-          required
-        />
-      </div>
-
-      <div className={styles.field}>
-        <label className={styles.label}>
-          상태 <span className={styles.required}>*</span>
-        </label>
-        <select className={styles.select} value={form.status} onChange={(e) => setField('status', e.target.value)}>
-          {statusOptions.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* 판매중인 키오스크 */}
-      <div className={`${styles.field} ${styles.full}`}>
-        <div className={styles.label}>판매할 키오스크</div>
-        <div className={styles.kioskRow}>
-          {kioskLoading && <div className={styles.noData}>키오스크 불러오는 중...</div>}
-          {!kioskLoading && kiosks.length === 0 && <div className={styles.noData}>키오스크가 없습니다.</div>}
-          {!kioskLoading &&
-            kiosks.map((k) => {
-              const active = form.kiosks.includes(k.id);
-              return (
-                <button
-                  key={k.id}
-                  type='button'
-                  className={active ? `${styles.kioskBtn} ${styles.kioskActive}` : styles.kioskBtn}
-                  onClick={() => toggleKiosk(k.id)}
-                  aria-pressed={active}
-                >
-                  {k.name}
-                </button>
-              );
-            })}
-        </div>
-      </div>
-
-      {/* 상품 소제목 */}
-      <div className={`${styles.field} ${styles.full}`}>
-        <label className={styles.label}>
-          상품 소제목
-          <span className={styles.charCount}>{form.shortDesc.length}/50</span>
-        </label>
-        <textarea
-          className={styles.textarea}
-          value={form.shortDesc}
-          onChange={(e) => {
-            if (e.target.value.length <= 50) {
-              setField('shortDesc', e.target.value);
-            }
-          }}
-          placeholder='상품에 대한 소제목을 작성해주세요'
-          rows={3}
-          maxLength={50}
-        />
-      </div>
-
-      {/* 상품 설명 */}
-      <div className={`${styles.field} ${styles.full}`}>
-        <label className={styles.label}>
-          상품 설명
-          <span className={styles.charCount}>{form.longDesc.length}/200</span>
-        </label>
-        <textarea
-          className={`${styles.textarea} ${styles.textareaTall}`}
-          value={form.longDesc}
-          onChange={(e) => {
-            if (e.target.value.length <= 200) {
-              setField('longDesc', e.target.value);
-            }
-          }}
-          placeholder='상품에 대한 설명을 작성해주세요'
-          rows={6}
-          maxLength={200}
-        />
-      </div>
-
-      {/* 상품 사진 */}
-      <div className={`${styles.field} ${styles.full}`}>
-        <label className={styles.label}>상품 사진</label>
-        <div className={styles.fileBox} onClick={() => fileInputRef.current?.click()} role='button' tabIndex={0}>
-          <div className={styles.fileHint}>
-            {form.files.length > 0 ? `선택된 파일 ${form.files.length} / 4` : '이미지는 최대 4개까지 업로드 가능합니다'}
-          </div>
-          <input
-            ref={fileInputRef}
-            className={styles.fileInput}
-            type='file'
-            accept='image/*'
-            multiple
-            onChange={handleFileChange}
-          />
+    <div className={styles.overlay} onClick={onClose}>
+      <div className={`${styles.modal} ${styles.modalLg}`} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.header}>
+          <h3 className={styles.title}>{mode === 'create' ? '상품 등록' : '상품 수정'}</h3>
+          <button className={styles.closeBtn} onClick={onClose}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
         </div>
 
-        {/* 수정 모드: 기존 이미지 미리보기 */}
-        {isEdit && Array.isArray(existingImages) && existingImages.length > 0 && (
-          <div className={styles.previewGrid}>
-            {existingImages
-              .slice()
-              .sort((a, b) => (a?.orderNum ?? 0) - (b?.orderNum ?? 0))
-              .map((img, idx) => (
-                <img
-                  key={img?.id ?? `${img?.imageUrl}-${idx}`}
-                  className={styles.previewImg}
-                  src={img?.imageUrl}
-                  alt={`기존 이미지 ${idx + 1}`}
-                  width={200}
-                  height={200}
-                />
-              ))}
-          </div>
-        )}
+        {loading ? (
+          <div style={{ padding:'40px', textAlign:'center', color:'var(--text-muted)', fontSize:12 }}>불러오는 중...</div>
+        ) : (
+          <form onSubmit={handleSubmit}>
+            <div className={styles.body}>
+              <div className={styles.field}>
+                <span className={styles.fieldLabel}>상품명</span>
+                <input required className={styles.fieldInput} placeholder="상품명"
+                  value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              </div>
+              <div className={styles.field}>
+                <span className={styles.fieldLabel}>부제목</span>
+                <input className={styles.fieldInput} placeholder="부제목"
+                  value={form.subTitle} onChange={(e) => setForm({ ...form, subTitle: e.target.value })} />
+              </div>
+              <div className={styles.field}>
+                <span className={styles.fieldLabel}>카테고리</span>
+                <select required className={styles.fieldSelect}
+                  value={form.categoryId} onChange={(e) => setForm({ ...form, categoryId: e.target.value })}>
+                  <option value="">카테고리 선택</option>
+                  {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </div>
+              <div className={styles.field}>
+                <span className={styles.fieldLabel}>상태</span>
+                <select className={styles.fieldSelect}
+                  value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
+                  {STATUS_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+              </div>
+              <div className={styles.field}>
+                <span className={styles.fieldLabel}>가격 (원)</span>
+                <input required type="number" min="0" className={styles.fieldInput} placeholder="0"
+                  value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
+              </div>
+              <div className={styles.field}>
+                <span className={styles.fieldLabel}>재고</span>
+                <input required type="number" min="0" className={styles.fieldInput} placeholder="0"
+                  value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} />
+              </div>
+              <div className={`${styles.field} ${styles.fieldFull}`}>
+                <span className={styles.fieldLabel}>설명</span>
+                <textarea className={styles.fieldTextarea} placeholder="상품 설명"
+                  value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+              </div>
+              {/* Image upload */}
+              <div className={`${styles.field} ${styles.fieldFull} ${styles.imageSection}`}>
+                <span className={styles.fieldLabel}>상품 이미지</span>
+                <div className={styles.imagesGrid}>
+                  {previewUrls.map((url, i) => (
+                    <img key={i} src={url} alt="" className={styles.imageThumbnail} />
+                  ))}
+                  <div className={styles.imageUploadArea}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.5">
+                      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    <input type="file" accept="image/*" multiple onChange={handleFileChange} />
+                  </div>
+                </div>
+              </div>
+            </div>
 
-        {previewUrls.length > 0 && (
-          <div className={styles.previewGrid}>
-            {previewUrls.map((url, idx) => (
-              <img
-                key={`${url}-${idx}`}
-                className={styles.previewImg}
-                src={url}
-                alt={`선택 이미지 ${idx + 1}`}
-                width={200}
-                height={200}
-              />
-            ))}
-          </div>
+            <div className={styles.footer}>
+              <button type="button" className={styles.btnSecondary} onClick={onClose}>취소</button>
+              <button type="submit" className={styles.btnPrimary} disabled={saving}>
+                {saving ? '저장 중...' : mode === 'create' ? '등록' : '수정'}
+              </button>
+            </div>
+          </form>
         )}
       </div>
-    </AdminModal>
+    </div>
   );
 }

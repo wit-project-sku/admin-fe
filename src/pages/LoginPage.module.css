@@ -1,91 +1,202 @@
-.page {
-  width: 100%;
-  height: 100%;
+.root {
   display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  background: #ffffff;
-  box-sizing: border-box;
+  min-height: 100vh;
 }
 
-/* 로그인 박스 */
-.loginBox {
-  padding-top: 100px;
-  width: 420px;
+.left {
+  width: 45%;
+  background: #1e293b;
   display: flex;
-  flex-direction: column;
   align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
 }
 
-.iconWrapper img {
-  width: 120px;
-  height: 120px;
-  margin-bottom: 40px;
+.left::before {
+  content: '';
+  position: absolute;
+  top: -80px;
+  left: -80px;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.07);
+}
+
+.left::after {
+  content: '';
+  position: absolute;
+  bottom: -60px;
+  right: -60px;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.brand {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+
+.logoMark {
+  width: 60px;
+  height: 60px;
+  background: #3b82f6;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  font-weight: 900;
+  color: white;
+  font-style: italic;
+  margin: 0 auto 20px;
+}
+
+.brandName {
+  color: white;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+}
+
+.brandSub {
+  color: #60a5fa;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  margin-top: 6px;
+}
+
+.divider {
+  width: 36px;
+  height: 2px;
+  background: #3b82f6;
+  border-radius: 2px;
+  margin: 20px auto;
+}
+
+.brandDesc {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.7;
+}
+
+.right {
+  flex: 1;
+  background: #0f172a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.form {
+  width: 100%;
+  max-width: 340px;
+  padding: 0 16px;
+}
+
+.formTitle {
+  color: white;
+  font-size: 20px;
+  font-weight: 900;
+  margin-bottom: 6px;
+}
+
+.formDesc {
+  color: #475569;
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 32px;
+}
+
+.errorBox {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 12px;
+  color: #dc2626;
+  font-weight: 500;
+  margin-bottom: 16px;
 }
 
 .field {
-  width: 100%;
-  font-weight: 700;
-  margin-bottom: 28px;
+  margin-bottom: 16px;
 }
 
-.field label {
+.label {
   display: block;
-  font-size: 24px;
-  color: #8f8f8f;
-  margin-bottom: 8px;
+  color: #94a3b8;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 7px;
 }
 
-.field input {
-  width: 100%;
-  height: 48px;
+.inputWrap {
+  background: #1e293b;
+  border: 1.5px solid #334155;
+  border-radius: 11px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: border-color 0.15s;
+}
+
+.inputWrap:focus-within {
+  border-color: #3b82f6;
+}
+
+.input {
+  flex: 1;
   border: none;
-  border-bottom: 3px solid #e5e5e5;
-  font-size: 28px;
+  background: transparent;
+  color: #e2e8f0;
+  font-size: 13px;
+  font-weight: 500;
   outline: none;
 }
 
-.field input:focus {
-  border-bottom-color: #0088ff;
-}
+.input::placeholder { color: #475569; }
 
-.passwordBox {
-  position: relative;
-  width: 100%;
-}
-
-.eyeIcon {
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 24px;
-  height: 24px;
-  margin-right: 10px;
+.eyeBtn {
   background: transparent;
-  border-radius: 0;
-  cursor: pointer;
-}
-
-.errorText {
-  width: 100%;
-  font-size: 16px;
-  font-weight: 400;
-  color: #ff3737; /* 빨간색 에러 */
-  text-align: left;
-}
-
-/* 로그인 버튼 */
-.loginButton {
-  width: 100%;
-  height: 56px;
-  margin-top: 20px;
-  background: #0088ff;
-  color: #ffffff;
-  font-size: 18px;
-  text-align: center;
-  font-weight: 600;
   border: none;
-  border-radius: 8px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0;
+}
+
+.submitBtn {
+  width: 100%;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 11px;
+  padding: 14px;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+  margin-top: 24px;
+  transition: all 0.15s;
+}
+
+.submitBtn:hover { background: #2563eb; }
+.submitBtn:active { transform: scale(0.99); }
+.submitBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.copyright {
+  color: #334155;
+  font-size: 10px;
+  text-align: center;
+  margin-top: 24px;
+  font-weight: 500;
 }

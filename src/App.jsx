@@ -1,7 +1,5 @@
-import Router from './routes/Router';
+import AppRouter from './routes/Router';
 
-function App() {
-  return <Router />;
+export default function App() {
+  return <AppRouter />;
 }
-
-export default App;

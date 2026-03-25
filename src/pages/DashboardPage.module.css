@@ -1,0 +1,189 @@
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.statCard {
+  background: white;
+  border-radius: 16px;
+  padding: 18px 20px;
+  border: 1px solid var(--border);
+  transition: box-shadow 0.15s;
+}
+
+.clickable { cursor: pointer; }
+.clickable:hover { box-shadow: 0 4px 18px rgba(0,0,0,0.07); }
+.clickable:active { transform: scale(0.99); }
+
+.statTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.statIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.trendBadge {
+  color: #16a34a;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.viewBadge {
+  background: var(--blue-bg);
+  color: var(--blue-text);
+  font-size: 8px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 20px;
+  letter-spacing: 0.05em;
+}
+
+.statLabel {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+
+.statValue {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+}
+
+.statUnit {
+  font-size: 12px;
+  font-weight: 700;
+  margin-left: 1px;
+}
+
+/* Charts */
+.chartsGrid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+}
+
+.lineChartCard, .pieChartCard {
+  /* inherits .card */
+}
+
+.chartArea {
+  height: 240px;
+  padding: 8px 16px 16px;
+}
+
+.chartLegend {
+  display: flex;
+  gap: 14px;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.legendLine {
+  width: 14px;
+  height: 2.5px;
+  border-radius: 2px;
+}
+
+.legendDash {
+  width: 14px;
+  height: 2px;
+  background: repeating-linear-gradient(90deg, #fbbf24 0, #fbbf24 4px, transparent 4px, transparent 8px);
+}
+
+.pieLabel {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+/* Drilldown */
+.backBtn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  transition: color 0.15s;
+}
+.backBtn:hover { color: var(--accent); }
+
+.drillGrid {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 16px;
+}
+
+.drillTotal {
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--text-primary);
+  letter-spacing: -1px;
+}
+
+.rankCard {}
+
+.rankRow {
+  margin-bottom: 14px;
+}
+
+.rankMeta {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+
+.rankName {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.rankVal {
+  font-size: 12px;
+  font-weight: 900;
+  color: var(--accent);
+}
+
+.rankTrack {
+  height: 5px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.rankFill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+  transition: width 0.6s ease;
+}

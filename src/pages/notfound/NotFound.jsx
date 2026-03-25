@@ -1,9 +1,9 @@
 import { useNavigate } from 'react-router-dom';
-import styles from './NotFound.module.css';
+//import styles from './NotFound.module.css';
 
 export default function NotFound({ message = '페이지를 찾을 수 없습니다.' }) {
   const navigate = useNavigate();
-
+const styles= {}
   return (
     <div className={styles.wrapper}>
       <h1 className={styles.code}>404</h1>

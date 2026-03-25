@@ -1,0 +1,58 @@
+.tabGroup {
+  display: flex;
+  gap: 4px;
+  background: white;
+  padding: 3px;
+  border-radius: 11px;
+  border: 1px solid var(--border);
+  width: fit-content;
+  margin-bottom: 18px;
+}
+.tabBtn {
+  padding: 8px 18px;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-secondary);
+  border: none;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .15s;
+}
+.tabBtn:hover { background: var(--border); }
+.tabBtnActive { background: var(--text-primary) !important; color: white !important; }
+.darkHead {}
+.darkTh {
+  padding: 11px 22px;
+  background: #0f172a;
+  color: #94a3b8;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  text-align: left;
+  white-space: nowrap;
+}
+.darkThAccent {
+  padding: 11px 22px;
+  background: #2563eb;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  text-align: right;
+  white-space: nowrap;
+}
+.filterCard {
+  padding: 18px 22px;
+  overflow: visible;
+}
+.emptyState {
+  padding: 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+}

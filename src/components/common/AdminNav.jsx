@@ -1,39 +1,114 @@
-import React, { useCallback } from 'react';
 import { NavLink } from 'react-router-dom';
 import styles from './AdminNav.module.css';
-import productIcon from '@assets/images/adminProductIcon.png';
-import paymentIcon from '@assets/images/adminPaymentIcon.png';
-import deliveryIcon from '@assets/images/adminDeliveryIcon.png';
+
+const MAIN_MENU = [
+  {
+    label: '통계 대시보드',
+    path: '/admin/dashboard',
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
+        <rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
+      </svg>
+    ),
+  },
+  {
+    label: '상세 분석 리포트',
+    path: '/admin/reports',
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" />
+        <line x1="6" y1="20" x2="6" y2="14" />
+      </svg>
+    ),
+  },
+];
+
+const MANAGE_MENU = [
+  {
+    label: '상품 관리',
+    path: '/admin/products',
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+        <line x1="3" y1="6" x2="21" y2="6" />
+        <path d="M16 10a4 4 0 0 1-8 0" />
+      </svg>
+    ),
+  },
+  {
+    label: '결제 관리',
+    path: '/admin/payments',
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <rect x="1" y="4" width="22" height="16" rx="2" />
+        <line x1="1" y1="10" x2="23" y2="10" />
+      </svg>
+    ),
+  },
+  {
+    label: '배송 관리',
+    path: '/admin/deliveries',
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <rect x="1" y="3" width="15" height="13" />
+        <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+        <circle cx="5.5" cy="18.5" r="2.5" /><circle cx="18.5" cy="18.5" r="2.5" />
+      </svg>
+    ),
+  },
+  {
+    label: '환불 관리',
+    path: '/admin/refunds',
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <polyline points="1 4 1 10 7 10" />
+        <path d="M3.51 15a9 9 0 1 0 .49-4.95" />
+      </svg>
+    ),
+  },
+  {
+    label: '의상 관리',
+    path: '/admin/outfits',
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.57a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.57a2 2 0 0 0-1.34-2.23z" />
+      </svg>
+    ),
+  },
+];
+
+function NavItem({ item }) {
+  return (
+    <NavLink
+      to={item.path}
+      className={({ isActive }) =>
+        `${styles.item} ${isActive ? styles.active : ''}`
+      }
+    >
+      <span className={styles.icon}>{item.icon}</span>
+      <span className={styles.label}>{item.label}</span>
+    </NavLink>
+  );
+}
 
 export default function AdminNav() {
-  const handlePreparing = useCallback((e) => {
-    e.preventDefault();
-    alert('준비중입니다');
-  }, []);
-
-  const menu = [
-    { label: '상품 관리', path: '/admin/products', icon: productIcon },
-    { label: '결제 관리', path: '/admin/payments', icon: paymentIcon },
-    { label: '배송 관리', path: '/admin/deliveries', icon: deliveryIcon },
-    { label: '환불 관리', path: '/admin/refunds', icon: deliveryIcon },
-    { label: '카테고리 관리', path: '/admin/categories', icon: deliveryIcon, preparing: true },
-    { label: '키오스크 관리', path: '/admin/kiosks', icon: deliveryIcon, preparing: true },
-    { label: '통계 관리', path: '/admin/chart', icon: deliveryIcon, preparing: true },
-  ];
-
   return (
-    <nav className={styles.nav}>
-      {menu.map((item) => (
-        <NavLink
-          key={item.path}
-          to={item.path}
-          onClick={item.preparing ? handlePreparing : undefined}
-          className={({ isActive }) => (isActive ? `${styles.menuItem} ${styles.active}` : styles.menuItem)}
-        >
-          <img src={item.icon} alt='' />
-          <span>{item.label}</span>
-        </NavLink>
-      ))}
-    </nav>
+    <aside className={styles.sidebar}>
+      <nav className={styles.nav}>
+        <div className={styles.group}>
+          <span className={styles.groupLabel}>MAIN</span>
+          {MAIN_MENU.map((item) => (
+            <NavItem key={item.path} item={item} />
+          ))}
+        </div>
+        <div className={styles.group}>
+          <span className={styles.groupLabel}>MANAGEMENT</span>
+          {MANAGE_MENU.map((item) => (
+            <NavItem key={item.path} item={item} />
+          ))}
+        </div>
+      </nav>
+    </aside>
   );
 }

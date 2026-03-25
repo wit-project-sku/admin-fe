@@ -1,56 +1,73 @@
-@font-face {
-  font-family: 'NotoSans';
-  src: url('../../assets/font/NotoSans-VariableFont_wdth,wght.ttf') format('truetype');
-  font-weight: 100 900;
-  font-style: normal;
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--sidebar-bg);
+  position: fixed;
+  top: var(--header-h);
+  left: 0;
+  bottom: 0;
+  overflow-y: auto;
+  flex-shrink: 0;
+  z-index: 50;
 }
 
 .nav {
-  font-family: 'NotoSans';
-  width: 300px;
-  height: 100%;
-  border-right: 1px solid #e5e5e5;
-  background-color: #ffffff;
+  padding: 14px 10px;
   display: flex;
   flex-direction: column;
-  padding: 16px 12px;
-  gap: 6px;
+  gap: 18px;
 }
 
-.menuItem {
-  font-family: 'NotoSans';
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.groupLabel {
+  font-size: 9px;
+  font-weight: 700;
+  color: #475569;
+  letter-spacing: 0.14em;
+  padding: 0 10px;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  display: block;
+}
+
+.item {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 10px;
-  height: 80px;
-  padding: 12px 16px;
-  margin: 0 8px;
-
-  font-size: 25px;
-  font-weight: 500;
-  color: #909dad; /* 기본 회색 */
+  gap: 9px;
+  padding: 9px 10px;
+  border-radius: 9px;
+  color: #94a3b8;
   text-decoration: none;
-  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  transition: all 0.15s;
+}
 
-  border-bottom: none; /* 기존 구분선 제거 */
-  border-radius: 9999px; /* 캡슐 모양 */
+.item:hover {
+  background: var(--sidebar-hover);
+  color: #e2e8f0;
 }
 
 .active {
-  font-family: 'NotoSans';
-  font-weight: 700;
-  color: #ffffff;
-  background-color: #0088ff;
+  background: var(--sidebar-active) !important;
+  color: white !important;
 }
 
-.menuItem img,
-.menuItem svg {
-  width: 24px;
-  height: 24px;
-  flex: 0 0 auto;
+.icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
 }
 
-.active img {
-  filter: brightness(0) invert(1); /* 활성 상태 아이콘을 흰색처럼 보이게 */
+.label {
+  white-space: nowrap;
+}
+
+/* offset main content */
+:global(.main-offset) {
+  margin-left: var(--sidebar-w);
 }

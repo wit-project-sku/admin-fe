@@ -1,353 +1,173 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import styles from './DeliveryManagePage.module.css';
-import searchIcon from '@assets/images/search.png';
-import clipboardIcon from '@assets/images/clipboard.png';
-import updateIcon from '@assets/images/update.png';
-
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import shared from '@commons/shared.module.css';
+import { fetchAllDeliveriesAdmin } from '@apis/deliveryApi';
 import DeliveryManageModal from '@modals/DeliveryManageModal';
 
-import { fetchAllDeliveriesAdmin } from '@apis/deliveryApi';
+const STATUS_FILTERS = [
+  { key: 'all', label: '전체' },
+  { key: 'ORDERED', label: '주문완료' },
+  { key: 'READY', label: '배송준비' },
+  { key: 'SHIPPING', label: '배송중' },
+  { key: 'COMPLETE', label: '배송완료' },
+  { key: 'PICKED_UP', label: '직접수령' },
+  { key: 'CANCEL', label: '취소' },
+];
+
+const STATUS_MAP = {
+  PICKED_UP: { label: '직접수령', cls: 'badgeGray' },
+  ORDERED:   { label: '주문완료', cls: 'badgeAmber' },
+  READY:     { label: '배송준비', cls: 'badgeBlue' },
+  SHIPPING:  { label: '배송중',   cls: 'badgeBlue' },
+  COMPLETE:  { label: '배송완료', cls: 'badgeGreen' },
+  CANCEL:    { label: '취소',     cls: 'badgeRed' },
+};
+
+const normalizePhone = (v) => {
+  if (!v) return '-';
+  const d = String(v).replace(/\D/g, '');
+  return d.length === 11 ? `${d.slice(0,3)}-${d.slice(3,7)}-${d.slice(7)}` : String(v);
+};
 
 export default function DeliveryManagePage() {
-  const [search, setSearch] = useState('');
-  const [activeFilter, setActiveFilter] = useState('all');
-  const [page, setPage] = useState(1);
-  const [showDeliveryModal, setShowDeliveryModal] = useState(false);
-  const [deliveryModalMode, setDeliveryModalMode] = useState('view'); // 'view' | 'edit'
-  const [selectedDeliveryId, setSelectedDeliveryId] = useState(null);
-
+  const [filter, setFilter]   = useState('all');
+  const [search, setSearch]   = useState('');
+  const [page, setPage]       = useState(1);
   const pageSize = 5;
+
   const [deliveries, setDeliveries] = useState([]);
   const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [loading, setLoading]       = useState(false);
 
-  const filterToStatus = (filter) => {
-    if (filter === 'pickedUp') return 'PICKED_UP';
-    if (filter === 'ordered') return 'ORDERED';
-    if (filter === 'ready') return 'READY';
-    if (filter === 'shipping') return 'SHIPPING';
-    if (filter === 'complete') return 'COMPLETE';
-    if (filter === 'cancel') return 'CANCEL';
-    return undefined; // all
-  };
+  const [selected, setSelected]   = useState(null);
+  const [modalMode, setMode]       = useState('view');
+  const [showModal, setShowModal] = useState(false);
 
-  const formatWon = (value) => {
-    if (value === null || value === undefined) return '-';
-    const num = typeof value === 'number' ? value : Number(value);
-    if (Number.isNaN(num)) return String(value);
-    return `${num.toLocaleString()}원`;
-  };
-
-  const normalizePhone = (value) => {
-    if (!value) return '-';
-    const digits = String(value).replace(/\D/g, '');
-    if (digits.length === 11) return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
-    return String(value);
-  };
-
-  const getStatusEnum = (item) => {
-    // 백엔드가 deliveryStatus: "ORDERED" 형태로 내려오는 케이스
-    if (typeof item?.deliveryStatus === 'string') return item.deliveryStatus;
-    // 혹시 status 필드로 내려오는 케이스도 방어
-    if (typeof item?.status === 'string') return item.status;
-    // boolean 형태였던 구버전 대응
-    if (typeof item?.deliveryStatus === 'boolean') return item.deliveryStatus ? 'COMPLETE' : 'READY';
-    return null;
-  };
-
-  const getStatusLabel = (statusEnum) => {
-    switch (statusEnum) {
-      case 'PICKED_UP':
-        return '직접 수령';
-      case 'ORDERED':
-        return '주문 완료';
-      case 'READY':
-        return '배송 준비';
-      case 'SHIPPING':
-        return '배송 중';
-      case 'COMPLETE':
-        return '배송 완료';
-      case 'CANCEL':
-        return '배송 취소';
-      default:
-        return '-';
-    }
-  };
-
-  const getStatusClass = (statusEnum) => {
-    switch (statusEnum) {
-      case 'PICKED_UP':
-        return styles.statusPickedUp;
-      case 'ORDERED':
-        return styles.statusOrdered;
-      case 'READY':
-        return styles.statusReady;
-      case 'SHIPPING':
-        return styles.statusShipping;
-      case 'COMPLETE':
-        return styles.statusComplete;
-      case 'CANCEL':
-        return styles.statusCancel;
-      default:
-        return styles.statusPickedUp;
-    }
-  };
-
-  useEffect(() => {
-    setPage(1);
-  }, [activeFilter]);
-
-  const fetchDeliveries = async () => {
+  const fetch = useCallback(async () => {
     setLoading(true);
-    setError(null);
     try {
       const res = await fetchAllDeliveriesAdmin(page, pageSize);
-      const wrapper = res?.data ?? res;
-      const payload = wrapper?.data ?? wrapper;
-
+      const payload = res?.data?.data ?? res?.data ?? res;
       setDeliveries(Array.isArray(payload?.content) ? payload.content : []);
-      setTotalPages(typeof payload?.totalPages === 'number' ? payload.totalPages : 1);
-    } catch (e) {
-      setError(e);
-      setDeliveries([]);
-      setTotalPages(1);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchDeliveries();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+      setTotalPages(payload?.totalPages ?? 1);
+    } catch { setDeliveries([]); }
+    finally { setLoading(false); }
   }, [page]);
 
-  const filteredData = useMemo(() => {
-    const keyword = search.trim();
-    const targetStatus = filterToStatus(activeFilter);
+  useEffect(() => { fetch(); }, [fetch]);
+  useEffect(() => { setPage(1); }, [filter]);
 
-    return deliveries.filter((item) => {
-      const statusEnum = getStatusEnum(item);
-      const matchesFilter = !targetStatus || statusEnum === targetStatus;
+  const displayed = useMemo(() => {
+    let list = deliveries;
+    const st = (d) => d.deliveryStatus ?? d.status ?? null;
+    if (filter !== 'all') list = list.filter((d) => st(d) === filter);
+    const kw = search.trim().toLowerCase();
+    if (kw) list = list.filter((d) =>
+      (d.recipientName ?? '').toLowerCase().includes(kw) ||
+      normalizePhone(d.phoneNumber).includes(kw)
+    );
+    return list;
+  }, [deliveries, filter, search]);
 
-      const matchesSearch =
-        !keyword ||
-        String(item?.orderNumber ?? item?.orderNo ?? item?.transactionId ?? '').includes(keyword) ||
-        String(item?.address ?? item?.deliveryAddress ?? '').includes(keyword) ||
-        String(item?.phoneNumber ?? item?.phone ?? '').includes(keyword);
-
-      return matchesFilter && matchesSearch;
-    });
-  }, [deliveries, search, activeFilter]);
-
-  const pages = useMemo(() => {
-    const maxButtons = 5;
-    const tp = Math.max(1, totalPages);
-    const current = Math.min(Math.max(1, page), tp);
-
-    let start = Math.max(1, current - Math.floor(maxButtons / 2));
-    let end = Math.min(tp, start + maxButtons - 1);
-    start = Math.max(1, end - maxButtons + 1);
-
-    const arr = [];
-    for (let p = start; p <= end; p += 1) arr.push(p);
-    return arr;
-  }, [page, totalPages]);
+  const si = (d) => {
+    const s = d.deliveryStatus ?? d.status ?? null;
+    return STATUS_MAP[s] ?? { label: s ?? '-', cls: 'badgeGray' };
+  };
 
   return (
-    <div className={styles.container}>
-      <div className={styles.titleRow}>
-        <div className={styles.titleWithButton}>
-          <span className={styles.title}>배송 관리</span>
+    <div>
+      <div className={shared.pageHeader}>
+        <div>
+          <h1 className={shared.pageTitle}>배송 관리</h1>
+          <p className={shared.pageSubtitle}>Delivery Management</p>
         </div>
       </div>
 
-      <div className={styles.topBar}>
-        <div className={styles.searchBoxWide}>
-          <input
-            type='text'
-            className={styles.searchInputWide}
-            placeholder='주문번호를 입력해주세요'
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <div className={styles.searchIcon} aria-hidden='true'>
-            <img src={searchIcon} alt='검색' />
+      <div className={shared.card}>
+        <div className={shared.cardHead} style={{ gap: 8 }}>
+          <div className={shared.filterGroup} style={{ flexWrap: 'wrap' }}>
+            {STATUS_FILTERS.map((f) => (
+              <button
+                key={f.key}
+                className={`${shared.filterBtn} ${filter === f.key ? shared.filterBtnActive : ''}`}
+                onClick={() => setFilter(f.key)}
+              >{f.label}</button>
+            ))}
           </div>
-
-          <div className={styles.filterButtons}>
-            <button
-              className={activeFilter === 'all' ? styles.filterButtonActive : styles.filterButton}
-              onClick={() => setActiveFilter('all')}
-              type='button'
-            >
-              전체
-            </button>
-            <button
-              className={activeFilter === 'pickedUp' ? styles.filterButtonActive : styles.filterButton}
-              onClick={() => setActiveFilter('pickedUp')}
-              type='button'
-            >
-              직접 수령
-            </button>
-            <button
-              className={activeFilter === 'ordered' ? styles.filterButtonActive : styles.filterButton}
-              onClick={() => setActiveFilter('ordered')}
-              type='button'
-            >
-              주문 완료
-            </button>
-            <button
-              className={activeFilter === 'ready' ? styles.filterButtonActive : styles.filterButton}
-              onClick={() => setActiveFilter('ready')}
-              type='button'
-            >
-              배송 준비
-            </button>
-            <button
-              className={activeFilter === 'shipping' ? styles.filterButtonActive : styles.filterButton}
-              onClick={() => setActiveFilter('shipping')}
-              type='button'
-            >
-              배송 중
-            </button>
-            <button
-              className={activeFilter === 'complete' ? styles.filterButtonActive : styles.filterButton}
-              onClick={() => setActiveFilter('complete')}
-              type='button'
-            >
-              배송 완료
-            </button>
-            <button
-              className={activeFilter === 'cancel' ? styles.filterButtonActive : styles.filterButton}
-              onClick={() => setActiveFilter('cancel')}
-              type='button'
-            >
-              배송 취소
-            </button>
+          <div className={shared.searchBox} style={{ minWidth: 160 }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input placeholder="수령인 / 전화번호..." value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
         </div>
-      </div>
 
-      <div className={styles.tableWrapper}>
-        <div className={styles.tableHeader}>
-          <div>순번</div>
-          <div>상태</div>
-          <div>주문번호</div>
-          <div>배송지 주소</div>
-          <div>결제 금액</div>
-          <div>수령 전화번호</div>
-          <div>세부사항</div>
-        </div>
-
-        {loading && <div className={styles.noData}>불러오는 중...</div>}
-        {error && <div className={styles.noData}>배송 조회에 실패했습니다.</div>}
-        {!loading && !error && filteredData.length === 0 && <div className={styles.noData}>검색 결과가 없습니다</div>}
-
-        {!loading && !error && (
-          <>
-            {filteredData.map((item, idx) => {
-              const statusEnum = getStatusEnum(item);
-              const statusLabel = getStatusLabel(statusEnum);
-              const orderNo = item?.orderNumber ?? item?.orderNo ?? item?.transactionId ?? '-';
-              const baseAddress = item?.address ?? item?.deliveryAddress ?? '';
-              const detailAddress = item?.detailAddress ?? '';
-              const address =
-                baseAddress || detailAddress
-                  ? `${baseAddress}${baseAddress && detailAddress ? ' ' : ''}${detailAddress}`.trim()
-                  : '-';
-              const amount = item?.amount ?? item?.totalAmount ?? item?.price ?? '-';
-              const phone = item?.phoneNumber ?? item?.phone ?? '-';
-
+        <table className={shared.table}>
+          <thead className={shared.thead}>
+            <tr>
+              <th className={shared.th}>주문번호</th>
+              <th className={shared.th}>수령인</th>
+              <th className={shared.th}>주소</th>
+              <th className={`${shared.th} ${shared.thRight}`}>결제금액</th>
+              <th className={`${shared.th} ${shared.thCenter}`}>상태</th>
+              <th className={`${shared.th} ${shared.thRight}`}>관리</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr><td colSpan={6} style={{ padding:'36px', textAlign:'center', color:'var(--text-muted)', fontSize:12 }}>불러오는 중...</td></tr>
+            ) : displayed.length === 0 ? (
+              <tr><td colSpan={6} style={{ padding:'36px', textAlign:'center', color:'var(--text-muted)', fontSize:12 }}>배송 내역이 없습니다.</td></tr>
+            ) : displayed.map((d) => {
+              const info = si(d);
+              const amt = d.payment?.totalAmount ?? d.totalAmount;
               return (
-                <div className={styles.tableRow} key={item?.deliveryId ?? item?.id ?? idx}>
-                  <div>{(page - 1) * pageSize + idx + 1}</div>
-                  <div className={styles.statusCell}>
-                    <span className={getStatusClass(statusEnum)}>{statusLabel}</span>
-                  </div>
-                  <div>{orderNo}</div>
-                  <div>{address}</div>
-                  <div>{typeof amount === 'string' && amount.includes('원') ? amount : formatWon(amount)}</div>
-                  <div>{normalizePhone(phone)}</div>
-                  <div className={styles.actionIcons}>
-                    <button
-                      type='button'
-                      className={styles.iconButton}
-                      aria-label='조회'
-                      onClick={() => {
-                        const id = item?.deliveryId ?? item?.id;
-                        if (!id) return;
-                        setSelectedDeliveryId(id);
-                        setDeliveryModalMode('view');
-                        setShowDeliveryModal(true);
-                      }}
-                    >
-                      <img src={clipboardIcon} alt='조회' />
-                    </button>
-                    <button
-                      type='button'
-                      className={styles.iconButton}
-                      aria-label='수정'
-                      onClick={() => {
-                        const id = item?.deliveryId ?? item?.id;
-                        if (!id) return;
-                        setSelectedDeliveryId(id);
-                        setDeliveryModalMode('edit');
-                        setShowDeliveryModal(true);
-                      }}
-                    >
-                      <img src={updateIcon} alt='수정' />
-                    </button>
-                  </div>
-                </div>
+                <tr key={d.id} className={shared.tr}>
+                  <td className={`${shared.td} ${shared.tdMono}`}>{`DEL-${String(d.id).padStart(3,'0')}`}</td>
+                  <td className={shared.td}>
+                    <div className={shared.tdBold}>{d.recipientName ?? '-'}</div>
+                    <div className={shared.tdSub}>{normalizePhone(d.phoneNumber)}</div>
+                  </td>
+                  <td className={`${shared.td} ${shared.tdMuted}`} style={{ maxWidth: 200, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                    {d.address ?? '-'}
+                  </td>
+                  <td className={`${shared.td} ${shared.tdRight} ${shared.tdBold}`}>
+                    {amt ? `${Number(amt).toLocaleString()}원` : '-'}
+                  </td>
+                  <td className={`${shared.td} ${shared.tdCenter}`}>
+                    <span className={`${shared.badge} ${shared[info.cls]}`}>{info.label}</span>
+                  </td>
+                  <td className={shared.td}>
+                    <div className={shared.actionGroup}>
+                      <button className={shared.btnOutline} onClick={() => { setSelected(d); setMode('view'); setShowModal(true); }}>상세</button>
+                      <button className={`${shared.btnPrimary}`} style={{ padding:'5px 11px', fontSize:10 }}
+                        onClick={() => { setSelected(d); setMode('edit'); setShowModal(true); }}>수정</button>
+                    </div>
+                  </td>
+                </tr>
               );
             })}
-          </>
-        )}
+          </tbody>
+        </table>
+
+        <div className={shared.pagination}>
+          <span className={shared.pageInfo}>총 {deliveries.length}건</span>
+          <div className={shared.pageButtons}>
+            <button className={shared.pageBtn} onClick={() => setPage((p) => Math.max(1, p - 1))}>‹</button>
+            {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map((n) => (
+              <button key={n} className={`${shared.pageBtn} ${page === n ? shared.pageBtnActive : ''}`} onClick={() => setPage(n)}>{n}</button>
+            ))}
+            <button className={shared.pageBtn} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>›</button>
+          </div>
+        </div>
       </div>
 
-      <div className={styles.pagination}>
-        <button
-          className={styles.pageButton}
-          type='button'
-          aria-label='이전 페이지'
-          onClick={() => setPage((p) => (p > 1 ? p - 1 : p))}
-        >
-          &lt;
-        </button>
-        {pages.map((p) => (
-          <button
-            key={p}
-            className={p === page ? styles.pageButtonActive : styles.pageButton}
-            type='button'
-            onClick={() => setPage(p)}
-            aria-current={p === page ? 'page' : undefined}
-          >
-            {p}
-          </button>
-        ))}
-        <button
-          className={styles.pageButton}
-          type='button'
-          aria-label='다음 페이지'
-          onClick={() => setPage((p) => (p < totalPages ? p + 1 : p))}
-        >
-          &gt;
-        </button>
-      </div>
-      {showDeliveryModal && (
+      {showModal && (
         <DeliveryManageModal
-          open={showDeliveryModal}
-          mode={deliveryModalMode}
-          deliveryId={selectedDeliveryId}
-          onClose={() => {
-            setShowDeliveryModal(false);
-            setSelectedDeliveryId(null);
-            setDeliveryModalMode('view');
-          }}
-          onSuccess={() => {
-            fetchDeliveries();
-          }}
+          open={showModal}
+          mode={modalMode}
+          deliveryId={selected?.id}
+          onClose={() => setShowModal(false)}
+          onSuccess={() => { setShowModal(false); fetch(); }}
         />
       )}
     </div>

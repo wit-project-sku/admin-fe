@@ -1,21 +1,32 @@
-.layoutContainer {
-  width: 100vw;
-  height: 100vh; /* 화면에 딱 고정 */
-  overflow: hidden; /* 바깥(브라우저) 스크롤 방지 */
-  display: flex;
-  flex-direction: column;
+/* Design tokens — 0.8× scale */
+:root {
+  --sidebar-w: 210px;
+  --header-h: 48px;
+  --sidebar-bg: #1e293b;
+  --sidebar-active: #2563eb;
+  --sidebar-hover: #334155;
+  --accent: #3b82f6;
+  --bg-page: #f8fafc;
+  --bg-card: #ffffff;
+  --border: #f1f5f9;
+  --border-md: #e2e8f0;
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
+  --green-bg: #dcfce7; --green-text: #16a34a;
+  --red-bg: #fef2f2;   --red-text: #dc2626;
+  --amber-bg: #fef3c7; --amber-text: #d97706;
+  --blue-bg: #dbeafe;  --blue-text: #2563eb;
+  --gray-bg: #f1f5f9;  --gray-text: #64748b;
+  --orange-bg: #fff7ed;--orange-text: #ea580c;
+  --purple-bg: #fdf4ff;--purple-text: #9333ea;
 }
-
-.bodyContainer {
+.root { min-height: 100vh; background: var(--bg-page); }
+.body { display: flex; padding-top: var(--header-h); }
+.main {
   flex: 1;
-  min-height: 0; /* flex 내부 스크롤 필수 */
-  display: flex;
-  overflow: hidden; /* nav/content가 밖으로 새지 않게 */
-}
-
-.contentArea {
-  flex: 1;
-  min-width: 0; /* 가로 overflow 방지에 도움 */
-  min-height: 0;
-  overflow-y: auto; /* ✅ 스크롤은 여기(안쪽)에서만 */
+  min-width: 0;
+  margin-left: var(--sidebar-w);
+  padding: 28px 32px;
+  min-height: calc(100vh - var(--header-h));
 }

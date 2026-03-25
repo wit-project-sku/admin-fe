@@ -1,0 +1,152 @@
+.viewToggle {
+  display: flex;
+  gap: 3px;
+  background: white;
+  padding: 3px;
+  border-radius: 11px;
+  border: 1px solid var(--border);
+}
+.toggleBtn {
+  padding: 8px 18px;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-secondary);
+  border: none;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .15s;
+}
+.toggleBtn:hover { background: var(--border); }
+.toggleBtnActive { background: var(--text-primary) !important; color: white !important; }
+.toggleBtnRegister { background: #2563eb !important; color: white !important; }
+.countBadge {
+  background: var(--blue-bg);
+  color: var(--blue-text);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 8px;
+  border-radius: 20px;
+}
+.registerGrid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+.formTitle {
+  font-size: 15px;
+  font-weight: 900;
+  color: var(--text-primary);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.formField {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .1em;
+}
+.input {
+  background: var(--bg-page);
+  border: 1px solid var(--border-md);
+  border-radius: 10px;
+  padding: 10px 13px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color .15s;
+  width: 100%;
+  box-sizing: border-box;
+}
+.input:focus { border-color: var(--accent); }
+.input::placeholder { color: var(--text-muted); }
+.kioskGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.kioskItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border-md);
+  background: var(--bg-page);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  transition: all .15s;
+}
+.kioskItem:hover { border-color: var(--accent); color: var(--accent); }
+.kioskActive { background: var(--blue-bg) !important; border-color: #93c5fd !important; color: var(--blue-text) !important; }
+.kioskCheck {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  border: 1.5px solid var(--border-md);
+  background: white;
+  flex-shrink: 0;
+  transition: all .15s;
+}
+.kioskChecked { background: var(--accent) !important; border-color: var(--accent) !important; }
+.dateRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.dateSep {
+  color: var(--text-muted);
+  font-weight: 700;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.submitBtn {
+  width: 100%;
+  justify-content: center;
+  padding: 12px;
+  font-size: 13px;
+  border-radius: 11px;
+  margin-top: 4px;
+}
+.imageUpload {
+  aspect-ratio: 4/5;
+  background: var(--bg-page);
+  border: 2px dashed var(--border-md);
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color .15s;
+}
+.imageUpload:hover { border-color: var(--accent); }
+.uploadPlaceholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+}
