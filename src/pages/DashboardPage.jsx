@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
 } from 'recharts';
 import s from './DashboardPage.module.css';
 import shared from '@commons/shared.module.css';
+import { getStatsSummary } from '@apis/statsApi';
 
 const TODAY_DAY = ['일', '월', '화', '수', '목', '금', '토'][new Date().getDay()];
 
@@ -75,10 +76,25 @@ const CustomTick = ({ x, y, payload }) => {
 
 export default function DashboardPage() {
   const [drilldown, setDrilldown] = useState(null);
+  const [summary, setSummary] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getStatsSummary()
+      .then((res) => {
+        const data = res?.data ?? res;
+        setSummary(data);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
 
   if (drilldown) {
     const isToday = drilldown === 'today';
-    const totalVal = isToday ? 428 : 12540;
+    const totalVal = isToday ? (summary?.todayTotal ?? 0): (summary?.monthlyTotal ?? 0);
+    
+    const locationData = isToday ? (summary?.todayByKiosk ?? []) : (summary?.monthlyByKiosk ?? []);
+
     const label = isToday ? '오늘 지점별 현황' : '이번 달 지점별 현황';
     const dataKey = isToday ? 'today' : 'monthly';
 
@@ -115,16 +131,16 @@ export default function DashboardPage() {
               <span className={shared.cardTitle}>지점 랭킹</span>
             </div>
             <div style={{ padding: '18px 22px' }}>
-              {LOCATION_DATA.map((loc) => (
-                <div key={loc.name} className={s.rankRow}>
+              {locationData.map((loc) => (
+                <div key={loc.kioskId} className={s.rankRow}>
                   <div className={s.rankMeta}>
-                    <span className={s.rankName}>{loc.name}</span>
-                    <span className={s.rankVal}>{loc[dataKey].toLocaleString()}건</span>
+                    <span className={s.rankName}>{loc.kioskName}</span>
+                    <span className={s.rankVal}>{loc.count.toLocaleString()}건</span>
                   </div>
                   <div className={s.rankTrack}>
                     <div
                       className={s.rankFill}
-                      style={{ width: `${(loc[dataKey] / totalVal) * 100}%` }}
+                      style={{ width: `${totalVal > 0 ? (loc.count / totalVal) * 100 : 0}%` }}
                     />
                   </div>
                 </div>
@@ -135,7 +151,7 @@ export default function DashboardPage() {
       </div>
     );
   }
-
+console.log('summary : ', summary)
   return (
     <div>
       <div className={shared.pageHeader}>
@@ -151,15 +167,15 @@ export default function DashboardPage() {
 
       {/* Stat cards */}
       <div className={s.statsGrid}>
-        <StatCard title="오늘 촬영 수" value={428} color="#f59e0b"
+        <StatCard title="오늘 촬영 수" value={summary?.todayTotal ?? 0} color="#f59e0b"
           icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>}
           onClick={() => setDrilldown('today')}
         />
-        <StatCard title="이번 달 촬영" value={12540} color="#a855f7" trendPct={15}
+        <StatCard title="이번 달 촬영"  value={summary?.monthlyTotal ?? 0} color="#a855f7" trendPct={15}
           icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>}
           onClick={() => setDrilldown('monthly')}
         />
-        <StatCard title="총 누적 촬영" value={154200} color="#3b82f6"
+        <StatCard title="총 누적 촬영" value={summary?.grandTotal ?? 0} color="#3b82f6"
           icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>}
         />
         <StatCard title="의상 종류" value={15} unit="종" color="#ec4899"

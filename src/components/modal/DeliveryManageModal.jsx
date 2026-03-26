@@ -25,17 +25,18 @@ export default function DeliveryManageModal({ open, mode, deliveryId, onClose, o
   const [saving, setSaving]   = useState(false);
   const [error, setError]     = useState('');
 
-  useEffect(() => {
+  useEffect(() => {    
     if (!open || !deliveryId) return;
     setLoading(true);
     setError('');
     fetchDeliveryByIdAdmin(deliveryId)
       .then((res) => {
-        const d = res?.data?.data ?? res?.data ?? res;
+        const d = res?.data?.data ?? res?.data ?? res;        
+        console.log('d : ', d)
         setData(d);
         setForm({
           deliveryStatus: d.deliveryStatus ?? d.status ?? 'ORDERED',
-          recipientName:  d.recipientName ?? '',
+          receiverName:  d.receiverName ?? '',
           phoneNumber:    d.phoneNumber ?? '',
           address:        d.address ?? '',
           trackingNumber: d.trackingNumber ?? '',
@@ -96,7 +97,7 @@ export default function DeliveryManageModal({ open, mode, deliveryId, onClose, o
           ) : (
             <>
               <div className={m.fieldRow}>
-                <Row label="수령인" value={data?.recipientName} field="recipientName" />
+                <Row label="수령인" value={data?.receiverName} field="receiverName" />
                 <Row label="전화번호" value={normalizePhone(data?.phoneNumber)} field="phoneNumber" />
               </div>
               <Row label="주소" value={data?.address} field="address" />
@@ -104,7 +105,7 @@ export default function DeliveryManageModal({ open, mode, deliveryId, onClose, o
                 <Row label="배송 상태" value={data?.deliveryStatus} field="status" />
                 <Row label="운송장 번호" value={data?.trackingNumber} field="trackingNumber" />
               </div>
-              <Row label="결제 금액" value={data?.payment?.totalAmount ? `${Number(data.payment.totalAmount).toLocaleString()}원` : '-'} />
+              <Row label="결제 금액" value={data?.totalAmount ? `${Number(data.totalAmount).toLocaleString()}원` : '-'} />
             </>
           )}
         </div>

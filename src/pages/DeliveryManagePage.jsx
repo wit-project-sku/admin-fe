@@ -4,22 +4,22 @@ import { fetchAllDeliveriesAdmin } from '@apis/deliveryApi';
 import DeliveryManageModal from '@modals/DeliveryManageModal';
 
 const STATUS_FILTERS = [
-  { key: 'all', label: '전체' },
-  { key: 'ORDERED', label: '주문완료' },
-  { key: 'READY', label: '배송준비' },
-  { key: 'SHIPPING', label: '배송중' },
-  { key: 'COMPLETE', label: '배송완료' },
-  { key: 'PICKED_UP', label: '직접수령' },
-  { key: 'CANCEL', label: '취소' },
+  { key: 'all',        label: '전체' },
+  { key: 'ORDERED',    label: '주문완료' },
+  { key: 'READY',      label: '배송준비' },
+  { key: 'DELIVERING', label: '배송중' },    // 변경
+  { key: 'COMPLETED',  label: '배송완료' },  // 변경
+  { key: 'PICKED_UP',  label: '직접수령' },
+  { key: 'CANCELED',   label: '취소' },      // 변경
 ];
 
 const STATUS_MAP = {
-  PICKED_UP: { label: '직접수령', cls: 'badgeGray' },
-  ORDERED:   { label: '주문완료', cls: 'badgeAmber' },
-  READY:     { label: '배송준비', cls: 'badgeBlue' },
-  SHIPPING:  { label: '배송중',   cls: 'badgeBlue' },
-  COMPLETE:  { label: '배송완료', cls: 'badgeGreen' },
-  CANCEL:    { label: '취소',     cls: 'badgeRed' },
+  DELIVERING: { label: '배송중',   cls: 'badgeBlue' },   // SHIPPING → DELIVERING
+  COMPLETED:  { label: '배송완료', cls: 'badgeGreen' },  // COMPLETE → COMPLETED
+  CANCELED:   { label: '취소',     cls: 'badgeRed' },    // CANCEL → CANCELED
+  PICKED_UP:  { label: '직접수령', cls: 'badgeGray' },
+  ORDERED:    { label: '주문완료', cls: 'badgeAmber' },
+  READY:      { label: '배송준비', cls: 'badgeBlue' },
 };
 
 const normalizePhone = (v) => {
@@ -62,7 +62,7 @@ export default function DeliveryManagePage() {
     if (filter !== 'all') list = list.filter((d) => st(d) === filter);
     const kw = search.trim().toLowerCase();
     if (kw) list = list.filter((d) =>
-      (d.recipientName ?? '').toLowerCase().includes(kw) ||
+      (d.receiverName ?? '').toLowerCase().includes(kw) ||
       normalizePhone(d.phoneNumber).includes(kw)
     );
     return list;
@@ -118,20 +118,19 @@ export default function DeliveryManagePage() {
             ) : displayed.length === 0 ? (
               <tr><td colSpan={6} style={{ padding:'36px', textAlign:'center', color:'var(--text-muted)', fontSize:12 }}>배송 내역이 없습니다.</td></tr>
             ) : displayed.map((d) => {
-              const info = si(d);
-              const amt = d.payment?.totalAmount ?? d.totalAmount;
+              const info = si(d);              
               return (
-                <tr key={d.id} className={shared.tr}>
-                  <td className={`${shared.td} ${shared.tdMono}`}>{`DEL-${String(d.id).padStart(3,'0')}`}</td>
+                <tr key={d.deliveryId} className={shared.tr}>
+                  <td className={`${shared.td} ${shared.tdMono}`}>{`DEL-${String(d.deliveryId).padStart(3,'0')}`}</td>
                   <td className={shared.td}>
-                    <div className={shared.tdBold}>{d.recipientName ?? '-'}</div>
+                    <div className={shared.tdBold}>{d.receiverName ?? '-'}</div>
                     <div className={shared.tdSub}>{normalizePhone(d.phoneNumber)}</div>
                   </td>
                   <td className={`${shared.td} ${shared.tdMuted}`} style={{ maxWidth: 200, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
                     {d.address ?? '-'}
                   </td>
                   <td className={`${shared.td} ${shared.tdRight} ${shared.tdBold}`}>
-                    {amt ? `${Number(amt).toLocaleString()}원` : '-'}
+                     {d.totalAmount ? `${Number(d.totalAmount).toLocaleString()}원` : '-'}
                   </td>
                   <td className={`${shared.td} ${shared.tdCenter}`}>
                     <span className={`${shared.badge} ${shared[info.cls]}`}>{info.label}</span>
@@ -165,7 +164,7 @@ export default function DeliveryManagePage() {
         <DeliveryManageModal
           open={showModal}
           mode={modalMode}
-          deliveryId={selected?.id}
+          deliveryId={selected?.deliveryId}
           onClose={() => setShowModal(false)}
           onSuccess={() => { setShowModal(false); fetch(); }}
         />
