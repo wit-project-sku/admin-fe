@@ -1,0 +1,168 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 20px;
+  backdrop-filter: blur(2px);
+}
+
+.modal {
+  background: white;
+  border-radius: 18px;
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  animation: modalIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border);
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 900;
+  color: var(--text-primary);
+}
+
+.closeBtn {
+  width: 28px;
+  height: 28px;
+  background: var(--bg-page);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  transition: all 0.15s;
+}
+
+.body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* 정보 그룹화를 위한 섹션 */
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sectionTitle {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+.fieldRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.valueText {
+  font-size: 13px;
+  /* 수정한 부분: font-weight를 600에서 400(또는 500)으로 변경하여 볼드 제거 */
+  font-weight: 500;
+  color: var(--text-primary);
+  padding: 8px 12px;
+  background: var(--bg-page);
+  border-radius: 8px;
+  border: 1px solid var(--border-md);
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+}
+
+/* 금액 강조 부분도 일반 굵기로 변경하거나 살짝만 강조 */
+.amount {
+  font-size: 15px;
+  font-weight: 600; /* 상품 관리 모달의 일반 텍스트 느낌으로 조정 */
+  color: var(--text-primary);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.productList {
+  background: var(--bg-page);
+  border-radius: 10px;
+  border: 1px solid var(--border-md);
+  overflow: hidden;
+}
+
+.productItem {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+
+.productItem:last-child {
+  border-bottom: none;
+}
+
+.footer {
+  padding: 16px 22px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* 닫기 버튼 가운데 정렬 보완 */
+.footer button {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* 텍스트 가로 중앙 정렬 */
+  text-align: center;
+  min-width: 80px;
+}

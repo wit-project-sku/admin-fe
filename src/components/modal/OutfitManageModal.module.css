@@ -1,0 +1,330 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.modal {
+  background: #fff;
+  border-radius: 18px;
+  width: 100%;
+  max-width: 640px; /* 상품 모달과 유사한 폭으로 조정 */
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+.header {
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #1e293b;
+}
+
+.body {
+  padding: 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.mainFields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.imageSection {
+  margin-top: 10px;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 20px;
+}
+
+/* 의상 미리보기 이미지 스타일 */
+.imageThumbnail {
+  width: 100px; /* 고정 크기 */
+  height: 100px;
+  position: relative;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+}
+
+.imagesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); /* 격자형 배치 */
+  gap: 12px;
+  margin-top: 8px;
+}
+
+/* 2번 요청: 사진은 cover 옵션으로 렌더링 */
+.previewImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* 영역 꽉 채우기 */
+  border-radius: 12px;
+}
+
+/* 3번 요청: 이미지 우측 상단 둥근 빨간색 x 버튼 */
+.deleteBtn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 18px;
+  height: 18px;
+  background: #ef4444; /* 세련된 레드 */
+  color: white;
+  border: none;
+  border-radius: 50%; /* 둥글게 */
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  z-index: 10;
+  transition: all 0.15s;
+}
+
+.deleteBtn:hover {
+  background: #dc2626;
+  transform: scale(1.1);
+}
+
+/* 1번 요청: 1개 등록 시 + 영역 숨김 처리를 위한 기본 스타일 */
+.imageUploadArea {
+  width: 100px;
+  height: 100px;
+  border: 2px dashed #e2e8f0;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.2s;
+}
+
+.imageUploadArea:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.sideUpload {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gridRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.required {
+  color: #ef4444;
+}
+
+.input,
+.select,
+.textarea {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #1e293b;
+  outline: none;
+}
+
+.textarea {
+  min-height: 100px;
+  resize: none;
+}
+
+/* 키오스크 그리드 */
+.kioskGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.kioskItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.kioskActive {
+  background: #f0f7ff;
+  border-color: #3b82f6;
+  color: #2563eb;
+}
+
+.kioskCheck {
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 4px;
+}
+
+.kioskChecked {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+/* 이미지 업로드 박스 */
+.imageUploadBox {
+  width: 100%;
+  margin-top: 5px;
+  height: 160px; /* 고정 높이로 축소 */
+  border: 2px dashed #e2e8f0;
+  border-radius: 14px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+  overflow: hidden;
+}
+
+.uploadPlaceholder {
+  text-align: center;
+}
+
+.uploadPlaceholder p {
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+  margin-top: 10px;
+}
+
+.uploadPlaceholder span {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.previewImg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* cover에서 contain으로 변경 */
+  background: #f1f5f9; /* 여백 발생 시 배경색 */
+  border-radius: 12px;
+}
+
+.reUploadBtn {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #e2e8f0;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.reUploadBtn:hover {
+  background: #fff;
+  border-color: #cbd5e1;
+}
+
+.fileInput {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 5;
+}
+
+.footer {
+  padding: 18px 24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.footer button {
+  min-width: 100px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px; /* 취소/확인 버튼 텍스트 크기 통일 */
+  font-weight: 600;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btnCancel {
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #64748b;
+}
+/* 1번 요청: 닫기 버튼 스타일을 다른 모달(상품/배송)과 동일하게 수정 */
+.closeBtn {
+  width: 28px;
+  height: 28px;
+  background: var(--bg-page);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  font-size: 14px;
+  transition: all 0.15s;
+}
+.closeBtn:hover {
+  background: var(--border);
+}
+
+.btnSubmit {
+  background: var(--text-primary);
+  color: #fff;
+  border: none;
+}

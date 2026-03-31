@@ -1,0 +1,237 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 20px;
+  backdrop-filter: blur(2px);
+}
+
+.modal {
+  background: white;
+  border-radius: 18px;
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  animation: modalIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modalLg {
+  max-width: 640px; /* 주문 내역이 포함되므로 조금 더 넓게 설정 */
+}
+
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border);
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 900;
+  color: var(--text-primary);
+}
+
+.closeBtn {
+  width: 28px;
+  height: 28px;
+  background: var(--bg-page);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+}
+
+.body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fieldRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fieldFull {
+  grid-column: span 2;
+}
+
+.label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+/* 입력창 스타일 */
+.input,
+.select {
+  background: var(--bg-page);
+  border: 1px solid var(--border-md);
+  border-radius: 9px;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--text-primary);
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.valueText {
+  font-size: 13px;
+  font-weight: 500; /* 일반체로 통일 */
+  color: var(--text-primary);
+  padding: 10px 12px;
+  background: var(--bg-page);
+  border-radius: 9px;
+  border: 1px solid var(--border-md);
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+/* 주문 내역 아이템 카드 보완 */
+.orderItem {
+  background: #f8fafc;
+  padding: 18px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  position: relative;
+  padding-left: 42px;
+}
+
+.orderItemDot {
+  position: absolute;
+  left: 18px;
+  top: 24px;
+  width: 6px;
+  height: 6px;
+  background: #3b82f6;
+  border-radius: 50%;
+}
+
+.orderItemName {
+  font-size: 14px;
+  font-weight: 500; /* 일반체 느낌으로 조정 */
+  color: #1e293b;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 8px;
+}
+
+.orderItemInfo {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+/* 이미지의 수량/가격 태그 스타일 */
+.infoTag {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 11px;
+  color: #64748b;
+  display: flex;
+  gap: 8px;
+}
+
+.infoTag b {
+  font-weight: 500;
+  color: #1e293b;
+}
+/* 푸터 버튼 레이아웃 */
+.footer {
+  padding: 18px 22px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end; /* 버튼 우측 정렬 */
+  gap: 10px;
+}
+
+/* 상세 보기와 수정 모드에서 버튼 스타일을 동일하게 유지 */
+.footer button {
+  width: 100px; /* 고정 사이즈 적용 */
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center; /* 텍스트 가로 중앙 정렬 */
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+/* shared.btnPrimary 커스텀 (텍스트 중앙 정렬 보장) */
+.btnPrimaryCustom {
+  background: var(--text-primary);
+  color: white;
+  border: none;
+}
+
+.btnPrimaryCustom:hover {
+  background: #1e293b;
+}
+
+.btnPrimaryCustom:disabled {
+  background: var(--border-md);
+  cursor: not-allowed;
+}
+
+/* 수정 모드에서 버튼 1:1 비율을 위해 추가 */
+.footerEdit {
+  justify-content: stretch;
+}
+
+.footerEdit button {
+  flex: 1;
+  justify-content: center;
+}
+
+.footerEdit button {
+  flex: 1;
+  justify-content: center;
+}
+
+.footerView {
+  justify-content: center; /* 상세 보기 시 버튼 중앙 배치 */
+}

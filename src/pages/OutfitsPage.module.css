@@ -1,3 +1,33 @@
+.pageContainer {
+  width: 100%;
+  overflow-x: hidden; /* 페이지 전체 가로스크롤 방지 */
+}
+
+/* 1번 요청: 테이블 가로 스크롤 처리 */
+.tableResponsive {
+  width: 100%;
+  overflow-x: auto; /* 창이 작아지면 테이블 내부에 스크롤 생성 */
+  -webkit-overflow-scrolling: touch;
+}
+
+.tableResponsive table {
+  min-width: 900px; /* 테이블이 뭉개지지 않는 최소 너비 확보 */
+}
+
+/* 4번 요청: Preview 이미지 사이즈 및 스타일 수정 */
+.previewWrapper {
+  width: 34px;
+  height: 40px;
+  margin: 0 auto;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .viewToggle {
   display: flex;
   gap: 3px;
@@ -15,18 +45,39 @@
   font-size: 11px;
   font-weight: 700;
   cursor: pointer;
-  transition: all .15s;
+  transition: all 0.15s;
 }
-.toggleBtn:hover { background: var(--border); }
-.toggleBtnActive { background: var(--text-primary) !important; color: white !important; }
-.toggleBtnRegister { background: #2563eb !important; color: white !important; }
+.toggleBtn:hover {
+  background: var(--border);
+}
+.toggleBtnActive {
+  background: var(--text-primary) !important;
+  color: white !important;
+}
+.toggleBtnRegister {
+  background: #2563eb !important;
+  color: white !important;
+}
+.tableThumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.filterCount {
+  margin-left: 4px;
+  font-size: 11px;
+  opacity: 0.6;
+}
+
 .countBadge {
   background: var(--blue-bg);
   color: var(--blue-text);
   font-size: 10px;
   font-weight: 700;
-  padding: 1px 8px;
+  padding: 2px 8px;
   border-radius: 20px;
+  margin-left: 8px;
 }
 .registerGrid {
   display: grid;
@@ -63,7 +114,7 @@
   font-weight: 700;
   color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: .1em;
+  letter-spacing: 0.1em;
 }
 .input {
   background: var(--bg-page);
@@ -74,12 +125,16 @@
   font-weight: 500;
   color: var(--text-primary);
   outline: none;
-  transition: border-color .15s;
+  transition: border-color 0.15s;
   width: 100%;
   box-sizing: border-box;
 }
-.input:focus { border-color: var(--accent); }
-.input::placeholder { color: var(--text-muted); }
+.input:focus {
+  border-color: var(--accent);
+}
+.input::placeholder {
+  color: var(--text-muted);
+}
 .kioskGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -97,10 +152,17 @@
   font-size: 11px;
   font-weight: 700;
   color: var(--text-secondary);
-  transition: all .15s;
+  transition: all 0.15s;
 }
-.kioskItem:hover { border-color: var(--accent); color: var(--accent); }
-.kioskActive { background: var(--blue-bg) !important; border-color: #93c5fd !important; color: var(--blue-text) !important; }
+.kioskItem:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.kioskActive {
+  background: var(--blue-bg) !important;
+  border-color: #93c5fd !important;
+  color: var(--blue-text) !important;
+}
 .kioskCheck {
   width: 14px;
   height: 14px;
@@ -108,9 +170,12 @@
   border: 1.5px solid var(--border-md);
   background: white;
   flex-shrink: 0;
-  transition: all .15s;
+  transition: all 0.15s;
 }
-.kioskChecked { background: var(--accent) !important; border-color: var(--accent) !important; }
+.kioskChecked {
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+}
 .dateRow {
   display: flex;
   align-items: center;
@@ -141,9 +206,11 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: border-color .15s;
+  transition: border-color 0.15s;
 }
-.imageUpload:hover { border-color: var(--accent); }
+.imageUpload:hover {
+  border-color: var(--accent);
+}
 .uploadPlaceholder {
   display: flex;
   flex-direction: column;

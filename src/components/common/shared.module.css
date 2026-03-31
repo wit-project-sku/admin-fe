@@ -74,7 +74,9 @@
   white-space: nowrap;
 }
 
-.filterBtn:hover { background: var(--border-md); }
+.filterBtn:hover {
+  background: var(--border-md);
+}
 .filterBtnActive {
   background: var(--text-primary) !important;
   color: white !important;
@@ -102,7 +104,9 @@
   width: 100%;
 }
 
-.searchBox input::placeholder { color: var(--text-muted); }
+.searchBox input::placeholder {
+  color: var(--text-muted);
+}
 
 /* Table */
 .table {
@@ -125,16 +129,24 @@
   white-space: nowrap;
 }
 
-.th:last-child { text-align: right; }
-.thCenter { text-align: center !important; }
-.thRight { text-align: right !important; }
+.th:last-child {
+  text-align: right;
+}
+.thCenter {
+  text-align: center !important;
+}
+.thRight {
+  text-align: right !important;
+}
 
 .tr {
   border-top: 1px solid var(--border);
   transition: background 0.1s;
 }
 
-.tr:hover { background: #fafbff; }
+.tr:hover {
+  background: #fafbff;
+}
 
 .td {
   padding: 13px 22px;
@@ -150,9 +162,15 @@
   font-weight: 700;
 }
 
-.tdMuted { color: var(--text-secondary); }
-.tdRight { text-align: right; }
-.tdCenter { text-align: center; }
+.tdMuted {
+  color: var(--text-secondary);
+}
+.tdRight {
+  text-align: right;
+}
+.tdCenter {
+  text-align: center;
+}
 
 .tdBold {
   font-size: 12px;
@@ -178,13 +196,34 @@
   white-space: nowrap;
 }
 
-.badgeGreen  { background: var(--green-bg);  color: var(--green-text); }
-.badgeRed    { background: var(--red-bg);    color: var(--red-text); }
-.badgeAmber  { background: var(--amber-bg);  color: var(--amber-text); }
-.badgeBlue   { background: var(--blue-bg);   color: var(--blue-text); }
-.badgeGray   { background: var(--gray-bg);   color: var(--gray-text); }
-.badgeOrange { background: var(--orange-bg); color: var(--orange-text); }
-.badgePurple { background: var(--purple-bg); color: var(--purple-text); }
+.badgeGreen {
+  background: var(--green-bg);
+  color: var(--green-text);
+}
+.badgeRed {
+  background: var(--red-bg);
+  color: var(--red-text);
+}
+.badgeAmber {
+  background: var(--amber-bg);
+  color: var(--amber-text);
+}
+.badgeBlue {
+  background: var(--blue-bg);
+  color: var(--blue-text);
+}
+.badgeGray {
+  background: var(--gray-bg);
+  color: var(--gray-text);
+}
+.badgeOrange {
+  background: var(--orange-bg);
+  color: var(--orange-text);
+}
+.badgePurple {
+  background: var(--purple-bg);
+  color: var(--purple-text);
+}
 
 /* Buttons */
 .btnPrimary {
@@ -202,8 +241,12 @@
   transition: all 0.15s;
   white-space: nowrap;
 }
-.btnPrimary:hover { background: #1e293b; }
-.btnPrimary:active { transform: scale(0.98); }
+.btnPrimary:hover {
+  background: #1e293b;
+}
+.btnPrimary:active {
+  transform: scale(0.98);
+}
 
 .btnGreen {
   display: flex;
@@ -219,7 +262,9 @@
   cursor: pointer;
   transition: all 0.15s;
 }
-.btnGreen:hover { background: #16a34a; }
+.btnGreen:hover {
+  background: #16a34a;
+}
 
 .btnOutline {
   background: var(--bg-page);
@@ -232,7 +277,10 @@
   cursor: pointer;
   transition: all 0.15s;
 }
-.btnOutline:hover { border-color: var(--border-md); color: var(--text-primary); }
+.btnOutline:hover {
+  border-color: var(--border-md);
+  color: var(--text-primary);
+}
 
 .btnEdit {
   width: 28px;
@@ -246,7 +294,10 @@
   justify-content: center;
   transition: all 0.15s;
 }
-.btnEdit:hover { border-color: var(--blue-text); background: var(--blue-bg); }
+.btnEdit:hover {
+  border-color: var(--blue-text);
+  background: var(--blue-bg);
+}
 
 .btnDelete {
   width: 28px;
@@ -260,7 +311,9 @@
   justify-content: center;
   transition: all 0.15s;
 }
-.btnDelete:hover { background: #fecaca; }
+.btnDelete:hover {
+  background: #fecaca;
+}
 
 .actionGroup {
   display: flex;
@@ -304,7 +357,9 @@
   justify-content: center;
   transition: all 0.15s;
 }
-.pageBtn:hover { border-color: var(--border-md); }
+.pageBtn:hover {
+  border-color: var(--border-md);
+}
 .pageBtnActive {
   background: var(--text-primary) !important;
   color: white !important;
@@ -365,8 +420,13 @@
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
 }
 
 .liveText {

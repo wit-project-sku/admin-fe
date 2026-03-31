@@ -1,73 +1,103 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import shared from '@commons/shared.module.css';
 import s from './OutfitsPage.module.css';
-import { getAllProducts, createProduct } from '@apis/productApi';
+import { getAllOutfits, deleteOutfit } from '@apis/outfitApi';
 import { getKiosks } from '@apis/kioskApi';
 import { getCategories } from '@apis/categoryApi';
+import OutfitManageModal from '@modals/OutfitManageModal';
+import DeleteModal from '@modals/DeleteModal';
+
+const DUMMY_OUTFITS = [
+  {
+    id: 1,
+    name: '궁중 당의 한복 A세트',
+    categoryName: '여성 한복',
+    price: 159000,
+    stock: 5,
+    status: 'ACTIVE',
+    kioskIds: [1, 2],
+    images: [{ imageUrl: 'https://picsum.photos/id/101/200/300' }],
+  },
+  {
+    id: 2,
+    name: '선비 도포 세트 (남성)',
+    categoryName: '남성 한복',
+    price: 129000,
+    stock: 0,
+    status: 'INACTIVE',
+    kioskIds: [3],
+    images: [{ imageUrl: 'https://picsum.photos/id/102/200/300' }],
+  },
+  {
+    id: 3,
+    name: '아동용 색동저고리',
+    categoryName: '아동 한복',
+    price: 89000,
+    stock: 12,
+    status: 'ACTIVE',
+    kioskIds: [1, 4],
+    images: [{ imageUrl: 'https://picsum.photos/id/103/200/300' }],
+  },
+];
+
+const DUMMY_KIOSKS = [
+  { id: 1, name: '화성휴게소(상)' },
+  { id: 2, name: '화성휴게소(하)' },
+  { id: 3, name: '인사동 본점' },
+  { id: 4, name: '강남 팝업' },
+  { id: 5, name: '제주공항점' },
+];
 
 export default function OutfitsPage() {
-  const [view, setView] = useState('list');
-  const [products, setProducts] = useState([]);
-  const [kiosks, setKiosks] = useState([]);
+  const [outfits, setOutfits] = useState(DUMMY_OUTFITS);
+  const [kiosks, setKiosks] = useState(DUMMY_KIOSKS);
   const [categories, setCategories] = useState([]);
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL'); // 필터링 상태 추가
+
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const pageSize = 10;
 
-  const [form, setForm] = useState({
-    name: '',
-    subTitle: '',
-    description: '',
-    price: '',
-    stock: '',
-    categoryId: '',
-    kioskIds: [],
-    images: [],
-    status: 'ON_SALE',
-  });
+  // 모달 제어 상태
+  const [modalMode, setModalMode] = useState('create'); // 'create' or 'edit'
+  const [selectedId, setSelectedId] = useState(null);
+  const [showManageModal, setShowManageModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  // 키오스크 목록 조회
-  useEffect(() => {
-    getKiosks()
-      .then((res) => {
-        const data = res?.data ?? res;
-        setKiosks(Array.isArray(data) ? data : []);
-      })
-      .catch(console.error);
+  // 기초 데이터 로드
+  const fetchBasics = useCallback(async () => {
+    try {
+      const [kRes, cRes] = await Promise.all([getKiosks(), getCategories()]);
+      setKiosks(kRes?.data ?? kRes ?? []);
+      setCategories(cRes?.data ?? cRes ?? []);
+    } catch (e) {
+      console.error(e);
+    }
   }, []);
 
-  // 카테고리 목록 조회
-  useEffect(() => {
-    getCategories()
-      .then((res) => {
-        const data = res?.data ?? res;
-        setCategories(Array.isArray(data) ? data : []);
-      })
-      .catch(console.error);
-  }, []);
-
-  // 상품(의상) 목록 조회
-  const fetchProducts = useCallback(async () => {
+  // 의상 목록 로드
+  const fetchOutfits = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await getAllProducts(page, pageSize);
+      const res = await getAllOutfits(page, pageSize);
       const payload = res?.data?.data ?? res?.data ?? res;
-      setProducts(Array.isArray(payload?.content) ? payload.content : []);
+      setOutfits(Array.isArray(payload?.content) ? payload.content : []);
       setTotalPages(payload?.totalPages ?? 1);
     } catch {
-      setProducts([]);
+      setOutfits([]);
     } finally {
       setLoading(false);
     }
   }, [page]);
 
   useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
+    // fetchBasics();
+    // fetchOutfits();
+  }, [fetchBasics, fetchOutfits]);
 
-  // 키오스크 ID → 이름 변환 헬퍼
   const kioskNameById = useMemo(() => {
     return kiosks.reduce((acc, k) => {
       acc[k.id] = k.name;
@@ -75,59 +105,43 @@ export default function OutfitsPage() {
     }, {});
   }, [kiosks]);
 
+  // 통합 검색 (의상명, No, 카테고리)
   const displayed = useMemo(() => {
-    if (!search.trim()) return products;
-    const kw = search.toLowerCase();
-    return products.filter((p) => (p.name ?? '').toLowerCase().includes(kw));
-  }, [products, search]);
+    return outfits.filter((item) => {
+      const matchesSearch = item.name.toLowerCase().includes(search.toLowerCase());
+      const matchesStatus = statusFilter === 'ALL' || item.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [outfits, search, statusFilter]);
 
-  const toggleKiosk = (id) =>
-    setForm((f) => ({
-      ...f,
-      kioskIds: f.kioskIds.includes(id) ? f.kioskIds.filter((k) => k !== id) : [...f.kioskIds, id],
-    }));
-
-  const handleImageAdd = (e) => {
-    const files = Array.from(e.target.files ?? []);
-    setForm((f) => ({ ...f, images: [...f.images, ...files] }));
+  const openCreateModal = () => {
+    setModalMode('create');
+    setSelectedId(null);
+    setShowManageModal(true);
   };
 
-  const handleRegister = async (e) => {
-    e.preventDefault();
+  const openEditModal = (outfit) => {
+    setModalMode('edit');
+    setSelectedId(outfit.id);
+    setShowManageModal(true);
+  };
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
     try {
-      const body = {
-        name: form.name,
-        subTitle: form.subTitle,
-        description: form.description,
-        price: Number(form.price),
-        stock: Number(form.stock),
-        status: form.status,
-        kioskIds: form.kioskIds,
-      };
-      await createProduct(form.categoryId, body, form.images);
-      setForm({
-        name: '',
-        subTitle: '',
-        description: '',
-        price: '',
-        stock: '',
-        categoryId: '',
-        kioskIds: [],
-        images: [],
-        status: 'ON_SALE',
-      });
-      setView('list');
-      fetchProducts();
-    } catch (err) {
-      console.error('의상 등록 실패:', err);
-      alert('등록에 실패했습니다.');
+      await deleteOutfit(selectedId);
+      setShowDeleteModal(false);
+      fetchOutfits();
+    } catch {
+      alert('삭제에 실패했습니다.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
   const STATUS_MAP = {
-    ON_SALE: { label: 'Active', cls: 'badgeGreen' },
-    SOLD_OUT: { label: 'Sold Out', cls: 'badgeOrange' },
-    HIDDEN: { label: 'Inactive', cls: 'badgeGray' },
+    ACTIVE: { label: '활성화', cls: 'badgeGreen' },
+    INACTIVE: { label: '비활성화', cls: 'badgeGray' },
   };
 
   return (
@@ -135,327 +149,193 @@ export default function OutfitsPage() {
       <div className={shared.pageHeader}>
         <div>
           <h1 className={shared.pageTitle}>의상 관리 시스템</h1>
-          <p className={shared.pageSubtitle}>Inventory & Registration</p>
+          <p className={shared.pageSubtitle}>Inventory & Management</p>
         </div>
-        <div className={s.viewToggle}>
-          <button
-            className={`${s.toggleBtn} ${view === 'list' ? s.toggleBtnActive : ''}`}
-            onClick={() => setView('list')}
+        {/* 1번 요청: 등록 버튼으로 단일화 */}
+        <button className={shared.btnPrimary} onClick={openCreateModal}>
+          <svg
+            width='14'
+            height='14'
+            viewBox='0 0 24 24'
+            fill='none'
+            stroke='currentColor'
+            strokeWidth='3'
+            style={{ marginRight: 6 }}
           >
-            의상 목록
-          </button>
-          <button
-            className={`${s.toggleBtn} ${view === 'register' ? s.toggleBtnRegister : ''}`}
-            onClick={() => setView('register')}
-          >
-            신규 등록
-          </button>
-        </div>
+            <line x1='12' y1='5' x2='12' y2='19' />
+            <line x1='5' y1='12' x2='19' y2='12' />
+          </svg>
+          의상 등록
+        </button>
       </div>
 
-      {view === 'list' ? (
-        <div className={shared.card}>
-          <div className={shared.cardHead}>
-            <span className={shared.cardTitle}>
-              현재 등록된 의상
-              <span className={s.countBadge}>{products.length}</span>
-            </span>
-            <div className={shared.searchBox}>
-              <svg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='#94a3b8' strokeWidth='2'>
-                <circle cx='11' cy='11' r='8' />
-                <line x1='21' y1='21' x2='16.65' y2='16.65' />
-              </svg>
-              <input placeholder='의상명 검색...' value={search} onChange={(e) => setSearch(e.target.value)} />
-            </div>
+      <div className={shared.card}>
+        <div className={shared.cardHead}>
+          <div className={shared.filterGroup}>
+            <button
+              className={`${shared.filterBtn} ${statusFilter === 'ALL' ? shared.filterBtnActive : ''}`}
+              onClick={() => setStatusFilter('ALL')}
+            >
+              전체 <span className={shared.filterCount}>{outfits.length}</span>
+            </button>
+            <button
+              className={`${shared.filterBtn} ${statusFilter === 'ACTIVE' ? shared.filterBtnActive : ''}`}
+              onClick={() => setStatusFilter('ACTIVE')}
+            >
+              활성화 <span className={shared.filterCount}>{outfits.filter((o) => o.status === 'ACTIVE').length}</span>
+            </button>
+            <button
+              className={`${shared.filterBtn} ${statusFilter === 'INACTIVE' ? shared.filterBtnActive : ''}`}
+              onClick={() => setStatusFilter('INACTIVE')}
+            >
+              비활성화{' '}
+              <span className={shared.filterCount}>{outfits.filter((o) => o.status === 'INACTIVE').length}</span>
+            </button>
           </div>
+          <div className={shared.searchBox} style={{ minWidth: 260 }}>
+            <svg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='#94a3b8' strokeWidth='2'>
+              <circle cx='11' cy='11' r='8' />
+              <line x1='21' y1='21' x2='16.65' y2='16.65' />
+            </svg>
+            <input
+              placeholder='의상명, ID, 카테고리 검색...'
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+        </div>
 
+        <div className={s.tableResponsive}>
           <table className={shared.table}>
             <thead className={shared.thead}>
               <tr>
-                <th className={shared.th}>No</th>
-                <th className={shared.th}>Preview</th>
-                <th className={shared.th}>의상명</th>
-                <th className={shared.th}>카테고리</th>
-                <th className={shared.th}>설치 키오스크</th>
+                <th className={`${shared.th} ${shared.thCenter}`}>ID</th>
+                <th className={`${shared.th} ${shared.thCenter}`}>Preview</th>
+                <th className={`${shared.th} ${shared.thCenter}`}>의상명</th>
+                <th className={`${shared.th} ${shared.thCenter}`}>카테고리</th>
+                <th className={`${shared.th} ${shared.thCenter}`}>설치 키오스크</th>
                 <th className={`${shared.th} ${shared.thRight}`}>가격</th>
                 <th className={`${shared.th} ${shared.thCenter}`}>재고</th>
-                <th className={`${shared.th} ${shared.thRight}`}>상태</th>
+                <th className={`${shared.th} ${shared.thCenter}`}>상태</th>
+                <th className={`${shared.th} ${shared.thRight}`}>관리</th>
               </tr>
             </thead>
             <tbody>
-              {loading ? (
-                <tr>
-                  <td
-                    colSpan={8}
-                    style={{ padding: '36px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 12 }}
-                  >
-                    불러오는 중...
-                  </td>
-                </tr>
-              ) : displayed.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={8}
-                    style={{ padding: '36px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 12 }}
-                  >
-                    등록된 의상이 없습니다.
-                  </td>
-                </tr>
-              ) : (
-                displayed.map((p, i) => {
-                  const si = STATUS_MAP[p.status] ?? { label: p.status, cls: 'badgeGray' };
-                  return (
-                    <tr key={p.id} className={shared.tr}>
-                      <td className={`${shared.td} ${shared.tdMuted}`}>
-                        #{String((page - 1) * pageSize + i + 1).padStart(3, '0')}
-                      </td>
-                      <td className={shared.td}>
-                        {p.images?.[0]?.imageUrl ? (
-                          <img
-                            src={p.images[0].imageUrl}
-                            alt={p.name}
-                            style={{
-                              width: 44,
-                              height: 52,
-                              objectFit: 'cover',
-                              borderRadius: 8,
-                              border: '1px solid var(--border)',
-                            }}
-                          />
-                        ) : (
-                          <div
-                            style={{
-                              width: 44,
-                              height: 52,
-                              borderRadius: 8,
-                              background: 'var(--bg-page)',
-                              border: '1px solid var(--border)',
-                            }}
-                          />
-                        )}
-                      </td>
-                      <td className={shared.td}>
-                        <div className={shared.tdBold}>{p.name}</div>
-                        {p.subTitle && <div className={shared.tdSub}>{p.subTitle}</div>}
-                      </td>
-                      <td className={shared.td}>
-                        <span className={shared.badge} style={{ background: '#fdf4ff', color: '#9333ea' }}>
-                          {p.categoryName ?? '-'}
-                        </span>
-                      </td>
-                      <td className={shared.td}>
-                        <div className={shared.tagGroup}>
-                          {(p.kioskIds ?? []).map((id) => (
-                            <span key={id} className={shared.tag}>
-                              {kioskNameById[id] ?? `키오스크 ${id}`}
-                            </span>
-                          ))}
-                          {(p.kioskIds ?? []).length === 0 && <span className={shared.tag}>미배정</span>}
-                        </div>
-                      </td>
-                      <td className={`${shared.td} ${shared.tdRight} ${shared.tdBold}`}>
-                        {p.price?.toLocaleString()}원
-                      </td>
-                      <td
-                        className={`${shared.td} ${shared.tdCenter}`}
-                        style={{ color: p.stock === 0 ? '#ef4444' : 'var(--text-primary)', fontWeight: 700 }}
-                      >
-                        {p.stock}
-                      </td>
-                      <td className={`${shared.td} ${shared.tdRight}`}>
-                        <span className={`${shared.badge} ${shared[si.cls]}`}>{si.label}</span>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
+              {displayed.map((p, i) => {
+                const si = STATUS_MAP[p.status] || STATUS_MAP.INACTIVE;
+                return (
+                  <tr key={p.id} className={shared.tr}>
+                    <td className={`${shared.td} ${shared.tdMuted} ${shared.tdCenter}`}>
+                      #{String(i + 1).padStart(3, '0')}
+                    </td>
+                    <td className={`${shared.td} ${shared.tdCenter}`}>
+                      {/* 4번 요청: 더 작고 둥근 Preview 이미지 스타일 */}
+                      <div className={s.previewWrapper}>
+                        <img src={p.images?.[0]?.imageUrl} alt='' className={s.tableThumb} />
+                      </div>
+                    </td>
+                    <td className={`${shared.td} ${shared.tdCenter}`}>
+                      <div className={shared.tdBold}>{p.name}</div>
+                    </td>
+                    <td className={`${shared.td} ${shared.tdCenter}`}>
+                      <span className={shared.badge} style={{ background: '#fdf4ff', color: '#9333ea' }}>
+                        {p.categoryName}
+                      </span>
+                    </td>
+                    <td className={`${shared.td} ${shared.tdCenter}`}>
+                      <div className={shared.tagGroup} style={{ justifyContent: 'center' }}>
+                        {(p.kioskIds ?? []).map((id) => (
+                          <span key={id} className={shared.tag}>
+                            {kioskNameById[id]}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                    <td className={`${shared.td} ${shared.tdRight}`}>{p.price?.toLocaleString()}원</td>
+                    <td className={`${shared.td} ${shared.tdCenter} ${shared.tdBold}`}>{p.stock}</td>
+                    <td className={`${shared.td} ${shared.tdCenter}`}>
+                      <span className={`${shared.badge} ${shared[si.cls]}`}>{si.label}</span>
+                    </td>
+                    <td className={shared.td}>
+                      <div className={shared.actionGroup} style={{ justifyContent: 'flex-end' }}>
+                        <button className={shared.btnEdit} onClick={() => openEditModal(p)}>
+                          <svg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='#3b82f6' strokeWidth='2'>
+                            <path d='M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7' />
+                            <path d='M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z' />
+                          </svg>
+                        </button>
+                        <button
+                          className={shared.btnDelete}
+                          onClick={() => {
+                            setSelectedId(p.id);
+                            setShowDeleteModal(true);
+                          }}
+                        >
+                          <svg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='#ef4444' strokeWidth='2'>
+                            <polyline points='3 6 5 6 21 6' />
+                            <path d='M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2' />
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
-
-          <div className={shared.pagination}>
-            <span className={shared.pageInfo}>총 {products.length}종</span>
-            <div className={shared.pageButtons}>
+        </div>
+        {/* 페이지네이션 중앙 정렬 */}
+        <div className={shared.pagination} style={{ position: 'relative' }}>
+          <span className={shared.pageInfo} style={{ position: 'absolute', left: '22px' }}>
+            총 {outfits.length}건
+          </span>
+          <div className={shared.pageButtons} style={{ margin: '0 auto' }}>
+            <button className={shared.pageBtn} onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>
+              ‹
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
               <button
-                className={shared.pageBtn}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
+                key={n}
+                className={`${shared.pageBtn} ${page === n ? shared.pageBtnActive : ''}`}
+                onClick={() => setPage(n)}
               >
-                ‹
+                {n}
               </button>
-              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map((n) => (
-                <button
-                  key={n}
-                  className={`${shared.pageBtn} ${page === n ? shared.pageBtnActive : ''}`}
-                  onClick={() => setPage(n)}
-                >
-                  {n}
-                </button>
-              ))}
-              <button
-                className={shared.pageBtn}
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-              >
-                ›
-              </button>
-            </div>
+            ))}
+            <button
+              className={shared.pageBtn}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+            >
+              ›
+            </button>
           </div>
         </div>
-      ) : (
-        <div className={s.registerGrid}>
-          <div className={shared.card} style={{ padding: '22px 24px' }}>
-            <h3 className={s.formTitle}>신규 의상 정보 입력</h3>
-            <form onSubmit={handleRegister} className={s.form}>
-              <div className={s.formRow}>
-                <div className={s.formField}>
-                  <label className={s.label}>의상 이름</label>
-                  <input
-                    required
-                    className={s.input}
-                    placeholder='예: 전통 한복 A'
-                    value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  />
-                </div>
-                <div className={s.formField}>
-                  <label className={s.label}>부제목</label>
-                  <input
-                    className={s.input}
-                    placeholder='예: 프리미엄 한복 컬렉션'
-                    value={form.subTitle}
-                    onChange={(e) => setForm({ ...form, subTitle: e.target.value })}
-                  />
-                </div>
-              </div>
+      </div>
 
-              <div className={s.formRow}>
-                <div className={s.formField}>
-                  <label className={s.label}>카테고리</label>
-                  <select
-                    required
-                    className={s.input}
-                    value={form.categoryId}
-                    onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
-                  >
-                    <option value=''>선택하세요</option>
-                    {categories.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className={s.formField}>
-                  <label className={s.label}>상태</label>
-                  <select
-                    className={s.input}
-                    value={form.status}
-                    onChange={(e) => setForm({ ...form, status: e.target.value })}
-                  >
-                    <option value='ON_SALE'>판매중</option>
-                    <option value='SOLD_OUT'>품절</option>
-                    <option value='HIDDEN'>숨김</option>
-                  </select>
-                </div>
-              </div>
+      {/* 관리 모달 (등록/수정) */}
+      {showManageModal && (
+        <OutfitManageModal
+          open={showManageModal}
+          mode={modalMode}
+          outfitId={selectedId}
+          onClose={() => setShowManageModal(false)}
+          onSuccess={() => {
+            setShowManageModal(false);
+            fetchOutfits();
+          }}
+        />
+      )}
 
-              <div className={s.formRow}>
-                <div className={s.formField}>
-                  <label className={s.label}>가격 (원)</label>
-                  <input
-                    required
-                    type='number'
-                    min={0}
-                    className={s.input}
-                    placeholder='0'
-                    value={form.price}
-                    onChange={(e) => setForm({ ...form, price: e.target.value })}
-                  />
-                </div>
-                <div className={s.formField}>
-                  <label className={s.label}>재고</label>
-                  <input
-                    required
-                    type='number'
-                    min={0}
-                    className={s.input}
-                    placeholder='0'
-                    value={form.stock}
-                    onChange={(e) => setForm({ ...form, stock: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className={s.formField}>
-                <label className={s.label}>설명</label>
-                <textarea
-                  className={s.input}
-                  placeholder='의상 설명을 입력하세요'
-                  style={{ minHeight: 72, resize: 'vertical' }}
-                  value={form.description}
-                  onChange={(e) => setForm({ ...form, description: e.target.value })}
-                />
-              </div>
-
-              <div className={s.formField}>
-                <label className={s.label}>설치 키오스크 선택</label>
-                <div className={s.kioskGrid}>
-                  {kiosks.map((k) => (
-                    <div
-                      key={k.id}
-                      className={`${s.kioskItem} ${form.kioskIds.includes(k.id) ? s.kioskActive : ''}`}
-                      onClick={() => toggleKiosk(k.id)}
-                    >
-                      <div className={`${s.kioskCheck} ${form.kioskIds.includes(k.id) ? s.kioskChecked : ''}`} />
-                      <span>{k.name}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <button type='submit' className={`${shared.btnPrimary} ${s.submitBtn}`}>
-                의상 등록 완료
-              </button>
-            </form>
-          </div>
-
-          <div className={shared.card} style={{ padding: '22px 24px' }}>
-            <label className={s.label} style={{ display: 'block', marginBottom: 10 }}>
-              이미지 업로드
-            </label>
-            <div className={s.imageUpload}>
-              {form.images.length > 0 ? (
-                <img
-                  src={URL.createObjectURL(form.images[0])}
-                  alt='preview'
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 10 }}
-                />
-              ) : (
-                <div className={s.uploadPlaceholder}>
-                  <svg width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='#94a3b8' strokeWidth='1.5'>
-                    <rect x='3' y='3' width='18' height='18' rx='2' />
-                    <circle cx='8.5' cy='8.5' r='1.5' />
-                    <polyline points='21 15 16 10 5 21' />
-                  </svg>
-                  <p style={{ fontSize: 11, fontWeight: 700, color: '#64748b', marginTop: 10 }}>클릭하여 업로드</p>
-                  <p style={{ fontSize: 10, color: '#94a3b8', marginTop: 3 }}>JPG, PNG, WEBP</p>
-                </div>
-              )}
-              <input
-                type='file'
-                accept='image/*'
-                multiple
-                style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }}
-                onChange={handleImageAdd}
-              />
-            </div>
-            {form.images.length > 1 && (
-              <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>
-                + {form.images.length - 1}개 추가 이미지
-              </p>
-            )}
-          </div>
-        </div>
+      {/* 삭제 모달 */}
+      {showDeleteModal && (
+        <DeleteModal
+          open={showDeleteModal}
+          target='선택한 의상'
+          loading={isDeleting}
+          onConfirm={handleDelete}
+          onClose={() => setShowDeleteModal(false)}
+        />
       )}
     </div>
   );
