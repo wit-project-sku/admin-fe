@@ -170,7 +170,7 @@ export default function DashboardPage() {
       </div>
     );
   }
-  console.log('summary : ', summary);
+
   return (
     <div>
       <div className={shared.pageHeader}>

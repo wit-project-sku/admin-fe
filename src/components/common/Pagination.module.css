@@ -1,0 +1,73 @@
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  position: relative;
+  border-top: 1px solid #f1f5f9;
+}
+
+/* 좌측에 고정되는 전체 개수 정보 */
+.info {
+  position: absolute;
+  left: 24px;
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.buttonGroup {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pageBtn {
+  min-width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background-color: #fff;
+  color: #64748b;
+
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pageBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* 페이지 좌우 이동 버튼 */
+.pageMoveBtn {
+  font-size: 18px;
+  color: black;
+}
+
+/* 활성화된 페이지 번호 */
+.active {
+  background-color: #1e293b;
+  border-color: #1e293b;
+  color: #fff;
+}
+
+.active:hover {
+  background-color: #0f172a;
+}
+
+/* 반응형: 정보 텍스트가 버튼과 겹칠 경우 위로 올림 */
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+    gap: 16px;
+  }
+  .info {
+    position: static;
+  }
+}

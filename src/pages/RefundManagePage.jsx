@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import shared from '@commons/shared.module.css';
 import { getAllRefundsAdmin } from '@apis/refundApi';
 import RefundManageModal from '@modals/RefundManageModal';
+import FilterGroup from '@components/common/FilterGroup';
+import Pagination from '@components/common/Pagination';
 
 const STATUS_FILTERS = [
   { key: 'all', label: '전체' },
@@ -89,17 +91,7 @@ export default function RefundManagePage() {
 
       <div className={shared.card}>
         <div className={shared.cardHead}>
-          <div className={shared.filterGroup}>
-            {STATUS_FILTERS.map((f) => (
-              <button
-                key={f.key}
-                className={`${shared.filterBtn} ${filter === f.key ? shared.filterBtnActive : ''}`}
-                onClick={() => setFilter(f.key)}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
+          <FilterGroup filters={STATUS_FILTERS} current={filter} onFilterChange={setFilter} />
         </div>
 
         <table className={shared.table}>
@@ -171,29 +163,13 @@ export default function RefundManagePage() {
           </tbody>
         </table>
 
-        {/* 3번 요청: 하단 페이지 버튼 가운데 정렬 */}
-        <div className={shared.pagination} style={{ position: 'relative' }}>
-          <span className={shared.pageInfo} style={{ position: 'absolute', left: '22px' }}>
-            총 {refunds.length}건
-          </span>
-          <div className={shared.pageButtons} style={{ margin: '0 auto' }}>
-            <button className={shared.pageBtn} onClick={() => setPage((p) => Math.max(1, p - 1))}>
-              ‹
-            </button>
-            {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map((n) => (
-              <button
-                key={n}
-                className={`${shared.pageBtn} ${page === n ? shared.pageBtnActive : ''}`}
-                onClick={() => setPage(n)}
-              >
-                {n}
-              </button>
-            ))}
-            <button className={shared.pageBtn} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>
-              ›
-            </button>
-          </div>
-        </div>
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          totalCount={refunds.length}
+          unit='건'
+        />
       </div>
 
       {showModal && <RefundManageModal open={showModal} refund={selected} onClose={() => setShowModal(false)} />}

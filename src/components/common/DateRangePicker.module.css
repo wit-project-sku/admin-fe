@@ -1,0 +1,56 @@
+.container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dateInputGroup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0 12px;
+  height: 35px;
+  transition: all 0.2s ease;
+}
+
+.dateInputGroup:focus-within {
+  border-color: #2563eb;
+  background-color: #fff;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.icon {
+  flex-shrink: 0;
+  color: #94a3b8;
+}
+
+.input {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 12px;
+  color: #1e293b;
+  width: 110px;
+  cursor: pointer;
+}
+
+.separator {
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* 반응형: 화면이 아주 좁아지면 날짜 입력창이 세로로 배치될 수 있음 */
+@media (max-width: 480px) {
+  .container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .separator {
+    text-align: center;
+    padding: 2px 0;
+  }
+}

@@ -1,6 +1,14 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import shared from '@commons/shared.module.css';
 import { getPaymentsAdmin } from '@apis/paymentApi';
+
+import SearchBar from '@components/common/SearchBar';
+import FilterGroup from '@components/common/FilterGroup';
+import Pagination from '@components/common/Pagination';
+import EditBtn from '../components/common/EditBtn';
+import DeleteBtn from '../components/common/DeleteBtn';
+import RegisterBtn from '../components/common/RegisterBtn';
+import DateRangePicker from '../components/common/DateRangePicker';
 import PaymentManageModal from '@modals/PaymentManageModal';
 
 const STATUS_FILTERS = [
@@ -45,8 +53,8 @@ export default function PaymentManagePage() {
   const [page, setPage] = useState(1);
 
   // 1. 초기 날짜 설정: 최근 1주일 (기획적 성능 고려)
-  const [startDate, setStart] = useState(getPastDate(30));
-  const [endDate, setEnd] = useState(getToday());
+  const [startDate, setStartDate] = useState(getPastDate(30));
+  const [endDate, setEndDate] = useState(getToday());
 
   const pageSize = 7;
   const [payments, setPayments] = useState([]);
@@ -119,49 +127,39 @@ export default function PaymentManagePage() {
       </div>
 
       <div className={shared.card}>
-        <div className={shared.cardHead}>
-          <div className={shared.filterGroup}>
-            {STATUS_FILTERS.map((f) => (
-              <button
-                key={f.key}
-                className={`${shared.filterBtn} ${filter === f.key ? shared.filterBtnActive : ''}`}
-                onClick={() => setFilter(f.key)}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
-          <div className={shared.dateFilter}>
-            <div className={shared.dateInput}>
-              <svg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='#94a3b8' strokeWidth='2'>
-                <rect x='3' y='4' width='18' height='18' rx='2' />
-                <line x1='16' y1='2' x2='16' y2='6' />
-                <line x1='8' y1='2' x2='8' y2='6' />
-                <line x1='3' y1='10' x2='21' y2='10' />
-              </svg>
-              <input type='date' value={startDate} onChange={(e) => setStart(e.target.value)} />
-            </div>
-            <span className={shared.dateSep}>~</span>
-            <div className={shared.dateInput}>
-              <svg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='#94a3b8' strokeWidth='2'>
-                <rect x='3' y='4' width='18' height='18' rx='2' />
-                <line x1='16' y1='2' x2='16' y2='6' />
-                <line x1='8' y1='2' x2='8' y2='6' />
-                <line x1='3' y1='10' x2='21' y2='10' />
-              </svg>
-              <input type='date' value={endDate} onChange={(e) => setEnd(e.target.value)} />
-            </div>
-            <div className={shared.searchBox} style={{ minWidth: 220 }}>
-              <svg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='#94a3b8' strokeWidth='2'>
-                <circle cx='11' cy='11' r='8' />
-                <line x1='21' y1='21' x2='16.65' y2='16.65' />
-              </svg>
-              <input
-                placeholder='전화번호 또는 카드번호 검색...'
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
+        <div
+          className={shared.cardHead}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            padding: '12px 20px',
+            flexWrap: 'nowrap', // 한 줄 유지
+            overflowX: 'auto', // 좁아지면 툴바 자체 스크롤
+          }}
+        >
+          {/* 1. 상태 필터 */}
+          <FilterGroup filters={STATUS_FILTERS} current={filter} onFilterChange={setFilter} />
+
+          {/* 세로 구분선 */}
+          <div style={{ width: '1px', height: '18px', background: '#e2e8f0', margin: '0 8px' }} />
+
+          {/* 2. 날짜 선택기 */}
+          <DateRangePicker
+            startDate={startDate}
+            endDate={endDate}
+            onStartChange={setStartDate}
+            onEndChange={setEndDate}
+          />
+
+          {/* 3. 검색창 (우측 정렬) */}
+          <div style={{ marginLeft: 'auto', flexShrink: 0 }}>
+            <SearchBar
+              value={search}
+              onChange={setSearch}
+              placeholder='주문번호 또는 상품명 검색...'
+              minWidth='300px'
+            />
           </div>
         </div>
 
@@ -241,28 +239,13 @@ export default function PaymentManagePage() {
           </tbody>
         </table>
 
-        <div className={shared.pagination} style={{ position: 'relative' }}>
-          <span className={shared.pageInfo} style={{ position: 'absolute', left: '22px' }}>
-            총 {displayed.length}건
-          </span>
-          <div className={shared.pageButtons} style={{ margin: '0 auto' }}>
-            <button className={shared.pageBtn} onClick={() => setPage((p) => Math.max(1, p - 1))}>
-              ‹
-            </button>
-            {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map((n) => (
-              <button
-                key={n}
-                className={`${shared.pageBtn} ${page === n ? shared.pageBtnActive : ''}`}
-                onClick={() => setPage(n)}
-              >
-                {n}
-              </button>
-            ))}
-            <button className={shared.pageBtn} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>
-              ›
-            </button>
-          </div>
-        </div>
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          totalCount={payments.length}
+          unit='건'
+        />
       </div>
 
       {showModal && <PaymentManageModal open={showModal} payment={selected} onClose={() => setShowModal(false)} />}

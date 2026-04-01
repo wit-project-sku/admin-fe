@@ -4,6 +4,22 @@ import shared from '@commons/shared.module.css';
 import { getOutfitDetail, createOutfit, updateOutfit } from '@apis/outfitApi';
 import { getCategories } from '@apis/categoryApi';
 import { getKiosks } from '@apis/kioskApi';
+import {
+  DropDownField,
+  ImageUploadField,
+  InputField,
+  ModalContainer,
+  ModalFooter,
+  ModalHeader,
+  MultiSelectField,
+  TextAreaField,
+} from './ModalElements';
+
+// 상태 옵션 데이터
+const OUTFIT_STATUS_OPTIONS = [
+  { value: 'ON_SALE', label: '판매중' },
+  { value: 'SOLD_OUT', label: '품절' },
+];
 
 export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuccess }) {
   const [categories, setCategories] = useState([]);
@@ -23,7 +39,7 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
   });
 
   const [image, setImage] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState([]);
 
   const isEdit = mode === 'edit';
 
@@ -35,14 +51,17 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
     });
 
     if (isEdit && outfitId) {
-      setLoading(true);
-      getOutfitDetail(outfitId)
-        .then((res) => {
-          const d = res?.data ?? res;
-          setForm({ ...d });
-          setPreviewUrl(d.imageUrls ?? []);
-        })
-        .finally(() => setLoading(false));
+      // setLoading(true);
+      // getOutfitDetail(outfitId)
+      //   .then((res) => {
+      //     const d = res?.data ?? res;
+      //     setForm({ ...d });
+      //     setPreviewUrl(d.imageUrls ?? []);
+      //   })
+      //   .finally(() => setLoading(false));
+
+      // 테스트를 위해 임시 폼 유지
+      setForm((prev) => ({ ...prev, kioskIds: [] }));
     } else {
       setForm({
         name: '',
@@ -76,8 +95,8 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
     e.preventDefault();
     setSaving(true);
     try {
-      if (mode === 'create') await createOutfit(form, images);
-      else await updateOutfit(outfitId, form, images);
+      if (mode === 'create') await createOutfit(form, image);
+      else await updateOutfit(outfitId, form, image);
       onSuccess?.();
     } catch {
       alert('실패');
@@ -89,127 +108,64 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
   if (!open) return null;
 
   return (
-    <div className={m.overlay} onClick={onClose}>
-      <div className={`${m.modal} ${m.modalLg}`} onClick={(e) => e.stopPropagation()}>
-        <div className={m.header}>
-          <span className={m.title}>{mode === 'create' ? '신규 의상 등록' : '의상 정보 수정'}</span>
-          <button className={m.closeBtn} onClick={onClose}>
-            ✕
-          </button>
-        </div>
-        <form onSubmit={handleSubmit}>
-          <div className={m.body}>
-            <div className={m.mainFields}>
-              <div className={m.gridRow}>
-                <div className={m.field}>
-                  <label className={m.label}>
-                    의상 이름 <span className={m.required}>*</span>
-                  </label>
-                  <input
-                    required
-                    className={m.input}
-                    value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  />
-                </div>
-                <div className={m.field}>
-                  <label className={m.label}>부제목</label>
-                  <input
-                    className={m.input}
-                    value={form.subTitle}
-                    onChange={(e) => setForm({ ...form, subTitle: e.target.value })}
-                  />
-                </div>
-              </div>
-              <div className={m.gridRow}>
-                <div className={m.field}>
-                  <label className={m.label}>
-                    카테고리 <span className={m.required}>*</span>
-                  </label>
-                  <select
-                    required
-                    className={m.select}
-                    value={form.categoryId}
-                    onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
-                  >
-                    <option value=''>선택</option>
-                    {categories.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className={m.field}>
-                  <label className={m.label}>상태</label>
-                  <select
-                    className={m.select}
-                    value={form.status}
-                    onChange={(e) => setForm({ ...form, status: e.target.value })}
-                  >
-                    <option value='ON_SALE'>판매중</option>
-                    <option value='SOLD_OUT'>품절</option>
-                  </select>
-                </div>
-              </div>
-              <div className={m.field}>
-                <label className={m.label}>설치 키오스크 선택</label>
-                <div className={m.kioskGrid}>
-                  {kiosks.map((k) => (
-                    <div
-                      key={k.id}
-                      className={`${m.kioskItem} ${form.kioskIds.includes(k.id) ? m.kioskActive : ''}`}
-                      onClick={() => {
-                        const ids = form.kioskIds.includes(k.id)
-                          ? form.kioskIds.filter((i) => i !== k.id)
-                          : [...form.kioskIds, k.id];
-                        setForm({ ...form, kioskIds: ids });
-                      }}
-                    >
-                      <div className={`${m.kioskCheck} ${form.kioskIds.includes(k.id) ? m.kioskChecked : ''}`} />
-                      <span>{k.name}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <div className={m.imageSection}>
-              <label className={m.label}>이미지 업로드</label>
-              <div className={m.imagesGrid}>
-                {/* 2/3번 요청 반영: 등록된 이미지 미리보기 및 삭제 버튼 */}
-                {previewUrl && (
-                  <div className={m.imageThumbnail}>
-                    <img src={previewUrl} className={m.previewImg} alt='의상 미리보기' />
-                    {/* 3번 요청: 삭제 버튼 */}
-                    <button type='button' className={m.deleteBtn} onClick={handleDeleteImage}>
-                      ✕
-                    </button>
-                  </div>
-                )}
+    <ModalContainer>
+      <ModalHeader title={mode === 'create' ? '신규 의상 등록' : '의상 정보 수정'} onClose={onClose} />
 
-                {/* 1번 요청: 이미지가 없을 때만 업로드 영역(+) 표시 */}
-                {!previewUrl && (
-                  <div className={m.imageUploadArea}>
-                    <svg width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='#94a3b8' strokeWidth='1.5'>
-                      <line x1='12' y1='5' x2='12' y2='19' />
-                      <line x1='5' y1='12' x2='19' y2='12' />
-                    </svg>
-                    <input type='file' className={m.fileInput} onChange={handleFileChange} />
-                  </div>
-                )}
-              </div>
+      <form onSubmit={handleSubmit}>
+        <div className={m.body}>
+          <div className={m.mainFields}>
+            <div className={m.gridRow}>
+              <InputField
+                label='의상 이름'
+                required
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+              />
+              <InputField
+                label='부제목'
+                value={form.subTitle}
+                onChange={(e) => setForm({ ...form, subTitle: e.target.value })}
+              />
             </div>
+            <div className={m.gridRow}>
+              {/** Dropdown 공용 컴포넌트로 수정 필요 */}
+              <DropDownField
+                label='카테고리'
+                required
+                options={categories}
+                value={form.categoryId}
+                onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
+              />
+              <DropDownField
+                label='상태'
+                options={OUTFIT_STATUS_OPTIONS}
+                value={form.status}
+                onChange={(e) => setForm({ ...form, status: e.target.value })}
+              />
+            </div>
+            <MultiSelectField
+              label='설치 키오스크 선택'
+              items={kiosks}
+              selectedIds={form.kioskIds || []} // undefined 방지
+              onChange={(newIds) => setForm({ ...form, kioskIds: newIds })}
+            />
           </div>
-          <div className={m.footer}>
-            <button type='button' className={m.btnCancel} onClick={onClose}>
-              취소
-            </button>
-            <button type='submit' className={shared.btnPrimary} style={{ width: 140, justifyContent: 'center' }}>
-              {saving ? '저장 중...' : mode === 'create' ? '의상 등록 완료' : '수정 완료'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+          <ImageUploadField
+            label='의상 이미지 (1개)'
+            previewUrls={previewUrl || []} // null 방지
+            onUpload={handleFileChange}
+            onDelete={handleDeleteImage}
+            isEdit={true}
+            maxCount={1}
+          />
+        </div>
+        <ModalFooter
+          onCancel={onClose}
+          onSubmit={handleSubmit}
+          isLoading={saving}
+          submitText={mode === 'create' ? '의상 등록 완료' : '수정 완료'}
+        />
+      </form>
+    </ModalContainer>
   );
 }

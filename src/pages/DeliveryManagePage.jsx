@@ -3,6 +3,11 @@ import shared from '@commons/shared.module.css';
 import { fetchAllDeliveriesAdmin } from '@apis/deliveryApi';
 import DeliveryManageModal from '@modals/DeliveryManageModal';
 
+import SearchBar from '@components/common/SearchBar';
+import FilterGroup from '@components/common/FilterGroup';
+import Pagination from '@components/common/Pagination';
+import DateRangePicker from '@components/common/DateRangePicker';
+
 const STATUS_FILTERS = [
   { key: 'all', label: '전체' },
   { key: 'ORDERED', label: '주문완료' },
@@ -107,26 +112,14 @@ export default function DeliveryManagePage() {
 
       <div className={shared.card}>
         <div className={shared.cardHead} style={{ gap: 8 }}>
-          <div className={shared.filterGroup} style={{ flexWrap: 'wrap' }}>
-            {STATUS_FILTERS.map((f) => (
-              <button
-                key={f.key}
-                className={`${shared.filterBtn} ${filter === f.key ? shared.filterBtnActive : ''}`}
-                onClick={() => setFilter(f.key)}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
-          <div className={shared.searchBox} style={{ minWidth: 200 }}>
-            <svg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='#94a3b8' strokeWidth='2'>
-              <circle cx='11' cy='11' r='8' />
-              <line x1='21' y1='21' x2='16.65' y2='16.65' />
-            </svg>
-            <input
-              placeholder='주문번호, 수령인, 전화번호, 주소 검색...'
+          <FilterGroup filters={STATUS_FILTERS} current={filter} onFilterChange={setFilter} />
+
+          <div style={{ marginLeft: 'auto', flexShrink: 0 }}>
+            <SearchBar
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={setSearch}
+              placeholder='주문번호, 수령인, 연락처 검색...'
+              minWidth='300px'
             />
           </div>
         </div>
@@ -210,29 +203,13 @@ export default function DeliveryManagePage() {
           </tbody>
         </table>
 
-        {/* 1번 요청: 페이지 번호 영역 가운데 정렬 */}
-        <div className={shared.pagination} style={{ position: 'relative' }}>
-          <span className={shared.pageInfo} style={{ position: 'absolute', left: '22px' }}>
-            총 {deliveries.length}건
-          </span>
-          <div className={shared.pageButtons} style={{ margin: '0 auto' }}>
-            <button className={shared.pageBtn} onClick={() => setPage((p) => Math.max(1, p - 1))}>
-              ‹
-            </button>
-            {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map((n) => (
-              <button
-                key={n}
-                className={`${shared.pageBtn} ${page === n ? shared.pageBtnActive : ''}`}
-                onClick={() => setPage(n)}
-              >
-                {n}
-              </button>
-            ))}
-            <button className={shared.pageBtn} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>
-              ›
-            </button>
-          </div>
-        </div>
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          totalCount={deliveries.length}
+          unit='건'
+        />
       </div>
 
       {showModal && (
