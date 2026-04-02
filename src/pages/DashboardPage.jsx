@@ -135,6 +135,7 @@ export default function DashboardPage() {
                     outerRadius={80}
                     paddingAngle={4}
                     dataKey='value'
+                    label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
                   >
                     {PIE_DATA.map((e, i) => (
                       <Cell key={i} fill={e.color} />
@@ -274,6 +275,7 @@ export default function DashboardPage() {
                   strokeDasharray='5 4'
                   dot={false}
                   name='지난주'
+                  
                 />
                 <Line
                   type='monotone'
@@ -304,6 +306,7 @@ export default function DashboardPage() {
                   outerRadius={72}
                   paddingAngle={4}
                   dataKey='value'
+                  label={({ name, percent }) => `${(percent *  100).toFixed(0)}%`}
                 >
                   {PIE_DATA.map((e, i) => (
                     <Cell key={i} fill={e.color} />
@@ -315,6 +318,7 @@ export default function DashboardPage() {
                   iconType='circle'
                   iconSize={7}
                   wrapperStyle={{ fontSize: 10, fontWeight: 700, color: '#64748b' }}
+                  
                 />
               </PieChart>
             </ResponsiveContainer>

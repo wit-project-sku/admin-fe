@@ -11,12 +11,15 @@ export default function AdminLayout() {
 
   return (
     <div className={styles.root}>
-      <AdminHeader />
+      {/* <AdminHeader /> */}
       <div className={styles.body}>
         <AdminNav />
-        <main className={styles.main}>
-          <Outlet />
-        </main>
+        <div className={styles.mainWrapper}>
+          <AdminHeader />
+          <main className={styles.main}>
+            <Outlet />
+          </main>
+        </div>
       </div>
     </div>
   );
