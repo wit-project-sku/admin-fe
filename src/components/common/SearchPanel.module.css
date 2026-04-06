@@ -1,0 +1,239 @@
+.panel {
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid #eaecf0;
+  border-radius: 20px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+
+.sectionLabel {
+  font-size: 14px;
+  font-weight: 700;
+  color: #333333;
+  white-space: nowrap;
+  margin-right: 30px;
+}
+
+/* 필터 섹션 */
+.filterSection {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.filterList {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.filterItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333333;
+  user-select: none;
+}
+
+.checkboxHidden {
+  display: none;
+}
+
+.checkboxCustom {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid #8c9ee7;
+  border-radius: 4px;
+  background: #e7e9ff;
+  flex-shrink: 0;
+}
+
+.checkboxChecked {
+  background: #8c9ee7;
+  border-color: #8c9ee7;
+}
+
+.checkboxChecked::after {
+  content: '';
+  display: block;
+  width: 10px;
+  height: 6px;
+  border-left: 3px solid #ffffff;
+  border-bottom: 3px solid #ffffff;
+  transform: rotate(-45deg);
+  margin-top: -2px;
+}
+
+.dateSection {
+  margin-left: 70px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* 날짜 인풋 래퍼 */
+.dateInputWrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.dateInput {
+  width: 120px;
+  height: 40px;
+  border: 1px solid #ebeef2;
+  border-radius: 10px;
+  font-size: 14px;
+  padding: 0 36px 0 14px;
+  color: #333333;
+  outline: none;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.dateInput::-webkit-calendar-picker-indicator {
+  display: none;
+}
+
+.dateInput:focus {
+  border-color: #8c9ee7;
+}
+
+.calendarIcon {
+  position: absolute;
+  right: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.dateDash {
+  color: #333333;
+  font-size: 14px;
+}
+
+/* 검색 섹션 */
+.searchSection {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+/* 드롭다운 래퍼 */
+.selectWrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.searchTypeSelect {
+  height: 40px;
+  border: 1px solid #ebeef2;
+  border-radius: 10px;
+  padding: 0 0 0 30px;
+  font-size: 14px;
+  align-items: center;
+  color: #333333;
+  background: #ffffff;
+  appearance: none;
+  cursor: pointer;
+  outline: none;
+  min-width: 100px;
+}
+
+.searchTypeSelect:focus {
+  border-color: #8c9ee7;
+}
+
+.selectChevron {
+  position: absolute;
+  right: 25px;
+  width: 25px;
+  height: 25px;
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+/* 검색 인풋 */
+.searchInput {
+  flex: 1;
+  height: 40px;
+  border: 1px solid #ebeef2;
+  border-radius: 10px;
+  padding: 0 20px;
+  font-size: 14px;
+  color: #333333;
+  outline: none;
+  background: #ffffff;
+  min-width: 0;
+}
+
+.searchInput::placeholder {
+  color: #bbbbbf;
+}
+
+.searchInput:focus {
+  border-color: #8c9ee7;
+}
+
+/* 액션 버튼 */
+.actionButtons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.searchBtn {
+  width: 120px;
+  height: 40px;
+  background: #5967ff;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.searchBtn:hover {
+  background: #4555ee;
+}
+
+.resetBtn {
+  width: 120px;
+  height: 40px;
+  background: #ffffff;
+  color: #5967ff;
+  border: 1px solid #5967ff;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.resetBtn:hover {
+  background: #f3f4f6;
+}

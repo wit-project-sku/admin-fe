@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { lazy, Suspense } from 'react';
 import AdminLayout from '@layouts/AdminLayout';
 
+const HomePage = lazy(() => import('@pages/HomePage'));
 const ProductManagePage = lazy(() => import('@pages/ProductManagePage'));
 const PaymentManagePage = lazy(() => import('@pages/PaymentManagePage'));
 const DeliveryManagePage = lazy(() => import('@pages/DeliveryManagePage'));
@@ -32,7 +33,7 @@ function AdminGuard({ children }) {
 
 function AdminLoginGuard({ children }) {
   const hasToken = !!localStorage.getItem('accessToken');
-  return hasToken ? <Navigate to='/admin/products' replace /> : children;
+  return hasToken ? <Navigate to='/admin/home' replace /> : children;
 }
 
 export default function AppRouter() {
@@ -63,8 +64,9 @@ export default function AppRouter() {
             }
           >
             {/* /admin 진입 시 기본 페이지 */}
-            <Route index element={<Navigate to='products' replace />} />
+            <Route index element={<Navigate to='home' replace />} />
 
+            <Route path='home' element={<HomePage />} />
             <Route path='products' element={<ProductManagePage />} />
             <Route path='payments' element={<PaymentManagePage />} />
             <Route path='deliveries' element={<DeliveryManagePage />} />

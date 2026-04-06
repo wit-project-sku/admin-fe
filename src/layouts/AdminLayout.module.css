@@ -1,21 +1,21 @@
 .layoutContainer {
   width: 100vw;
-  height: 100vh; /* 화면에 딱 고정 */
-  overflow: hidden; /* 바깥(브라우저) 스크롤 방지 */
+  height: 100vh;
+  overflow: hidden;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
 }
 
-.bodyContainer {
+.rightSection {
   flex: 1;
-  min-height: 0; /* flex 내부 스크롤 필수 */
+  min-width: 0;
   display: flex;
-  overflow: hidden; /* nav/content가 밖으로 새지 않게 */
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .contentArea {
   flex: 1;
-  min-width: 0; /* 가로 overflow 방지에 도움 */
   min-height: 0;
-  overflow-y: auto; /* ✅ 스크롤은 여기(안쪽)에서만 */
+  overflow-y: auto;
 }

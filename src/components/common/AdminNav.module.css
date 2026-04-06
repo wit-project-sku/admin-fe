@@ -1,56 +1,135 @@
-@font-face {
-  font-family: 'NotoSans';
-  src: url('../../assets/font/NotoSans-VariableFont_wdth,wght.ttf') format('truetype');
-  font-weight: 100 900;
-  font-style: normal;
-}
-
 .nav {
-  font-family: 'NotoSans';
-  width: 300px;
+  width: 240px;
+  min-width: 160px;
   height: 100%;
-  border-right: 1px solid #e5e5e5;
-  background-color: #ffffff;
+  background: #353a55;
   display: flex;
   flex-direction: column;
-  padding: 16px 12px;
-  gap: 6px;
+  border-top-right-radius: 20px;
+  border-bottom-right-radius: 20px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.logoSection {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 30px;
+  flex-shrink: 0;
+}
+
+.logo {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+  border-radius: 12px;
+}
+
+.logoText {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.menuList {
+  list-style: none;
+  margin: 0;
+  padding: 12px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .menuItem {
-  font-family: 'NotoSans';
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 400;
+  color: #8e94b8;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.menuItem:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: #c4c9e2;
+}
+
+.menuItem.active {
+  background: #8c9ee7;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.iconWrap {
+  width: 25px;
+  height: 25px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  height: 80px;
-  padding: 12px 16px;
-  margin: 0 8px;
+}
 
-  font-size: 25px;
-  font-weight: 500;
-  color: #909dad; /* 기본 회색 */
+.iconWrap img {
+  width: 25px;
+  height: 25px;
+  object-fit: contain;
+  filter: brightness(0) invert(0.55);
+}
+
+.menuItem.active .iconWrap img {
+  filter: brightness(0) invert(1);
+}
+
+.subMenuList {
+  list-style: none;
+  margin: 4px 0 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.subItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px 10px 36px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 400;
+  color: #8e94b8;
   text-decoration: none;
   cursor: pointer;
-
-  border-bottom: none; /* 기존 구분선 제거 */
-  border-radius: 9999px; /* 캡슐 모양 */
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 
-.active {
-  font-family: 'NotoSans';
-  font-weight: 700;
+.subItem:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: #c4c9e2;
+}
+
+.subItem.subActive {
+  background: #8c9ee7;
   color: #ffffff;
-  background-color: #0088ff;
+  font-weight: 600;
 }
 
-.menuItem img,
-.menuItem svg {
-  width: 24px;
-  height: 24px;
-  flex: 0 0 auto;
+.subItem.subActive .iconWrap img {
+  filter: brightness(0) invert(1);
 }
 
-.active img {
-  filter: brightness(0) invert(1); /* 활성 상태 아이콘을 흰색처럼 보이게 */
+.menuItem.parentOpen {
+  color: #c4c9e2;
 }

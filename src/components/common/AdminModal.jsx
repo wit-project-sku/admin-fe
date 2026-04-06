@@ -1,6 +1,6 @@
 import React from 'react';
 import styles from './AdminModal.module.css';
-import closeBtn from '@assets/images/close.png';
+import closeBtn from '@assets/images/dot.png';
 
 export default function AdminModal({
   title = '제목',

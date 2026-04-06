@@ -1,0 +1,373 @@
+.container {
+  width: 100%;
+  padding: 30px 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background: #f9fafb;
+  min-height: 100%;
+}
+
+/* ── 배너 ── */
+.banner {
+  position: relative;
+  background: linear-gradient(135deg, #353a55 0%, #4a5080 100%);
+  border-radius: 16px;
+  padding: 32px 40px;
+  color: #ffffff;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bannerLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 1;
+}
+
+.bannerDate {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #a8b0d8;
+  font-weight: 500;
+}
+
+.bannerDateIcon {
+  width: 14px;
+  height: 14px;
+  filter: brightness(0) invert(0.7);
+}
+
+.bannerTitle {
+  font-size: 26px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+}
+
+.bannerSub {
+  font-size: 14px;
+  color: #a8b0d8;
+}
+
+.bannerDeco {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 260px;
+  height: 100%;
+  pointer-events: none;
+}
+
+.decoCircle1 {
+  position: absolute;
+  right: -40px;
+  top: -40px;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: rgba(140, 158, 231, 0.15);
+}
+
+.decoCircle2 {
+  position: absolute;
+  right: 40px;
+  bottom: -50px;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  background: rgba(140, 158, 231, 0.1);
+}
+
+/* ── 통계 카드 그리드 ── */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.statCard {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 22px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  border: 1px solid #f0f0f0;
+  text-align: left;
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s;
+}
+
+.statCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.statIconWrap {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.statIcon {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  filter: brightness(0) invert(0.4);
+}
+
+.statInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.statLabel {
+  font-size: 12px;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.statValue {
+  font-size: 20px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.statSub {
+  font-size: 12px;
+  color: #b0b7c3;
+}
+
+/* ── 하단 2열 ── */
+.bottomGrid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 16px;
+  align-items: start;
+}
+
+.sideColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── 섹션 공통 ── */
+.section {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 22px 24px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  border: 1px solid #f0f0f0;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.sectionTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.moreBtn {
+  font-size: 12px;
+  color: #8c9ee7;
+  font-weight: 600;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.moreBtn:hover {
+  text-decoration: underline;
+}
+
+/* ── 테이블 ── */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table thead th {
+  padding: 8px 12px;
+  text-align: left;
+  font-size: 12px;
+  color: #9ca3af;
+  font-weight: 600;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.table tbody tr {
+  border-bottom: 1px solid #f9fafb;
+  transition: background 0.1s;
+}
+
+.table tbody tr:hover {
+  background: #fafbff;
+}
+
+.table tbody td {
+  padding: 11px 12px;
+  color: #374151;
+  vertical-align: middle;
+}
+
+.orderId {
+  color: #8c9ee7 !important;
+  font-weight: 600;
+  font-size: 12px !important;
+}
+
+.dateCell {
+  color: #b0b7c3 !important;
+  font-size: 12px !important;
+}
+
+/* ── 배지 ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.badgePaid {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.badgeShipping {
+  background: #fef9ec;
+  color: #b45309;
+}
+
+.badgeRefund {
+  background: #fef2f2;
+  color: #ef4444;
+}
+
+/* ── 빠른 현황 ── */
+.quickList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.quickItem {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  background: #f9fafb;
+  border-radius: 10px;
+}
+
+.quickIconWrap {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: #eef0fb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.quickIcon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  filter: brightness(0) invert(0.45);
+}
+
+.quickInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.quickLabel {
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+.quickValue {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+/* ── 도넛 차트 (CSS 전용) ── */
+.donutWrap {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  justify-content: center;
+}
+
+.donut {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: conic-gradient(
+    #8c9ee7 0% 78.5%,
+    #f87171 78.5% 93.6%,
+    #d1d5db 93.6% 100%
+  );
+  flex-shrink: 0;
+  mask: radial-gradient(circle at center, transparent 38px, black 39px);
+  -webkit-mask: radial-gradient(circle at center, transparent 38px, black 39px);
+}
+
+.donutLegend {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #374151;
+}
+
+.legendDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.legendItem strong {
+  margin-left: auto;
+  font-weight: 700;
+  color: #1f2937;
+  padding-left: 12px;
+}

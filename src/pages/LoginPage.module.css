@@ -1,52 +1,78 @@
 .page {
+  font-family: 'Pretendard', sans-serif;
   width: 100%;
-  height: 100%;
+  height: 100vh;
   display: flex;
   justify-content: center;
-  align-items: flex-start;
-  background: #ffffff;
-  box-sizing: border-box;
+  align-items: center;
+  background: linear-gradient(135deg, #4b435a, #353a55);
 }
 
-/* 로그인 박스 */
 .loginBox {
-  padding-top: 100px;
-  width: 420px;
+  width: 600px;
+  height: 600px;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 40px 95px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
 }
 
-.iconWrapper img {
-  width: 120px;
-  height: 120px;
-  margin-bottom: 40px;
+.logoWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.logoIcon {
+  width: 100px;
+  height: 100px;
+  margin-bottom: 5px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #673a97;
 }
 
 .field {
-  width: 100%;
+  width: 410px;
   font-weight: 700;
-  margin-bottom: 28px;
+  margin-top: 12px;
+  margin-bottom: 12px;
 }
 
 .field label {
   display: block;
-  font-size: 24px;
-  color: #8f8f8f;
-  margin-bottom: 8px;
+  font-size: 14px;
+  color: #666666;
+  margin-bottom: 13px;
+  font-weight: 500;
 }
 
 .field input {
-  width: 100%;
-  height: 48px;
-  border: none;
-  border-bottom: 3px solid #e5e5e5;
-  font-size: 28px;
+  width: 360px;
+  height: 50px;
+  border: 1px solid #eeeef0;
+  border-radius: 4px;
+  padding: 0 24px;
+  font-size: 14px;
+  color: #bbbbbf;
+  font-family: inherit;
   outline: none;
 }
 
+.field input::placeholder {
+  color: #bbbbbf;
+  font-weight: 400;
+}
+
 .field input:focus {
-  border-bottom-color: #0088ff;
+  border-color: #7b5cff;
 }
 
 .passwordBox {
@@ -54,14 +80,60 @@
   width: 100%;
 }
 
+.autoLoginRow {
+  width: 100%;
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #444444;
+  font-weight: 500;
+  user-select: none;
+}
+
+.checkbox input[type='checkbox'] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid #cccccc;
+  border-radius: 5px;
+  cursor: pointer;
+  position: relative;
+  flex-shrink: 0;
+  background: #ffffff;
+}
+
+.checkbox input[type='checkbox']:checked {
+  background: #6f7a8c;
+  border-color: #6f7a8c;
+}
+
+.checkbox input[type='checkbox']:checked::after {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 3px;
+  width: 8px;
+  height: 11px;
+  border: 1.5px solid #ffffff;
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg);
+}
+
 .eyeIcon {
   position: absolute;
   right: 0;
   top: 50%;
   transform: translateY(-50%);
-  width: 24px;
-  height: 24px;
-  margin-right: 10px;
+  width: 20px;
+  height: 20px;
+  margin-right: 18px;
   background: transparent;
   border-radius: 0;
   cursor: pointer;
@@ -71,21 +143,38 @@
   width: 100%;
   font-size: 16px;
   font-weight: 400;
-  color: #ff3737; /* 빨간색 에러 */
+  margin-top: 10px;
+  color: #ff3737;
   text-align: left;
 }
 
 /* 로그인 버튼 */
 .loginButton {
   width: 100%;
-  height: 56px;
-  margin-top: 20px;
-  background: #0088ff;
+  height: 54px;
+  margin-top: 14px;
+  background: #6f7a8c;
   color: #ffffff;
-  font-size: 18px;
-  text-align: center;
+  font-size: 17px;
   font-weight: 600;
+  text-align: center;
   border: none;
-  border-radius: 8px;
+  border-radius: 4px;
   cursor: pointer;
+  transition: background 0.2s;
+  font-family: inherit;
+  letter-spacing: 0.5px;
+}
+
+.loginButton:hover {
+  background: #5c6472;
+}
+
+.loginButton:active {
+  background: #4e5562;
+}
+
+.loginButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './LoginPage.module.css';
-import lockIcon from '@assets/images/lock.png';
+import logoIcon from '@assets/images/logo.png';
 import eyeClose from '@assets/images/eyeClose.png';
 import eyeOpen from '@assets/images/eyeOpen.png';
 import { loginAdmin } from '@apis/authApi';
@@ -13,6 +13,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [autoLogin, setAutoLogin] = useState(true);
 
   const handleLogin = async () => {
     setError('');
@@ -43,8 +44,9 @@ export default function LoginPage() {
   return (
     <div className={styles.page}>
       <div className={styles.loginBox}>
-        <div className={styles.iconWrapper}>
-          <img src={lockIcon} alt='lock' />
+        <div className={styles.logoWrapper}>
+          <img src={logoIcon} alt='WIT KIOSK' className={styles.logoIcon} />
+          <h2 className={styles.title}>관리자 로그인</h2>
         </div>
 
         <div className={styles.field}>
@@ -53,7 +55,7 @@ export default function LoginPage() {
             type='text'
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            placeholder='아이디 입력'
+            placeholder='ID'
             autoComplete='username'
           />
         </div>
@@ -65,7 +67,7 @@ export default function LoginPage() {
               type={showPassword ? 'text' : 'password'}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder='비밀번호 입력'
+              placeholder='PW'
               autoComplete='current-password'
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
@@ -81,6 +83,13 @@ export default function LoginPage() {
               onClick={() => setShowPassword((prev) => !prev)}
             />
           </div>
+        </div>
+
+        <div className={styles.autoLoginRow}>
+          <label className={styles.checkbox}>
+            <input type='checkbox' checked={autoLogin} onChange={(e) => setAutoLogin(e.target.checked)} />
+            자동 로그인
+          </label>
         </div>
 
         {error && <div className={styles.errorText}>{error}</div>}
