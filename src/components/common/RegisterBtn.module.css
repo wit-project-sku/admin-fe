@@ -1,21 +1,24 @@
 .btnPrimary {
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  gap: 8px;
   background: var(--text-primary);
-  color: white;
+  color: #fff;
   border: none;
-  border-radius: 10px;
-  padding: 10px 16px;
-  font-size: 13px;
-  font-weight: 700;
+  border-radius: var(--radius-sm);
+  padding: 9px 14px;
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: background 0.15s, transform 0.1s;
   white-space: nowrap;
 }
+
 .btnPrimary:hover {
-  background: #1e293b;
+  background: #1a2234;
 }
+
 .btnPrimary:active {
-  transform: scale(0.98);
+  transform: translateY(1px);
 }

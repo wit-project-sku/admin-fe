@@ -1,7 +1,8 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: var(--overlay-scrim);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -10,14 +11,15 @@
 }
 
 .modal {
-  background: white;
-  border-radius: 18px;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
   width: 100%;
   max-width: 600px;
   max-height: 50vh;
   overflow-y: auto;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-  animation: modalIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.14);
+  animation: modalIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .modalLg {
@@ -27,7 +29,7 @@
 @keyframes modalIn {
   from {
     opacity: 0;
-    transform: scale(0.97) translateY(8px);
+    transform: scale(0.98) translateY(6px);
   }
   to {
     opacity: 1;
@@ -39,45 +41,49 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 22px;
-  border-bottom: 1px solid var(--border);
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-card);
 }
 
 .title {
   font-size: 15px;
-  font-weight: 900;
+  font-weight: 700;
   color: var(--text-primary);
+  letter-spacing: -0.01em;
 }
 
 .closeBtn {
-  width: 28px;
-  height: 28px;
-  background: var(--bg-page);
+  width: 32px;
+  height: 32px;
+  background: var(--bg-muted);
   border: 1px solid var(--border);
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--text-secondary);
   font-size: 14px;
-  transition: all 0.15s;
+  transition: background 0.15s, border-color 0.15s;
 }
+
 .closeBtn:hover {
-  background: var(--border);
+  background: var(--border-subtle);
+  border-color: var(--border-md);
 }
 
 .body {
-  padding: 20px 22px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 13px;
+  gap: 14px;
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
 }
 
 .fieldRow {
@@ -87,84 +93,96 @@
 }
 
 .label {
-  font-size: 10px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.06em;
 }
 
 .input {
-  background: var(--bg-page);
-  border: 1px solid var(--border-md);
-  border-radius: 9px;
-  padding: 9px 12px;
-  font-size: 12px;
+  background: var(--bg-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--text-primary);
   outline: none;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
   width: 100%;
   box-sizing: border-box;
 }
+
 .input:focus {
   border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  background: var(--bg-card);
 }
+
 .input:disabled {
-  background: var(--border);
+  background: var(--border-subtle);
   color: var(--text-secondary);
   cursor: not-allowed;
 }
 
 .textarea {
-  background: var(--bg-page);
-  border: 1px solid var(--border-md);
-  border-radius: 9px;
-  padding: 9px 12px;
-  font-size: 12px;
+  background: var(--bg-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--text-primary);
   outline: none;
   resize: vertical;
-  min-height: 72px;
+  min-height: 80px;
   width: 100%;
   box-sizing: border-box;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
   font-family: inherit;
 }
+
 .textarea:focus {
   border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  background: var(--bg-card);
 }
+
 .textarea:disabled {
-  background: var(--border);
+  background: var(--border-subtle);
   color: var(--text-secondary);
   cursor: not-allowed;
 }
 
 .select {
-  background: var(--bg-page);
-  border: 1px solid var(--border-md);
-  border-radius: 9px;
-  padding: 9px 12px;
-  font-size: 12px;
+  background: var(--bg-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text-primary);
   outline: none;
   width: 100%;
   cursor: pointer;
   font-family: inherit;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
 }
+
 .select:focus {
   border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  background: var(--bg-card);
 }
 
 .footer {
-  padding: 14px 22px;
-  border-top: 1px solid var(--border);
+  padding: 14px 20px;
+  border-top: 1px solid var(--border-subtle);
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
+  gap: 10px;
+  background: var(--bg-muted);
 }
 
 /* Image preview strip */
@@ -177,7 +195,7 @@
 .imageThumb {
   width: 68px;
   height: 80px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   object-fit: cover;
   border: 1px solid var(--border);
 }
@@ -185,53 +203,58 @@
 .imageUploadBtn {
   width: 68px;
   height: 80px;
-  border-radius: 8px;
-  border: 1.5px dashed var(--border-md);
-  background: var(--bg-page);
+  border-radius: var(--radius-sm);
+  border: 2px dashed var(--border-md);
+  background: var(--bg-muted);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, background 0.15s;
   gap: 4px;
   position: relative;
 }
+
 .imageUploadBtn:hover {
   border-color: var(--accent);
+  background: rgba(37, 99, 235, 0.04);
 }
+
 .imageUploadBtn span {
-  font-size: 9px;
+  font-size: 10px;
   color: var(--text-muted);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 /* Kiosk / location checkbox grid */
 .checkGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 6px;
+  gap: 8px;
 }
 
 .checkItem {
   display: flex;
   align-items: center;
-  gap: 7px;
-  padding: 8px 10px;
-  border-radius: 8px;
-  border: 1px solid var(--border-md);
-  background: var(--bg-page);
+  gap: 8px;
+  padding: 9px 11px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--bg-muted);
   cursor: pointer;
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: 600;
   color: var(--text-secondary);
-  transition: all 0.15s;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
   user-select: none;
 }
+
 .checkItem:hover {
   border-color: var(--accent);
   color: var(--accent);
 }
+
 .checkItemActive {
   background: var(--blue-bg) !important;
   border-color: #93c5fd !important;
@@ -242,8 +265,8 @@
 .warnIcon {
   width: 44px;
   height: 44px;
-  background: #fef2f2;
-  border-radius: 12px;
+  background: var(--red-bg);
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -252,15 +275,16 @@
 
 .warnTitle {
   font-size: 15px;
-  font-weight: 900;
+  font-weight: 700;
   color: var(--text-primary);
   text-align: center;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
 }
 
 .warnDesc {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-secondary);
   text-align: center;
-  line-height: 1.6;
+  line-height: 1.55;
 }

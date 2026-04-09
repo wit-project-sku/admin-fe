@@ -1,43 +1,20 @@
-/* Design tokens — 0.8× scale */
-:root {
-  --sidebar-w: 210px;
-  --header-h: 48px;
-  --sidebar-bg: #1e293b;
-  --sidebar-active: #2563eb;
-  --sidebar-hover: #334155;
-  --accent: #3b82f6;
-  --bg-page: #f8fafc;
-  --bg-card: #ffffff;
-  --border: #f1f5f9;
-  --border-md: #e2e8f0;
-  --text-primary: #0f172a;
-  --text-secondary: #64748b;
-  --text-muted: #94a3b8;
-  --green-bg: #dcfce7;
-  --green-text: #16a34a;
-  --red-bg: #fef2f2;
-  --red-text: #dc2626;
-  --amber-bg: #fef3c7;
-  --amber-text: #d97706;
-  --blue-bg: #dbeafe;
-  --blue-text: #2563eb;
-  --gray-bg: #f1f5f9;
-  --gray-text: #64748b;
-  --orange-bg: #fff7ed;
-  --orange-text: #ea580c;
-  --purple-bg: #fdf4ff;
-  --purple-text: #9333ea;
-}
 .root {
   min-height: 100vh;
-  background: var(--bg-page);
+  background: var(--bg-canvas);
 }
+
 .body {
   display: flex;
+  min-height: 100vh;
 }
+
+.bodyCollapsed {}
+
 .main {
-  padding: 28px 32px;
+  padding: 26px 30px 36px;
   width: 100%;
+  max-width: 1320px;
+  margin: 0 auto;
 }
 
 .mainWrapper {
@@ -45,4 +22,11 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  background: var(--bg-canvas);
+  border-left: 1px solid var(--border-subtle);
+  transition: width 0.2s ease;
+}
+
+.mainWrapperCollapsed {
+  width: calc(100% - var(--sidebar-collapsed-w));
 }

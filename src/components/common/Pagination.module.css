@@ -2,24 +2,28 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: 18px 22px;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-card);
+  gap: 12px;
   position: relative;
-  border-top: 1px solid #f1f5f9;
 }
 
-/* 좌측에 고정되는 전체 개수 정보 */
-.info {
-  position: absolute;
-  left: 24px;
+.leftInfo {
   font-size: 13px;
-  color: #64748b;
+  color: var(--text-muted);
   font-weight: 500;
+  white-space: nowrap;
+  position: absolute;
+  left: 22px;
 }
 
-.buttonGroup {
+.centerControls {
   display: flex;
   align-items: center;
   gap: 4px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .pageBtn {
@@ -28,15 +32,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  background-color: #fff;
-  color: #64748b;
-
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  background-color: var(--bg-card);
+  color: var(--text-secondary);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
 }
 
 .pageBtn:disabled {
@@ -44,30 +47,44 @@
   cursor: not-allowed;
 }
 
-/* 페이지 좌우 이동 버튼 */
-.pageMoveBtn {
-  font-size: 18px;
-  color: black;
+.pageBtn:not(:disabled):hover {
+  border-color: var(--border-md);
+  background: var(--bg-page);
+  color: var(--text-primary);
 }
 
-/* 활성화된 페이지 번호 */
+.ellipsis {
+  min-width: 20px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.pageMoveBtn {
+  font-size: 16px;
+  color: var(--text-primary);
+}
+
 .active {
-  background-color: #1e293b;
-  border-color: #1e293b;
+  background-color: var(--text-primary);
+  border-color: var(--text-primary);
   color: #fff;
 }
 
 .active:hover {
-  background-color: #0f172a;
+  background-color: #1e293b;
+  border-color: #1e293b;
 }
 
-/* 반응형: 정보 텍스트가 버튼과 겹칠 경우 위로 올림 */
 @media (max-width: 768px) {
   .container {
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
+    align-items: center;
   }
-  .info {
+
+  .leftInfo {
+    text-align: center;
     position: static;
   }
 }

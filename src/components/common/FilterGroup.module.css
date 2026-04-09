@@ -2,51 +2,52 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  flex-wrap: wrap; /* 버튼이 많아지면 다음 줄로 이동 */
+  flex-wrap: wrap;
 }
 
 .filterBtn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 7px 14px;
-  height: 35px;
-  border-radius: 9px;
-  background-color: #fff;
-  border: 1px solid #e2e8f0;
-  color: #64748b;
-  font-size: 12px;
+  padding: 8px 14px;
+  min-height: 36px;
+  border-radius: var(--radius-md);
+  background-color: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
   white-space: nowrap;
 }
 
 .filterBtn:hover {
-  background-color: #f8fafc;
-  border-color: #cbd5e1;
+  background-color: var(--bg-muted);
+  border-color: var(--border-md);
+  color: var(--text-primary);
 }
 
-/* 활성화된 필터 스타일 */
 .active {
-  background-color: #1e293b; /* 관리자 대시보드 메인 검정 계열 */
-  border-color: #1e293b;
+  background-color: var(--text-primary);
+  border-color: var(--text-primary);
   color: #fff;
 }
 
 .active:hover {
-  background-color: #0f172a;
+  background-color: #1e293b;
+  border-color: #1e293b;
+  color: #fff;
 }
 
-/* 필터 옆 숫자 배지 */
 .count {
   font-size: 11px;
   font-weight: 600;
-  padding: 1px 6px;
-  border-radius: 10px;
-  background-color: rgba(0, 0, 0, 0.05);
+  padding: 2px 6px;
+  border-radius: 999px;
+  background-color: rgba(15, 23, 42, 0.06);
   color: inherit;
-  opacity: 0.8;
+  opacity: 0.9;
 }
 
 .active .count {

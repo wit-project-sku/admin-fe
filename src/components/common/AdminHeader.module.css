@@ -1,62 +1,98 @@
 .header {
   position: sticky;
-  /* background: #1e293b; */
-  display: flex;
-  align-items: center;
-  justify-content: right;
-  padding: 12px 20px 0 16px;
+  top: 0;
   z-index: 100;
   width: 100%;
-  /* border-bottom: 1px solid rgba(255, 255, 255, 0.06); */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  min-height: var(--header-h);
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.left {
+  display: flex;
+  align-items: center;
+}
+
+.toggleBtn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.toggleBtn:hover {
+  color: var(--text-primary);
+  border-color: var(--border-md);
+  background: var(--bg-page);
 }
 
 .right {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .account {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 5px 12px 5px 6px;
-  border-radius: 20px;
-  /* background: rgba(255, 255, 255, 0.439); */
-  /* border: 1px solid rgba(206, 206, 206, 0.407); */
+  gap: 10px;
+  padding: 4px 2px 4px 0;
+  border-radius: 0;
+  border: none;
+  background: transparent;
+  transition: opacity 0.15s;
+}
+
+.account:hover {
+  opacity: 0.85;
 }
 
 .accountRole {
-  color: #94a3b8;
-  font-size: 10px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 500;
 }
 
 .infoWrapper {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
+  align-items: flex-start;
 }
 
 .avatar {
-  width: 36px;
-  height: 36px;
-  background: #3b82f6;
+  width: 34px;
+  height: 34px;
+  background: #1e293b;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
-  color: white;
+  color: #fff;
+  flex-shrink: 0;
 }
 
 .accountName {
-  color: #464343;
-  font-size: 12px;
-  font-weight: 700;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .noAccount {
-  color: #64748b;
-  font-size: 12px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
 }

@@ -1,30 +1,31 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: var(--overlay-scrim);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 200;
   padding: 20px;
-  backdrop-filter: blur(2px);
 }
 
 .modal {
-  background: white;
-  border-radius: 18px;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
   width: 100%;
   max-width: 500px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-  animation: modalIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.14);
+  animation: modalIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes modalIn {
   from {
     opacity: 0;
-    transform: scale(0.97) translateY(8px);
+    transform: scale(0.98) translateY(6px);
   }
   to {
     opacity: 1;
@@ -36,31 +37,37 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 22px;
-  border-bottom: 1px solid var(--border);
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .title {
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 700;
   color: var(--text-primary);
+  letter-spacing: -0.01em;
 }
 
 .closeBtn {
-  width: 28px;
-  height: 28px;
-  background: var(--bg-page);
+  width: 32px;
+  height: 32px;
+  background: var(--bg-muted);
   border: 1px solid var(--border);
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--text-secondary);
+  transition: background 0.15s;
+}
+
+.closeBtn:hover {
+  background: var(--border-subtle);
 }
 
 .body {
-  padding: 24px;
+  padding: 22px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -80,65 +87,64 @@
 
 .label {
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .valueText {
   font-size: 13px;
-  font-weight: 400;
+  font-weight: 500;
   color: var(--text-primary);
   padding: 10px 12px;
-  background: var(--bg-page);
-  border-radius: 9px;
-  border: 1px solid var(--border-md);
-  min-height: 38px;
+  background: var(--bg-muted);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  min-height: 40px;
   display: flex;
   align-items: center;
 }
 
 .textarea {
-  background: var(--bg-page);
-  border: 1px solid var(--border-md);
-  border-radius: 9px;
-  padding: 12px;
+  background: var(--bg-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
   font-size: 13px;
   color: var(--text-primary);
   min-height: 100px;
   resize: none;
-  line-height: 1.6;
+  line-height: 1.55;
 }
 
 .badge {
   display: inline-flex;
   align-items: center;
   padding: 4px 12px;
-  border-radius: 20px;
+  border-radius: 999px;
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
 }
-
-/* ... 기존 스타일 동일 ... */
 
 .footer {
-  padding: 16px 22px;
-  border-top: 1px solid var(--border);
+  padding: 16px 20px;
+  border-top: 1px solid var(--border-subtle);
   display: flex;
-  justify-content: flex-end; /* 중앙에서 우측 정렬로 변경 */
-  gap: 8px;
+  justify-content: flex-end;
+  gap: 10px;
+  background: var(--bg-muted);
 }
 
-/* 버튼 내부 텍스트 중앙 정렬 유지 */
 .footer button {
-  width: 100px;
-  height: 38px;
+  min-width: 100px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 9px;
+  border-radius: var(--radius-md);
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: opacity 0.15s, transform 0.1s;
 }

@@ -2,30 +2,31 @@
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: var(--overlay-scrim);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 200;
   padding: 20px;
-  backdrop-filter: blur(2px);
+  backdrop-filter: blur(4px);
 }
 
 .modal {
-  background: white;
-  border-radius: 18px;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
   width: 100%;
   max-width: 520px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-  animation: modalIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.14);
+  animation: modalIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes modalIn {
   from {
     opacity: 0;
-    transform: scale(0.97) translateY(8px);
+    transform: scale(0.98) translateY(6px);
   }
   to {
     opacity: 1;
@@ -38,75 +39,85 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 22px;
-  border-bottom: 1px solid var(--border);
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-card);
 }
 
 .title {
   font-size: 16px;
-  font-weight: 900;
+  font-weight: 700;
   color: var(--text-primary);
+  letter-spacing: -0.01em;
 }
 
 .closeBtn {
-  width: 28px;
-  height: 28px;
-  background: var(--bg-page);
+  width: 32px;
+  height: 32px;
+  background: var(--bg-muted);
   border: 1px solid var(--border);
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--text-secondary);
-  transition: all 0.15s;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.closeBtn:hover {
+  background: var(--border-subtle);
+  border-color: var(--border-md);
 }
 
 /********************** 텍스트 표시 영역 *********************/
 .field {
   display: flex;
   flex-direction: column;
-  gap: 4px; /* 간격 축소 */
+  gap: 5px;
   flex: 1;
 }
 
 .label {
-  font-size: 10px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .valueText {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--text-primary);
-  padding: 8px 12px;
-  background: var(--bg-page);
-  border-radius: 8px;
-  border: 1px solid var(--border-md);
-  min-height: 34px;
+  padding: 9px 12px;
+  background: var(--bg-muted);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  min-height: 36px;
   display: flex;
   align-items: center;
 }
 
 /********************** 입력창 *********************/
 .input {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 8px 12px;
+  background: var(--bg-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 9px 12px;
   font-size: 13px;
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
 }
 
 .input:focus {
-  border-color: #2563eb;
+  border-color: var(--accent);
+  background: var(--bg-card);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 .required {
-  color: #ef4444;
+  color: var(--red-text);
   margin-left: 2px;
 }
 
@@ -114,32 +125,33 @@
 .fieldInput,
 .fieldSelect {
   padding: 10px 14px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  color: #1e293b;
-  background-color: #f8fafc;
-  transition: all 0.2s;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 0.9375rem;
+  color: var(--text-primary);
+  background-color: var(--bg-muted);
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
 }
+
 .fieldInput:focus,
 .fieldSelect:focus,
 .fieldTextarea:focus {
   outline: none;
-  border-color: #2563eb;
-  background-color: #fff;
+  border-color: var(--accent);
+  background-color: var(--bg-card);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 .fieldTextarea {
   padding: 10px 14px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  font-size: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 13px;
   font-weight: 500;
   min-height: 80px;
   color: var(--text-primary);
-  background-color: #f8fafc;
-  transition: all 0.2s;
+  background-color: var(--bg-muted);
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
 }
 
 .fieldFull {
@@ -155,20 +167,21 @@
 
 .imageThumbnail,
 .uploadArea {
-  width: 80px; /* 100px -> 80px 축소 */
+  width: 80px;
   height: 80px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   position: relative;
   overflow: hidden;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
 }
 
 .uploadArea {
-  border: 2px dashed #e2e8f0;
+  border: 2px dashed var(--border-md);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  background: var(--bg-muted);
 }
 
 .previewImg {
@@ -181,9 +194,9 @@
   position: absolute;
   top: 4px;
   right: 4px;
-  width: 16px;
-  height: 16px;
-  background: #ef4444;
+  width: 18px;
+  height: 18px;
+  background: #b91c1c;
   color: white;
   border-radius: 50%;
   font-size: 9px;
@@ -192,6 +205,11 @@
   justify-content: center;
   cursor: pointer;
   border: none;
+  transition: background 0.15s;
+}
+
+.deleteBtn:hover {
+  background: #991b1b;
 }
 
 .fileInput {
@@ -202,64 +220,59 @@
 }
 
 /********************** 여러 버튼 선택(MultiSelectField) *********************/
-/* 그리드 레이아웃 */
 .itemGrid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr); /* 2열 배치 기본 */
+  grid-template-columns: repeat(2, 1fr);
   gap: 8px;
 }
 
-/* 개별 아이템 스타일 */
 .selectableItem {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
   cursor: pointer;
-  background: #fff;
-  transition: all 0.2s ease;
+  background: var(--bg-card);
+  transition: border-color 0.15s, background 0.15s;
 }
 
 .selectableItem:hover:not(.disabled) {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+  background: var(--bg-muted);
+  border-color: var(--border-md);
 }
 
-/* 선택된 상태 */
 .itemActive {
-  background: #f0f7ff;
-  border-color: #3b82f6;
+  background: var(--blue-bg);
+  border-color: var(--accent);
 }
 
 .itemName {
   font-size: 12px;
   font-weight: 600;
-  color: #475569;
+  color: var(--text-secondary);
 }
 
 .itemActive .itemName {
-  color: #2563eb;
+  color: var(--blue-text);
 }
 
-/* 체크 표시 시각화 (동그란 형태) */
 .checkCircle {
   width: 14px;
   height: 14px;
-  border: 1.5px solid #cbd5e1;
-  border-radius: 50%; /* 더 세련된 원형으로 변경 */
+  border: 1.5px solid var(--border-md);
+  border-radius: 50%;
   flex-shrink: 0;
   transition: all 0.2s;
 }
 
 .checked {
-  background: #2563eb;
-  border-color: #2563eb;
+  background: var(--accent);
+  border-color: var(--accent);
   position: relative;
 }
 
-/* 체크 안의 흰 점/V자 느낌 (옵션) */
 .checked::after {
   content: '';
   position: absolute;
@@ -272,40 +285,50 @@
   border-radius: 50%;
 }
 
-/* 비활성화 상태 (상세 보기 모드 등) */
 .disabled {
   cursor: default;
   opacity: 0.7;
 }
 
 /********************** 하단 버튼 *********************/
-
 .footer {
   padding: 14px 20px;
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
-  border-top: 1px solid #f1f5f9;
+  gap: 10px;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-muted);
 }
 
 .footer button {
-  padding: 0 16px;
-  height: 34px; /* 40px -> 34px 축소 */
-  font-size: 12px;
+  padding: 0 18px;
+  min-height: 38px;
+  font-size: 13px;
   font-weight: 600;
-  border-radius: 7px;
+  border-radius: var(--radius-md);
   cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
 }
 
 .btnCancel {
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  color: #64748b;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
   min-width: 100px;
 }
+
+.btnCancel:hover {
+  background: var(--bg-muted);
+  border-color: var(--border-md);
+}
+
 .btnSubmit {
-  background: #1e293b;
+  background: var(--text-primary);
   color: #fff;
   border: none;
   min-width: 100px;
+}
+
+.btnSubmit:hover {
+  background: #1e293b;
 }

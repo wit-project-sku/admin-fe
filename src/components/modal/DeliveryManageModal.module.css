@@ -23,37 +23,37 @@
 
 .label {
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-/* 주문 내역 아이템 카드 보완 */
 .orderItem {
-  background: #f8fafc;
-  padding: 10px;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  background: var(--bg-muted);
+  padding: 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
   position: relative;
-  padding-left: 34px;
+  padding-left: 36px;
 }
 
 .orderItemDot {
   position: absolute;
-  left: 17px;
-  top: 17px;
+  left: 18px;
+  top: 18px;
   width: 5px;
   height: 5px;
-  background: #3b82f6;
+  background: var(--accent);
   border-radius: 50%;
 }
 
 .orderItemName {
   font-size: 12px;
-  font-weight: 500; /* 일반체 느낌으로 조정 */
-  color: #1e293b;
+  font-weight: 500;
+  color: var(--text-primary);
   margin-bottom: 2px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--border-subtle);
   padding-bottom: 8px;
 }
 
@@ -63,19 +63,18 @@
   align-items: center;
 }
 
-/* 이미지의 수량/가격 태그 스타일 */
 .infoTag {
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 999px;
   padding: 4px 10px;
   font-size: 11px;
-  color: #64748b;
+  color: var(--text-muted);
   display: flex;
   gap: 8px;
 }
 
 .infoTag b {
-  font-weight: 500;
-  color: #1e293b;
+  font-weight: 600;
+  color: var(--text-primary);
 }
