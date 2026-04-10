@@ -84,6 +84,151 @@
   justify-content: center;
 }
 
+.thumbButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: inherit;
+  background: transparent;
+  cursor: pointer;
+  transition: box-shadow 0.15s, transform 0.15s;
+}
+
+.thumbButton:hover:not(:disabled) {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.thumbButton:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.35);
+}
+
+.thumbButton:disabled {
+  cursor: default;
+}
+
+/* Table image preview & kiosk list modals */
+.imagePreviewModal {
+  max-width: min(92vw, 720px);
+  width: 100%;
+}
+
+.imagePreviewBody {
+  padding: 16px 20px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-muted);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.imagePreviewImg {
+  max-width: 100%;
+  max-height: min(70vh, 640px);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+}
+
+.kioskListModal {
+  max-width: min(92vw, 440px);
+  width: 100%;
+}
+
+.kioskListBody {
+  padding: 16px 20px 20px;
+  max-height: min(60vh, 400px);
+  overflow-y: auto;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.kioskList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.kioskListItem {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  padding: 10px 12px;
+  background: var(--bg-muted);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+
+.kioskCellStack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  max-width: 220px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.kioskNamesText {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  word-break: keep-all;
+}
+
+.kioskCellTrigger {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  max-width: 220px;
+  margin: 0 auto;
+  padding: 6px 8px;
+  text-align: center;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s;
+  font: inherit;
+}
+
+.kioskCellTrigger:hover {
+  background: var(--bg-muted);
+}
+
+.kioskCellTrigger:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+}
+
+.kioskTotalBadge {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+  background: var(--blue-bg);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  padding: 4px 10px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.kioskCellTrigger:hover .kioskTotalBadge {
+  background: var(--accent);
+  color: #fff;
+}
+
 .viewToggle {
   display: flex;
   gap: 2px;

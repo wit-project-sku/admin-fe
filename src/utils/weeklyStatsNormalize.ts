@@ -45,8 +45,24 @@ function coerceTrendRow(row: unknown): WeeklyTrendRow | null {
 function coerceMarketRow(row: unknown): MarketShareRow | null {
   if (row == null || typeof row !== 'object') return null;
   const r = row as Record<string, unknown>;
-  const name = String(r.name ?? r.label ?? r.kioskName ?? r.kiosk_name ?? '').trim();
-  const value = num(r.value ?? r.count ?? r.share);
+  const kioskObj = r.kiosk;
+  const nested =
+    kioskObj != null && typeof kioskObj === 'object' && !Array.isArray(kioskObj)
+      ? (kioskObj as Record<string, unknown>)
+      : null;
+  const name = String(
+    r.name ??
+      r.label ??
+      r.kioskName ??
+      r.kiosk_name ??
+      r.branchName ??
+      r.branch_name ??
+      r.title ??
+      nested?.name ??
+      nested?.label ??
+      '',
+  ).trim();
+  const value = num(r.value ?? r.count ?? r.share ?? r.shots ?? r.total);
   return { name: name || '기타', value: Math.max(0, value) };
 }
 

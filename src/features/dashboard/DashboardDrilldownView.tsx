@@ -1,4 +1,4 @@
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import shared from '@commons/shared.module.css';
 import s from '@pages/DashboardPage.module.css';
 import { DashboardChartFallback } from './DashboardChartFallback';
@@ -41,19 +41,43 @@ export function DashboardDrilldownView({
         <PieChart>
           <Pie
             data={pieSlices}
+            dataKey='value'
+            nameKey='name'
             cx='50%'
-            cy='50%'
+            cy='45%'
             innerRadius={55}
             outerRadius={80}
             paddingAngle={4}
-            dataKey='value'
-            label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+            label={({ name, percent }) => {
+              const pct = percent != null ? (percent * 100).toFixed(0) : '0';
+              return  `${pct}%`;
+            }}
+            labelLine={{ stroke: 'var(--text-muted, #94a3b8)', strokeWidth: 1 }}
           >
             {pieSlices.map((e, i) => (
               <Cell key={i} fill={e.color} />
             ))}
           </Pie>
-          <Tooltip formatter={(v) => [`${v}건`]} />
+          <Tooltip
+            formatter={(value, _n, item) => {
+              const row = item?.payload as { name?: string } | undefined;
+              const place = row?.name ?? _n;
+              return [`${value}건`, place];
+            }}
+            contentStyle={{
+              borderRadius: 10,
+              border: 'none',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+              fontSize: 12,
+              fontWeight: 600,
+            }}
+          />
+          <Legend
+            verticalAlign='bottom'
+            iconType='circle'
+            iconSize={8}
+            wrapperStyle={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary, #64748b)', paddingTop: 8 }}
+          />
         </PieChart>
       </ResponsiveContainer>
     );
@@ -75,7 +99,7 @@ export function DashboardDrilldownView({
             <p className={s.drillTotal}>{totalVal.toLocaleString()}건</p>
             <p className={shared.pageSubtitle}>{label}</p>
           </div>
-          <div style={{ padding: '0 22px 18px', height: 220 }}>{pieSection}</div>
+          <div style={{ padding: '0 22px 18px', height: 280 }}>{pieSection}</div>
         </div>
         <div className={`${shared.card} ${s.rankCard}`}>
           <div className={shared.cardHead}>

@@ -5,11 +5,13 @@ import m from './ModalElements.module.css';
 type ModalContainerProps = {
   children: ReactNode;
   onClose?: () => void;
+  /** Merged with the default modal box (e.g. wider preview dialogs). */
+  modalClassName?: string;
 };
 
-export const ModalContainer = ({ children, onClose }: ModalContainerProps) => (
+export const ModalContainer = ({ children, onClose, modalClassName }: ModalContainerProps) => (
   <div className={m.overlay} onClick={onClose}>
-    <div className={m.modal} onClick={(e) => e.stopPropagation()}>
+    <div className={[m.modal, modalClassName].filter(Boolean).join(' ')} onClick={(e) => e.stopPropagation()}>
       {children}
     </div>
   </div>

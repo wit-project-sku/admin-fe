@@ -1,7 +1,9 @@
+import { useEffect, useState } from 'react';
 import shared from '@commons/shared.module.css';
 import s from '@pages/OutfitsPage.module.css';
 import EditBtn from '@components/common/EditBtn';
 import DeleteBtn from '@components/common/DeleteBtn';
+import { ModalContainer, ModalHeader } from '@modals/ModalElements';
 import type { OutfitRow } from './outfitListMappers';
 import { OUTFIT_TABLE_MESSAGES } from './outfitListConfig';
 
@@ -17,15 +19,14 @@ type OutfitsTableProps = {
 };
 
 const COL_COUNT = 7;
+const KIOSK_PREVIEW_LIMIT = 3;
 
-function formatKioskCell(ids: unknown, nameById: Record<string, string>): string {
-  if (!Array.isArray(ids) || ids.length === 0) return '—';
-  return (
-    ids
-      .map((id) => nameById[String(id)])
-      .filter(Boolean)
-      .join(', ') || '—'
-  );
+function resolveKioskNames(ids: unknown, nameById: Record<string, string>): string[] {
+  if (!Array.isArray(ids) || ids.length === 0) return [];
+  return ids.map((id) => {
+    const label = nameById[String(id)];
+    return label && label.trim() ? label.trim() : `지점 #${id}`;
+  });
 }
 
 function thumbSrc(row: OutfitRow): string | undefined {
@@ -47,6 +48,46 @@ function ScheduleCell({ row }: { row: OutfitRow }) {
   );
 }
 
+function KioskCell({
+  names,
+  onShowAll,
+}: {
+  names: string[];
+  onShowAll: () => void;
+}) {
+  if (names.length === 0) {
+    return <span className={shared.tdMuted}>—</span>;
+  }
+
+  const total = names.length;
+  const preview = names.slice(0, KIOSK_PREVIEW_LIMIT);
+  const previewText = preview.join(', ');
+  const hasOverflow = total > KIOSK_PREVIEW_LIMIT;
+
+  if (hasOverflow) {
+    return (
+      <button
+        type="button"
+        className={s.kioskCellTrigger}
+        aria-label={`설치 키오스크 총 ${total}곳 전체 보기`}
+        onClick={onShowAll}
+      >
+        <span className={s.kioskNamesText}>{previewText}</span>
+        <span className={s.kioskTotalBadge}>총 {total}곳 · 전체 보기</span>
+      </button>
+    );
+  }
+
+  return (
+    <div className={s.kioskCellStack}>
+      <span className={s.kioskNamesText}>{previewText}</span>
+    </div>
+  );
+}
+
+type ImagePreviewState = { src: string; title: string } | null;
+type KioskListState = { names: string[] } | null;
+
 export function OutfitsTable({
   loading,
   errorMessage,
@@ -57,6 +98,21 @@ export function OutfitsTable({
   onEdit,
   onDelete,
 }: OutfitsTableProps) {
+  const [imagePreview, setImagePreview] = useState<ImagePreviewState>(null);
+  const [kioskListModal, setKioskListModal] = useState<KioskListState>(null);
+
+  useEffect(() => {
+    if (!imagePreview && !kioskListModal) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setImagePreview(null);
+        setKioskListModal(null);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [imagePreview, kioskListModal]);
+
   return (
     <div className={s.tableResponsive}>
       <table className={shared.table}>
@@ -97,6 +153,8 @@ export function OutfitsTable({
           ) : (
             rows.map((o, i) => {
               const src = thumbSrc(o);
+              const kioskNames = resolveKioskNames(o.kioskIds, kioskNameById);
+              const previewTitle = [o.name, o.outfitCode].filter(Boolean).join(' · ') || '의상 미리보기';
               return (
                 <tr key={String(o.id)} className={shared.tr}>
                   <td className={`${shared.td} ${shared.tdMuted} ${shared.tdCenter}`}>
@@ -105,7 +163,14 @@ export function OutfitsTable({
                   <td className={`${shared.td} ${shared.tdCenter}`}>
                     <div className={s.previewWrapper}>
                       {src ? (
-                        <img src={src} alt="" className={s.tableThumb} />
+                        <button
+                          type="button"
+                          className={s.thumbButton}
+                          aria-label={`${previewTitle} 이미지 크게 보기`}
+                          onClick={() => setImagePreview({ src, title: previewTitle })}
+                        >
+                          <img src={src} alt="" className={s.tableThumb} />
+                        </button>
                       ) : (
                         <div className={s.tableThumbPlaceholder} aria-hidden />
                       )}
@@ -120,8 +185,8 @@ export function OutfitsTable({
                   <td className={`${shared.td} ${shared.tdCenter}`}>
                     <ScheduleCell row={o} />
                   </td>
-                  <td className={`${shared.td} ${shared.tdCenter} ${shared.tdMuted}`}>
-                    {formatKioskCell(o.kioskIds, kioskNameById)}
+                  <td className={`${shared.td} ${shared.tdCenter}`}>
+                    <KioskCell names={kioskNames} onShowAll={() => setKioskListModal({ names: kioskNames })} />
                   </td>
                   <td className={`${shared.td} ${shared.tdCenter}`}>
                     <span
@@ -142,6 +207,33 @@ export function OutfitsTable({
           )}
         </tbody>
       </table>
+
+      {imagePreview ? (
+        <ModalContainer onClose={() => setImagePreview(null)} modalClassName={s.imagePreviewModal}>
+          <ModalHeader title={imagePreview.title} onClose={() => setImagePreview(null)} />
+          <div className={s.imagePreviewBody}>
+            <img src={imagePreview.src} alt="" className={s.imagePreviewImg} />
+          </div>
+        </ModalContainer>
+      ) : null}
+
+      {kioskListModal ? (
+        <ModalContainer onClose={() => setKioskListModal(null)} modalClassName={s.kioskListModal}>
+          <ModalHeader
+            title={`설치 키오스크 · 총 ${kioskListModal.names.length}곳`}
+            onClose={() => setKioskListModal(null)}
+          />
+          <div className={s.kioskListBody}>
+            <ul className={s.kioskList}>
+              {kioskListModal.names.map((name, idx) => (
+                <li key={`${name}-${idx}`} className={s.kioskListItem}>
+                  {idx + 1}. {name}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </ModalContainer>
+      ) : null}
     </div>
   );
 }
