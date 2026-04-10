@@ -32,6 +32,68 @@ const OUTFIT_STATUS_OPTIONS = [
   { value: 'INACTIVE', label: '비활성화' },
 ];
 
+type OutfitFormState = {
+  outfitCode: string;
+  categoryId: string;
+  status: 'ACTIVE' | 'INACTIVE';
+  kioskIds: (string | number)[];
+  operationStartDate: string;
+  operationEndDate: string;
+};
+
+type OutfitFieldErrors = Partial<
+  Record<
+    | 'outfitCode'
+    | 'categoryId'
+    | 'status'
+    | 'kioskIds'
+    | 'operationStartDate'
+    | 'operationEndDate'
+    | 'image',
+    string
+  >
+>;
+
+function validateOutfitForm(form: OutfitFormState, previewCount: number): OutfitFieldErrors {
+  const e: OutfitFieldErrors = {};
+  if (!form.outfitCode.trim()) e.outfitCode = '의상 코드를 입력해 주세요.';
+
+  const categoryId = Number(form.categoryId);
+  if (!Number.isFinite(categoryId) || categoryId <= 0) {
+    e.categoryId = '의상 카테고리를 선택해 주세요.';
+  }
+
+  if (form.status !== 'ACTIVE' && form.status !== 'INACTIVE') {
+    e.status = '상태를 선택해 주세요.';
+  }
+
+  const kioskIds = form.kioskIds.map((k) => Number(k)).filter((n) => Number.isFinite(n) && n > 0);
+  if (kioskIds.length === 0) e.kioskIds = '설치 키오스크를 1개 이상 선택해 주세요.';
+
+  const start = form.operationStartDate.trim();
+  const end = form.operationEndDate.trim();
+  if (!start) e.operationStartDate = '운영 시작일을 선택해 주세요.';
+  if (!end) e.operationEndDate = '운영 종료일을 선택해 주세요.';
+  if (start && end && end < start) {
+    e.operationEndDate = '운영 종료일은 시작일 이후여야 합니다.';
+  }
+
+  if (previewCount <= 0) e.image = '의상 이미지를 등록해 주세요.';
+
+  return e;
+}
+
+function buildOutfitWriteBody(form: OutfitFormState): OutfitWriteBody {
+  return {
+    outfitCode: form.outfitCode.trim(),
+    status: form.status,
+    categoryId: Number(form.categoryId),
+    kioskIds: form.kioskIds.map((k) => Number(k)).filter((n) => Number.isFinite(n) && n > 0),
+    operationStartDate: form.operationStartDate.trim(),
+    operationEndDate: form.operationEndDate.trim(),
+  };
+}
+
 type OutfitManageModalProps = {
   open: boolean;
   mode: 'create' | 'edit';
@@ -50,17 +112,18 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
   const { updateOutfitAsync } = useUpdateOutfit();
   const [saving, setSaving] = useState(false);
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<OutfitFormState>({
     outfitCode: '',
     categoryId: '',
-    status: 'ACTIVE' as 'ACTIVE' | 'INACTIVE',
-    kioskIds: [] as (string | number)[],
+    status: 'ACTIVE',
+    kioskIds: [],
     operationStartDate: '',
     operationEndDate: '',
   });
 
   const [image, setImage] = useState<File[]>([]);
   const [previewUrl, setPreviewUrl] = useState<string[]>([]);
+  const [fieldErrors, setFieldErrors] = useState<OutfitFieldErrors>({});
 
   const isEdit = mode === 'edit';
 
@@ -78,6 +141,7 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
       setPreviewUrl([]);
       setImage([]);
     }
+    setFieldErrors({});
   }, [open, mode, outfitId, isEdit]);
 
   useEffect(() => {
@@ -115,11 +179,21 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
     setImage([]);
   }, [open, isEdit, detailData, outfitId, categories]);
 
+  const clearFieldError = (key: keyof OutfitFieldErrors) => {
+    setFieldErrors((prev) => {
+      if (!prev[key]) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  };
+
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setImage([file]);
       setPreviewUrl([URL.createObjectURL(file)]);
+      clearFieldError('image');
     }
   };
 
@@ -128,42 +202,16 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
     setPreviewUrl([]);
   };
 
-  const buildPayload = (): OutfitWriteBody | null => {
-    const code = form.outfitCode.trim();
-    if (!code) {
-      alert('의상 코드를 입력해 주세요.');
-      return null;
-    }
-    const categoryId = Number(form.categoryId);
-    if (!Number.isFinite(categoryId) || categoryId <= 0) {
-      alert('카테고리를 선택해 주세요.');
-      return null;
-    }
-    const kioskIds = form.kioskIds.map((k) => Number(k)).filter((n) => Number.isFinite(n) && n > 0);
-    const start = form.operationStartDate.trim();
-    const end = form.operationEndDate.trim();
-    if (!start && end) {
-      alert('운영 시작일을 입력하거나, 종료일을 비워 두세요 (무기한).');
-      return null;
-    }
-    if (start && end && end < start) {
-      alert('운영 종료일은 시작일 이후여야 합니다.');
-      return null;
-    }
-    return {
-      outfitCode: code,
-      status: form.status,
-      categoryId,
-      kioskIds,
-      operationStartDate: start || null,
-      operationEndDate: end || null,
-    };
-  };
-
   const handleSubmit = async (e?: FormEvent) => {
     e?.preventDefault();
-    const outfitData = buildPayload();
-    if (!outfitData) return;
+    const validation = validateOutfitForm(form, previewUrl.length);
+    if (Object.keys(validation).length > 0) {
+      setFieldErrors(validation);
+      return;
+    }
+    setFieldErrors({});
+
+    const outfitData = buildOutfitWriteBody(form);
 
     setSaving(true);
     try {
@@ -203,31 +251,42 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
               <InputField
                 label="의상 코드"
                 required
+                error={fieldErrors.outfitCode}
                 placeholder="예: OB-2024-001"
                 value={form.outfitCode}
                 disabled={formDisabled}
-                onChange={(e) => setForm({ ...form, outfitCode: e.target.value })}
+                onChange={(e) => {
+                  clearFieldError('outfitCode');
+                  setForm({ ...form, outfitCode: e.target.value });
+                }}
               />
               <div className={m.gridRow}>
                 <DropDownField
                   label="의상 카테고리"
                   required
+                  error={fieldErrors.categoryId}
                   options={categories}
                   value={form.categoryId === '' ? '' : String(form.categoryId)}
                   disabled={formDisabled || categoriesLoading}
-                  onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
+                  onChange={(e) => {
+                    clearFieldError('categoryId');
+                    setForm({ ...form, categoryId: e.target.value });
+                  }}
                 />
                 <DropDownField
                   label="상태"
+                  required
+                  error={fieldErrors.status}
                   options={OUTFIT_STATUS_OPTIONS}
                   value={String(form.status)}
                   disabled={formDisabled}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    clearFieldError('status');
                     setForm({
                       ...form,
                       status: e.target.value === 'INACTIVE' ? 'INACTIVE' : 'ACTIVE',
-                    })
-                  }
+                    });
+                  }}
                 />
               </div>
               <div className={m.scheduleSection}>
@@ -235,34 +294,51 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
                 <div className={m.gridRow}>
                   <InputField
                     label="운영 시작일"
+                    required
+                    error={fieldErrors.operationStartDate}
                     type="date"
                     value={form.operationStartDate}
                     disabled={formDisabled}
-                    onChange={(e) => setForm({ ...form, operationStartDate: e.target.value })}
+                    onChange={(e) => {
+                      clearFieldError('operationStartDate');
+                      clearFieldError('operationEndDate');
+                      setForm({ ...form, operationStartDate: e.target.value });
+                    }}
                   />
                   <InputField
                     label="운영 종료일"
+                    required
+                    error={fieldErrors.operationEndDate}
                     type="date"
                     value={form.operationEndDate}
                     disabled={formDisabled}
-                    onChange={(e) => setForm({ ...form, operationEndDate: e.target.value })}
+                    onChange={(e) => {
+                      clearFieldError('operationEndDate');
+                      clearFieldError('operationStartDate');
+                      setForm({ ...form, operationEndDate: e.target.value });
+                    }}
                   />
                 </div>
-                <p className={m.fieldHint}>
-                  종료일을 비우면 무기한으로 저장됩니다. 시작·종료를 모두 비우면 일정 제한 없음으로 전송됩니다.
-                </p>
+                <p className={m.fieldHint}>시작일과 종료일을 모두 선택해 주세요. 종료일은 시작일 이후여야 합니다.</p>
               </div>
               <MultiSelectField
                 label="설치 키오스크"
+                required
+                error={fieldErrors.kioskIds}
                 items={kiosks}
                 selectedIds={form.kioskIds}
-                onChange={(newIds) => setForm({ ...form, kioskIds: newIds })}
+                onChange={(newIds) => {
+                  clearFieldError('kioskIds');
+                  setForm({ ...form, kioskIds: newIds });
+                }}
                 isEdit={!formDisabled}
               />
-              <p className={m.fieldHint}>노출할 키오스크를 선택하세요. 미선택 시 빈 목록으로 저장됩니다.</p>
+              <p className={m.fieldHint}>노출할 키오스크를 최소 1개 이상 선택해야 합니다.</p>
             </div>
             <ImageUploadField
               label="의상 이미지 (1장)"
+              required
+              error={fieldErrors.image}
               previewUrls={previewUrl}
               onUpload={handleFileChange}
               onDelete={handleDeleteImage}

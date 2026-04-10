@@ -41,7 +41,7 @@ function kioskIdsFromPrimitives(raw: unknown): (string | number)[] {
     .filter((x): x is string | number => x !== '' && x != null);
 }
 
-/** Reads kiosk ids: flat `kioskIds` from GET-by-id, or relation arrays `kioskOutfits` / `kioskProducts`. */
+/** Reads kiosk ids: flat `kioskIds` from GET-by-id, relation arrays, or nested `kiosks` / single `kioskId`. */
 export function extractKioskIdsFromDetail(d: Record<string, unknown>): (string | number)[] {
   const direct = d.kioskIds ?? d.kiosk_ids ?? d.kioskIdList ?? d.kiosk_id_list;
   const fromFlat = kioskIdsFromPrimitives(direct);
@@ -51,9 +51,21 @@ export function extractKioskIdsFromDetail(d: Record<string, unknown>): (string |
     (d.kioskOutfits as unknown) ??
     (d.kioskProducts as unknown) ??
     (d.kiosk_outfits as unknown) ??
-    (d.kiosk_products as unknown);
-  if (!Array.isArray(list)) return [];
-  return list.map(kioskEntryId).filter((x): x is string | number => x != null);
+    (d.kiosk_products as unknown) ??
+    (d.kiosks as unknown);
+  if (Array.isArray(list) && list.length > 0) {
+    const primitives = kioskIdsFromPrimitives(list);
+    if (primitives.length > 0) return primitives;
+    const mapped = list.map(kioskEntryId).filter((x): x is string | number => x != null);
+    if (mapped.length > 0) return mapped;
+  }
+
+  const single = d.kioskId ?? d.kiosk_id;
+  if (typeof single === 'number' || (typeof single === 'string' && single !== '')) {
+    return [single];
+  }
+
+  return [];
 }
 
 type CategoryLike = { id?: string | number; value?: string | number; label?: string; name?: string };
@@ -65,7 +77,8 @@ export function resolveOutfitCategoryId(d: Record<string, unknown>, categories: 
   const direct = pickCategoryIdForSelect(d);
   if (direct) return direct;
 
-  const name = scalarToInputString(d.categoryName ?? d.category_name).trim();
+  const cat = (d.category ?? d.categoryDto) as Record<string, unknown> | undefined;
+  const name = scalarToInputString(d.categoryName ?? d.category_name ?? cat?.name).trim();
   if (!name || categories.length === 0) return '';
 
   const norm = (s: string) => s.trim().toLowerCase();
@@ -79,6 +92,11 @@ export function resolveOutfitCategoryId(d: Record<string, unknown>, categories: 
   if (found) return String(found.id ?? found.value ?? '');
 
   return '';
+}
+
+/** Product GET-by-id: same as outfit when category id is missing but name exists. */
+export function resolveProductCategoryId(d: Record<string, unknown>, categories: CategoryLike[]): string {
+  return resolveOutfitCategoryId(d, categories);
 }
 
 export function scalarToInputString(v: unknown): string {

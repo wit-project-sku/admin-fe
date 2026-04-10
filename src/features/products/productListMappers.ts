@@ -24,6 +24,8 @@ export type ProductRow = {
   price?: number;
   stock?: number;
   status?: ProductStatus;
+  /** Present when list API returns kiosk ids; used as edit fallback if GET-by-id omits them. */
+  kioskIds?: (string | number)[];
 };
 
 export function mapProductListItemToRow(raw: unknown): ProductRow {
@@ -64,6 +66,12 @@ export function mapProductListItemToRow(raw: unknown): ProductRow {
   const stock = Number(o.stock ?? o.quantity ?? 0);
   const status = normalizeListStatus(o.status);
 
+  let kioskIds: (string | number)[] | undefined;
+  const kRaw = o.kioskIds ?? o.kiosk_ids;
+  if (Array.isArray(kRaw) && kRaw.length > 0) {
+    kioskIds = kRaw.filter((x): x is string | number => typeof x === 'number' || (typeof x === 'string' && x !== ''));
+  }
+
   return {
     id,
     name,
@@ -73,5 +81,6 @@ export function mapProductListItemToRow(raw: unknown): ProductRow {
     price: Number.isFinite(price) ? price : 0,
     stock: Number.isFinite(stock) ? stock : 0,
     status,
+    kioskIds,
   };
 }

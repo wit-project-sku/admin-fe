@@ -45,14 +45,24 @@ export const InfoField = ({ label, value, children }: InfoFieldProps) => (
 type InputFieldProps = {
   label: string;
   required?: boolean;
+  error?: string;
 } & InputHTMLAttributes<HTMLInputElement>;
 
-export const InputField = ({ label, required, ...props }: InputFieldProps) => (
+export const InputField = ({ label, required, error, className, ...props }: InputFieldProps) => (
   <div className={m.field}>
     <label className={m.label}>
       {label} {required && <span className={m.required}>*</span>}
     </label>
-    <input className={m.input} {...props} />
+    <input
+      className={[m.input, error ? m.inputError : '', className].filter(Boolean).join(' ')}
+      aria-invalid={error ? true : undefined}
+      {...props}
+    />
+    {error ? (
+      <span className={m.fieldError} role="alert">
+        {error}
+      </span>
+    ) : null}
   </div>
 );
 
@@ -62,17 +72,25 @@ type DropDownFieldProps = {
   label: string;
   options: SelectOption[];
   required?: boolean;
+  error?: string;
   value?: string | number;
   onChange?: ChangeEventHandler<HTMLSelectElement>;
 } & Omit<SelectHTMLAttributes<HTMLSelectElement>, 'onChange' | 'value'>;
 
-export const DropDownField = ({ label, options, required, value, onChange, ...props }: DropDownFieldProps) => {
+export const DropDownField = ({ label, options, required, error, value, onChange, className, ...props }: DropDownFieldProps) => {
   return (
     <div className={m.field}>
       <label className={m.label}>
         {label} {required && <span className={m.required}>*</span>}
       </label>
-      <select className={m.input} value={value} onChange={onChange} required={required} {...props}>
+      <select
+        className={[m.input, error ? m.selectError : '', className].filter(Boolean).join(' ')}
+        value={value}
+        onChange={onChange}
+        required={required}
+        aria-invalid={error ? true : undefined}
+        {...props}
+      >
         <option value="">선택하세요</option>
         {options.map((opt) => (
           <option key={String(opt.value ?? opt.id)} value={opt.value ?? opt.id}>
@@ -80,6 +98,11 @@ export const DropDownField = ({ label, options, required, value, onChange, ...pr
           </option>
         ))}
       </select>
+      {error ? (
+        <span className={m.fieldError} role="alert">
+          {error}
+        </span>
+      ) : null}
     </div>
   );
 };
@@ -87,14 +110,25 @@ export const DropDownField = ({ label, options, required, value, onChange, ...pr
 type TextAreaFieldProps = {
   label: string;
   required?: boolean;
+  error?: string;
 } & TextareaHTMLAttributes<HTMLTextAreaElement>;
 
-export const TextAreaField = ({ label, required, ...props }: TextAreaFieldProps) => (
+export const TextAreaField = ({ label, required, error, className, ...props }: TextAreaFieldProps) => (
   <div className={`${m.field} ${m.fieldFull}`}>
     <span className={m.label}>
       {label} {required && <span className={m.required}>*</span>}
     </span>
-    <textarea className={m.fieldTextarea} required={required} {...props} />
+    <textarea
+      className={[m.fieldTextarea, error ? m.textareaError : '', className].filter(Boolean).join(' ')}
+      required={required}
+      aria-invalid={error ? true : undefined}
+      {...props}
+    />
+    {error ? (
+      <span className={m.fieldError} role="alert">
+        {error}
+      </span>
+    ) : null}
   </div>
 );
 
@@ -103,6 +137,7 @@ export type MultiSelectItem = { id: string | number; name: string };
 type MultiSelectFieldProps = {
   label: string;
   required?: boolean;
+  error?: string;
   items?: MultiSelectItem[];
   selectedIds?: (string | number)[];
   onChange: (ids: (string | number)[]) => void;
@@ -111,7 +146,15 @@ type MultiSelectFieldProps = {
 
 const idKey = (v: string | number) => String(v);
 
-export const MultiSelectField = ({ label, required, items = [], selectedIds = [], onChange, isEdit = true }: MultiSelectFieldProps) => {
+export const MultiSelectField = ({
+  label,
+  required,
+  error,
+  items = [],
+  selectedIds = [],
+  onChange,
+  isEdit = true,
+}: MultiSelectFieldProps) => {
   const ids = Array.isArray(selectedIds) ? selectedIds : [];
 
   const toggleItem = (itemId: string | number) => {
@@ -128,7 +171,7 @@ export const MultiSelectField = ({ label, required, items = [], selectedIds = []
       <span className={m.label}>
         {label} {required && <span className={m.required}>*</span>}
       </span>
-      <div className={m.itemGrid}>
+      <div className={[m.itemGrid, error ? m.multiSelectErrorWrap : ''].filter(Boolean).join(' ')}>
         {items.map((item) => {
           const isActive = ids.some((i) => idKey(i) === idKey(item.id));
           return (
@@ -148,12 +191,21 @@ export const MultiSelectField = ({ label, required, items = [], selectedIds = []
           );
         })}
       </div>
+      {error ? (
+        <span className={m.fieldError} role="alert">
+          {error}
+        </span>
+      ) : null}
     </div>
   );
 };
 
 type ImageUploadFieldProps = {
   label: string;
+  required?: boolean;
+  error?: string;
+  /** Span full width in parent CSS grids (e.g. product modal). */
+  spanFull?: boolean;
   previewUrls?: string[];
   onUpload?: ChangeEventHandler<HTMLInputElement>;
   onDelete?: (url?: string) => void;
@@ -161,12 +213,28 @@ type ImageUploadFieldProps = {
   maxCount?: number;
 };
 
-export const ImageUploadField = ({ label, previewUrls = [], onUpload, onDelete, isEdit, maxCount = 1 }: ImageUploadFieldProps) => {
+export const ImageUploadField = ({
+  label,
+  required,
+  error,
+  spanFull,
+  previewUrls = [],
+  onUpload,
+  onDelete,
+  isEdit,
+  maxCount = 1,
+}: ImageUploadFieldProps) => {
   const urls = Array.isArray(previewUrls) ? previewUrls : [];
 
   return (
-    <div className={m.imageSection}>
-      <label className={m.label}>{label}</label>
+    <div
+      className={[m.imageSection, spanFull ? m.fieldFull : '', error ? m.imageSectionError : '']
+        .filter(Boolean)
+        .join(' ')}
+    >
+      <label className={m.label}>
+        {label} {required && <span className={m.required}>*</span>}
+      </label>
       <div className={m.imageGrid}>
         {urls.map((url, index) => (
           <div key={`${url}-${index}`} className={m.imageThumbnail}>
@@ -189,6 +257,11 @@ export const ImageUploadField = ({ label, previewUrls = [], onUpload, onDelete, 
           </div>
         )}
       </div>
+      {error ? (
+        <span className={m.fieldError} role="alert">
+          {error}
+        </span>
+      ) : null}
     </div>
   );
 };

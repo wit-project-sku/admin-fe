@@ -1,10 +1,10 @@
-import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from 'react';
 import styles from './ProductManageModal.module.css';
 import { useGetKiosks } from '../../hooks/useGetKiosks';
 import {
   extractKioskIdsFromDetail,
   normalizeProductStatus,
-  pickCategoryIdForSelect,
+  resolveProductCategoryId,
   scalarToInputString,
   unwrapDetailBody,
 } from '../../utils/modalFormMapping';
@@ -62,9 +62,48 @@ function emptyForm(): ProductFormState {
   };
 }
 
+type ProductFieldErrors = Partial<
+  Record<
+    'name' | 'subTitle' | 'categoryId' | 'price' | 'stock' | 'status' | 'kioskIds' | 'description' | 'images',
+    string
+  >
+>;
+
+function validateProductForm(form: ProductFormState, imageCount: number): ProductFieldErrors {
+  const e: ProductFieldErrors = {};
+  if (!form.name.trim()) e.name = '상품명을 입력해 주세요.';
+  if (!form.subTitle.trim()) e.subTitle = '상품 소제목을 입력해 주세요.';
+
+  const categoryId = Number(form.categoryId);
+  if (!Number.isFinite(categoryId) || categoryId <= 0) e.categoryId = '카테고리를 선택해 주세요.';
+
+  const price = Number(form.price);
+  if (form.price.trim() === '' || !Number.isFinite(price) || price < 0) {
+    e.price = '0 이상의 가격을 입력해 주세요.';
+  }
+
+  const stock = Number(form.stock);
+  if (form.stock.trim() === '' || !Number.isFinite(stock) || stock < 0) {
+    e.stock = '0 이상의 재고를 입력해 주세요.';
+  }
+
+  if (!PRODUCT_STATUS_ALLOWED.includes(form.status)) e.status = '판매 상태를 선택해 주세요.';
+
+  const kioskIds = (form.kioskIds ?? []).map((id) => Number(id)).filter((n) => Number.isFinite(n));
+  if (kioskIds.length === 0) e.kioskIds = '판매 키오스크를 1개 이상 선택해 주세요.';
+
+  if (!form.description.trim()) e.description = '상품 상세 설명을 입력해 주세요.';
+  if (imageCount <= 0) e.images = '상품 이미지를 1장 이상 등록해 주세요.';
+
+  return e;
+}
+
 function buildProductWriteBody(form: ProductFormState): ProductWriteBody | null {
   const name = form.name.trim();
   if (!name) return null;
+
+  const subTitle = form.subTitle.trim();
+  if (!subTitle) return null;
 
   const categoryId = Number(form.categoryId);
   if (!Number.isFinite(categoryId) || categoryId <= 0) return null;
@@ -78,10 +117,13 @@ function buildProductWriteBody(form: ProductFormState): ProductWriteBody | null 
 
   if (!PRODUCT_STATUS_ALLOWED.includes(form.status)) return null;
 
+  const description = form.description.trim();
+  if (!description) return null;
+
   return {
     name,
-    subTitle: form.subTitle.trim(),
-    description: form.description.trim(),
+    subTitle,
+    description,
     price,
     stock,
     status: form.status,
@@ -92,7 +134,7 @@ function buildProductWriteBody(form: ProductFormState): ProductWriteBody | null 
 
 export default function ProductManageModal({ open, mode, product, onClose, onSuccess }: ProductManageModalProps) {
   const { data: categoriesData } = useGetAllProductCategories();
-  const categories = unwrapList(categoriesData) as SelectOption[];
+  const categories = useMemo(() => unwrapList(categoriesData) as SelectOption[], [categoriesData]);
   const { data: kiosksData } = useGetKiosks();
   const kiosks = unwrapList(kiosksData) as MultiSelectItem[];
   const { data: detailData, isLoading: loading } = useGetProductById(open && mode === 'edit' ? product?.id : null);
@@ -105,6 +147,7 @@ export default function ProductManageModal({ open, mode, product, onClose, onSuc
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   /** Number of leading preview URLs from the server (edit mode); new uploads are appended after this. */
   const [serverPreviewCount, setServerPreviewCount] = useState(0);
+  const [fieldErrors, setFieldErrors] = useState<ProductFieldErrors>({});
 
   useEffect(() => {
     if (!open) return;
@@ -114,6 +157,7 @@ export default function ProductManageModal({ open, mode, product, onClose, onSuc
       setPreviewUrls([]);
       setServerPreviewCount(0);
     }
+    setFieldErrors({});
   }, [open, mode]);
 
   useEffect(() => {
@@ -124,12 +168,18 @@ export default function ProductManageModal({ open, mode, product, onClose, onSuc
     setForm({
       name: scalarToInputString(d.name),
       subTitle: scalarToInputString(d.subTitle ?? d.sub_title),
-      categoryId: pickCategoryIdForSelect(d),
+      categoryId: resolveProductCategoryId(d, categories),
       price: scalarToInputString(d.price),
       stock: scalarToInputString(d.stock),
       description: scalarToInputString(d.description),
       status: normalizeProductStatus(d.status, PRODUCT_STATUS_ALLOWED, 'ON_SALE') as ProductStatus,
-      kioskIds: extractKioskIdsFromDetail(d),
+      kioskIds: (() => {
+        const fromDetail = extractKioskIdsFromDetail(d);
+        if (fromDetail.length > 0) return fromDetail;
+        const fromList = product?.kioskIds;
+        if (Array.isArray(fromList) && fromList.length > 0) return fromList;
+        return [];
+      })(),
     });
 
     const imgs = Array.isArray(d.images) ? d.images : [];
@@ -143,7 +193,7 @@ export default function ProductManageModal({ open, mode, product, onClose, onSuc
     setPreviewUrls(urls);
     setServerPreviewCount(urls.length);
     setImages([]);
-  }, [open, mode, detailData, product?.id]);
+  }, [open, mode, detailData, product?.id, product?.kioskIds, categories]);
 
   useEffect(() => {
     if (!open) return;
@@ -156,10 +206,20 @@ export default function ProductManageModal({ open, mode, product, onClose, onSuc
 
   if (!open) return null;
 
+  const clearFieldError = (key: keyof ProductFieldErrors) => {
+    setFieldErrors((prev) => {
+      if (!prev[key]) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  };
+
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []) as File[];
     setImages((prev) => [...prev, ...files]);
     setPreviewUrls((prev) => [...prev, ...files.map((f) => URL.createObjectURL(f))]);
+    clearFieldError('images');
   };
 
   const handleDeleteImage = (url: string | undefined) => {
@@ -179,9 +239,16 @@ export default function ProductManageModal({ open, mode, product, onClose, onSuc
 
   const handleSubmit = async (e?: FormEvent) => {
     e?.preventDefault();
+    const validation = validateProductForm(form, previewUrls.length);
+    if (Object.keys(validation).length > 0) {
+      setFieldErrors(validation);
+      return;
+    }
+    setFieldErrors({});
+
     const productData = buildProductWriteBody(form);
     if (!productData) {
-      alert('필수 항목을 확인해 주세요. (상품명, 카테고리, 키오스크, 가격·재고)');
+      alert('입력값을 다시 확인해 주세요.');
       return;
     }
     setSaving(true);
@@ -217,71 +284,108 @@ export default function ProductManageModal({ open, mode, product, onClose, onSuc
             <InputField
               label='상품명'
               required
+              error={fieldErrors.name}
               placeholder='예: [신규] 한복 합성 폰케이스'
               value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              onChange={(e) => {
+                clearFieldError('name');
+                setForm({ ...form, name: e.target.value });
+              }}
             />
 
             <InputField
               label='상품 소제목'
+              required
+              error={fieldErrors.subTitle}
               placeholder='리스트에 노출될 짧은 설명'
               value={form.subTitle}
-              onChange={(e) => setForm({ ...form, subTitle: e.target.value })}
+              onChange={(e) => {
+                clearFieldError('subTitle');
+                setForm({ ...form, subTitle: e.target.value });
+              }}
             />
 
             <DropDownField
               label='카테고리'
               options={categories}
               required
+              error={fieldErrors.categoryId}
               value={form.categoryId === '' ? '' : String(form.categoryId)}
-              onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
+              onChange={(e) => {
+                clearFieldError('categoryId');
+                setForm({ ...form, categoryId: e.target.value });
+              }}
             />
 
             <InputField
               label='가격 (KRW)'
               required
+              error={fieldErrors.price}
               type='number'
               min='0'
               placeholder='0'
               value={form.price}
-              onChange={(e) => setForm({ ...form, price: e.target.value })}
+              onChange={(e) => {
+                clearFieldError('price');
+                setForm({ ...form, price: e.target.value });
+              }}
             />
 
             <InputField
               label='현재 재고'
               required
+              error={fieldErrors.stock}
               type='number'
               min='0'
               placeholder='0'
               value={form.stock}
-              onChange={(e) => setForm({ ...form, stock: e.target.value })}
+              onChange={(e) => {
+                clearFieldError('stock');
+                setForm({ ...form, stock: e.target.value });
+              }}
             />
 
             <DropDownField
               label='판매 상태'
               options={STATUS_OPTIONS}
               required
+              error={fieldErrors.status}
               value={String(form.status)}
-              onChange={(e) => setForm({ ...form, status: e.target.value as ProductStatus })}
+              onChange={(e) => {
+                clearFieldError('status');
+                setForm({ ...form, status: e.target.value as ProductStatus });
+              }}
             />
 
             <MultiSelectField
               label='판매 키오스크 설정'
               required
+              error={fieldErrors.kioskIds}
               items={kiosks}
               selectedIds={form.kioskIds || []}
-              onChange={(newIds) => setForm({ ...form, kioskIds: newIds })}
+              onChange={(newIds) => {
+                clearFieldError('kioskIds');
+                setForm({ ...form, kioskIds: newIds });
+              }}
             />
 
             <TextAreaField
               label='상품 상세 설명'
+              required
+              error={fieldErrors.description}
               placeholder='상품에 대한 자세한 정보를 입력하세요'
               value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              onChange={(e) => {
+                clearFieldError('description');
+                setForm({ ...form, description: e.target.value });
+              }}
             />
 
             <ImageUploadField
               label='상품 이미지 (최대 4개)'
+              required
+              error={fieldErrors.images}
+              spanFull
               previewUrls={previewUrls}
               onUpload={handleFileChange}
               onDelete={(img) => handleDeleteImage(img)}

@@ -121,6 +121,39 @@
   margin-left: 2px;
 }
 
+.fieldError {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--red-text);
+  line-height: 1.35;
+  margin-top: 2px;
+}
+
+.inputError,
+.selectError,
+.textareaError {
+  border-color: var(--red-text) !important;
+}
+
+.inputError:focus,
+.selectError:focus,
+.textareaError:focus {
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+}
+
+.multiSelectErrorWrap {
+  border: 1px solid var(--red-text);
+  border-radius: var(--radius-md);
+  padding: 8px;
+  background: rgba(220, 38, 38, 0.04);
+}
+
+.imageSectionError .imageGrid {
+  outline: 2px solid var(--red-text);
+  outline-offset: 2px;
+  border-radius: var(--radius-md);
+}
+
 /********************** dropdown 버튼, textarea *********************/
 .fieldInput,
 .fieldSelect {

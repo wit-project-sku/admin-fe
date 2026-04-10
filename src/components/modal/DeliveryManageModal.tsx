@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import m from './DeliveryManageModal.module.css'; // 분리된 CSS 적용
 import { useGetDeliveryById } from '../../hooks/delivery-api/useGetDeliveryById';
 import { useUpdateDelivery } from '../../hooks/delivery-api/useUpdateDelivery';
 import { normalizePhone } from '../../utils/normalizePhone';
 
-import type { ReactNode } from 'react';
+import type { Dispatch, ReactNode, SetStateAction } from 'react';
 import { DropDownField, InfoField, InputField, ModalContainer, ModalFooter, ModalHeader } from './ModalElements';
 
 // 상태 옵션 키값
@@ -17,25 +18,96 @@ const STATUS_OPTIONS = [
   { value: 'CANCELED', label: '취소' },
 ];
 
+type DeliveryFormFieldProps = {
+  isEdit: boolean;
+  label: string;
+  value: ReactNode;
+  field?: string;
+  required?: boolean;
+  fullWidth?: boolean;
+  form: Record<string, string>;
+  setForm: Dispatch<SetStateAction<Record<string, string>>>;
+};
+
+/** Must be module-scoped: an inner component would remount on every keystroke and drop input focus. */
+function DeliveryFormField({
+  isEdit,
+  label,
+  value,
+  field,
+  required = false,
+  fullWidth = false,
+  form,
+  setForm,
+}: DeliveryFormFieldProps) {
+  return (
+    <div className={`${m.field} ${fullWidth ? m.fieldFull : ''}`}>
+      {isEdit && field ? (
+        field === 'deliveryStatus' ? (
+          <DropDownField
+            label={label}
+            options={STATUS_OPTIONS}
+            required={required}
+            value={form.deliveryStatus ?? ''}
+            onChange={(e) => {
+              const v = e.target.value;
+              setForm((prev) => ({ ...prev, deliveryStatus: v }));
+            }}
+          />
+        ) : (
+          <InputField
+            label={label}
+            required={required}
+            value={field ? String(form[field] ?? '') : value == null ? '' : String(value)}
+            onChange={(e) => {
+              const v = e.target.value;
+              setForm((prev) => ({ ...prev, [field]: v }));
+            }}
+          />
+        )
+      ) : (
+        <InfoField label={label} value={value} />
+      )}
+    </div>
+  );
+}
+
+function buildFormFromDelivery(data: Record<string, any>) {
+  return {
+    deliveryStatus: data.deliveryStatus ?? data.status ?? 'ORDERED',
+    receiverName: data.receiverName ?? '',
+    phoneNumber: data.phoneNumber ?? '',
+    address: data.address ?? '',
+    addressDetail: data.addressDetail ?? data.detailAddress ?? '',
+    trackingNumber: data.trackingNumber ?? '',
+    zipCode: data.zipCode != null ? String(data.zipCode) : '',
+  };
+}
+
 export default function DeliveryManageModal({ open, mode, deliveryId, onClose, onSuccess }) {
+  const queryClient = useQueryClient();
   const { data: deliveryData, error: deliveryError, isLoading: loading } = useGetDeliveryById(open ? deliveryId : null);
   const { updateDeliveryAsync } = useUpdateDelivery();
   const data = ((deliveryData as { data?: unknown } | undefined)?.data ?? deliveryData) as Record<string, any> | null;
   const [form, setForm] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  /** Only re-hydrate form when opening or switching delivery — not when React Query returns a new `data` ref while editing. */
+  const hydratedKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!open || !data) return;
-    setForm({
-      deliveryStatus: data.deliveryStatus ?? data.status ?? 'ORDERED',
-      receiverName: data.receiverName ?? '',
-      phoneNumber: data.phoneNumber ?? '',
-      address: data.address ?? '',
-      addressDetail: data.addressDetail ?? '',
-      trackingNumber: data.trackingNumber ?? '',
-    });
-  }, [open, data]);
+    if (!open) {
+      hydratedKeyRef.current = null;
+      return;
+    }
+    if (!data) return;
+    const id = data.deliveryId ?? deliveryId;
+    const key = id != null ? String(id) : '';
+    if (!key) return;
+    if (hydratedKeyRef.current === key) return;
+    hydratedKeyRef.current = key;
+    setForm(buildFormFromDelivery(data));
+  }, [open, data, deliveryId]);
 
   useEffect(() => {
     setError(deliveryError ? '배송 정보를 불러오지 못했습니다.' : '');
@@ -44,7 +116,19 @@ export default function DeliveryManageModal({ open, mode, deliveryId, onClose, o
   const handleSave = async () => {
     setSaving(true);
     try {
-      await updateDeliveryAsync({ deliveryId, deliveryData: form as Record<string, unknown> });
+      const deliveryData = {
+        deliveryStatus: form.deliveryStatus,
+        trackingNumber: form.trackingNumber,
+        receiverName: form.receiverName,
+        phoneNumber: form.phoneNumber,
+        zipCode: form.zipCode,
+        address: form.address,
+        addressDetail: form.addressDetail,
+        detailAddress: form.addressDetail,
+      };
+      await updateDeliveryAsync({ deliveryId, deliveryData });
+      await queryClient.invalidateQueries({ queryKey: ['deliveries-all'] });
+      await queryClient.invalidateQueries({ queryKey: ['delivery-by-id', deliveryId] });
       onSuccess?.();
     } catch {
       setError('저장에 실패했습니다.');
@@ -66,45 +150,6 @@ export default function DeliveryManageModal({ open, mode, deliveryId, onClose, o
           { productName: 'WITH > AR합성 머그컵', quantity: 1, price: 24900 },
         ];
 
-  const FormField = ({
-    label,
-    value,
-    field,
-    required = false,
-    fullWidth = false,
-  }: {
-    label: string;
-    value: ReactNode;
-    field?: string;
-    required?: boolean;
-    fullWidth?: boolean;
-  }) => {
-    return (
-      <div className={`${m.field} ${fullWidth ? m.fieldFull : ''}`}>
-        {isEdit && field ? (
-          field === 'deliveryStatus' ? (
-            <DropDownField
-              label={label}
-              options={STATUS_OPTIONS}
-              required={required}
-              value={form.deliveryStatus ?? ''}
-              onChange={(e) => setForm({ ...form, deliveryStatus: e.target.value })}
-            />
-          ) : (
-            <InputField
-              label={label}
-              required={required}
-              value={value == null ? '' : String(value)}
-              onChange={(e) => setForm({ ...form, [field]: e.target.value })}
-            />
-          )
-        ) : (
-          <InfoField label={label} value={value} />
-        )}
-      </div>
-    );
-  };
-
   // 상세 보기 시 라벨 표시용
   const currentStatusLabel = STATUS_OPTIONS.find((o) => o.value === data?.deliveryStatus)?.label || '-';
 
@@ -121,33 +166,105 @@ export default function DeliveryManageModal({ open, mode, deliveryId, onClose, o
           <>
             <div className={m.section}>
               <div className={m.fieldRow}>
-                <FormField
+                <DeliveryFormField
+                  isEdit={isEdit}
+                  form={form}
+                  setForm={setForm}
                   label='주문번호'
                   value={`DEL-${String(data?.deliveryId || '003').padStart(3, '0')}`}
                   required
                 />
-                <FormField label='주문 날짜' value={data?.orderDate ?? '2026-01-30'} required />
+                <DeliveryFormField
+                  isEdit={isEdit}
+                  form={form}
+                  setForm={setForm}
+                  label='주문 날짜'
+                  value={data?.orderDate ?? '2026-01-30'}
+                  required
+                />
               </div>
               <div className={m.fieldRow}>
-                <FormField label='휴대폰 번호' value={normalizePhone(data?.phoneNumber)} field='phoneNumber' required />
-                <FormField label='수령인 이름' value={data?.receiverName} field='receiverName' />
+                <DeliveryFormField
+                  isEdit={isEdit}
+                  form={form}
+                  setForm={setForm}
+                  label='휴대폰 번호'
+                  value={normalizePhone(data?.phoneNumber)}
+                  field='phoneNumber'
+                  required
+                />
+                <DeliveryFormField
+                  isEdit={isEdit}
+                  form={form}
+                  setForm={setForm}
+                  label='수령인 이름'
+                  value={data?.receiverName}
+                  field='receiverName'
+                />
               </div>
               <div className={m.fieldRow}>
-                <FormField label='우편번호' value={data?.zipCode ?? '-'} field='zipCode' />
-                <FormField label='도로명 주소' value={data?.address} field='address' required />
+                <DeliveryFormField
+                  isEdit={isEdit}
+                  form={form}
+                  setForm={setForm}
+                  label='우편번호'
+                  value={data?.zipCode != null ? String(data.zipCode) : '-'}
+                  field='zipCode'
+                />
+                <DeliveryFormField
+                  isEdit={isEdit}
+                  form={form}
+                  setForm={setForm}
+                  label='도로명 주소'
+                  value={data?.address}
+                  field='address'
+                  required
+                />
               </div>
-              <FormField label='상세주소' value={data?.addressDetail ?? '-'} field='addressDetail' fullWidth />
+              <DeliveryFormField
+                isEdit={isEdit}
+                form={form}
+                setForm={setForm}
+                label='상세주소'
+                value={data?.addressDetail ?? data?.detailAddress ?? '-'}
+                field='addressDetail'
+                fullWidth
+              />
               <div className={m.fieldRow}>
-                <FormField label='배송 상태' value={currentStatusLabel} field='deliveryStatus' />
-                <FormField label='송장번호' value={data?.trackingNumber} field='trackingNumber' />
+                <DeliveryFormField
+                  isEdit={isEdit}
+                  form={form}
+                  setForm={setForm}
+                  label='배송 상태'
+                  value={currentStatusLabel}
+                  field='deliveryStatus'
+                />
+                <DeliveryFormField
+                  isEdit={isEdit}
+                  form={form}
+                  setForm={setForm}
+                  label='송장번호'
+                  value={data?.trackingNumber}
+                  field='trackingNumber'
+                />
               </div>
               <div className={m.fieldRow}>
-                <FormField
+                <DeliveryFormField
+                  isEdit={isEdit}
+                  form={form}
+                  setForm={setForm}
                   label='총 결제 금액'
                   value={`${Number(data?.totalAmount ?? 0).toLocaleString()}원`}
                   required
                 />
-                <FormField label='총 상품 개수' value={`${data?.orderProducts?.length ?? 0}개`} required />
+                <DeliveryFormField
+                  isEdit={isEdit}
+                  form={form}
+                  setForm={setForm}
+                  label='총 상품 개수'
+                  value={`${data?.orderProducts?.length ?? 0}개`}
+                  required
+                />
               </div>
             </div>
 
