@@ -13,7 +13,7 @@ export const useUpdateOutfit = () => {
     mutationFn: async ({ outfitId, outfitData, images = [] }: UpdateOutfitPayload) => {
       const formData = new FormData();
 
-      formData.append('data', new Blob([JSON.stringify(outfitData)], { type: 'application/json' }));
+      formData.append('outfit', new Blob([JSON.stringify(outfitData)], { type: 'application/json' }));
       images.forEach((image) => {
         formData.append('images', image);
       });

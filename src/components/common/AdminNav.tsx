@@ -129,7 +129,7 @@ export default function AdminNav({ collapsed = false }: AdminNavProps) {
           </div>
         </div>
         <div className={styles.group}>
-          <span className={styles.groupLabel}>MAIN</span>
+          <span className={styles.groupLabel}>위드마켓</span>
           {MAIN_MENU.map((item) => (
             <NavItem key={item.path} item={item} collapsed={collapsed} />
           ))}

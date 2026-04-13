@@ -1,11 +1,12 @@
 export type KioskCountRow = { kioskId: string | number; kioskName: string; count: number };
 
 export type ShootingSummary = {
-  todayTotal?: number;
-  monthlyTotal?: number;
-  grandTotal?: number;
-  todayByKiosk?: KioskCountRow[];
+  todayTotal: number;
+  monthlyTotal: number;
+  grandTotal: number;
+  todayByKiosk: KioskCountRow[];
   monthlyByKiosk?: KioskCountRow[];
+  totalOutfitCount: number;
 };
 
 /** Normalizes `/admin/stats/summary`-style payloads (raw or `{ data }`). */

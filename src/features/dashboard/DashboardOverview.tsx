@@ -54,6 +54,7 @@ export function DashboardOverview({
   const todayVal = mergeStat(weekly.todayTotal, summary?.todayTotal, weeklyLoading, weeklyError);
   const monthlyVal = mergeStat(weekly.monthlyTotal, summary?.monthlyTotal, weeklyLoading, weeklyError);
   const grandVal = mergeStat(weekly.grandTotal, summary?.grandTotal, weeklyLoading, weeklyError);
+  const totalOutfitCount = summary?.totalOutfitCount ?? 0;
 
   const lineChartBody =
     weeklyLoading ? (
@@ -182,7 +183,7 @@ export function DashboardOverview({
         />
         <DashboardStatCard
           title='의상 종류'
-          value={15}
+          value={totalOutfitCount}
           unit='종'
           color='#ec4899'
           icon={

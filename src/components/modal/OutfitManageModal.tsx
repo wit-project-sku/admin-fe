@@ -37,19 +37,13 @@ type OutfitFormState = {
   categoryId: string;
   status: 'ACTIVE' | 'INACTIVE';
   kioskIds: (string | number)[];
-  operationStartDate: string;
-  operationEndDate: string;
+  startDate: string;
+  endDate: string;
 };
 
 type OutfitFieldErrors = Partial<
   Record<
-    | 'outfitCode'
-    | 'categoryId'
-    | 'status'
-    | 'kioskIds'
-    | 'operationStartDate'
-    | 'operationEndDate'
-    | 'image',
+    'outfitCode' | 'categoryId' | 'status' | 'kioskIds' | 'startDate' | 'endDate' | 'image',
     string
   >
 >;
@@ -70,12 +64,11 @@ function validateOutfitForm(form: OutfitFormState, previewCount: number): Outfit
   const kioskIds = form.kioskIds.map((k) => Number(k)).filter((n) => Number.isFinite(n) && n > 0);
   if (kioskIds.length === 0) e.kioskIds = '설치 키오스크를 1개 이상 선택해 주세요.';
 
-  const start = form.operationStartDate.trim();
-  const end = form.operationEndDate.trim();
-  if (!start) e.operationStartDate = '운영 시작일을 선택해 주세요.';
-  if (!end) e.operationEndDate = '운영 종료일을 선택해 주세요.';
+  const start = form.startDate.trim();
+  const end = form.endDate.trim();
+  if (!start) e.startDate = '운영 시작일을 선택해 주세요.';
   if (start && end && end < start) {
-    e.operationEndDate = '운영 종료일은 시작일 이후여야 합니다.';
+    e.endDate = '운영 종료일은 시작일 이후여야 합니다.';
   }
 
   if (previewCount <= 0) e.image = '의상 이미지를 등록해 주세요.';
@@ -84,13 +77,14 @@ function validateOutfitForm(form: OutfitFormState, previewCount: number): Outfit
 }
 
 function buildOutfitWriteBody(form: OutfitFormState): OutfitWriteBody {
+  const end = form.endDate.trim();
   return {
     outfitCode: form.outfitCode.trim(),
     status: form.status,
     categoryId: Number(form.categoryId),
     kioskIds: form.kioskIds.map((k) => Number(k)).filter((n) => Number.isFinite(n) && n > 0),
-    operationStartDate: form.operationStartDate.trim(),
-    operationEndDate: form.operationEndDate.trim(),
+    startDate: form.startDate.trim(),
+    endDate: end ? end : null,
   };
 }
 
@@ -117,8 +111,8 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
     categoryId: '',
     status: 'ACTIVE',
     kioskIds: [],
-    operationStartDate: '',
-    operationEndDate: '',
+    startDate: '',
+    endDate: '',
   });
 
   const [image, setImage] = useState<File[]>([]);
@@ -135,8 +129,8 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
         categoryId: '',
         status: 'ACTIVE',
         kioskIds: [],
-        operationStartDate: '',
-        operationEndDate: '',
+        startDate: '',
+        endDate: '',
       });
       setPreviewUrl([]);
       setImage([]);
@@ -154,8 +148,8 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
       categoryId: resolveOutfitCategoryId(d, categories),
       status: normalizeOutfitStatus(d.status),
       kioskIds: extractKioskIdsFromDetail(d),
-      operationStartDate: pickOperationStartFromDetail(d),
-      operationEndDate: pickOperationEndFromDetail(d),
+      startDate: pickOperationStartFromDetail(d),
+      endDate: pickOperationEndFromDetail(d),
     });
 
     const imgs = Array.isArray(d.images) ? d.images : [];
@@ -216,6 +210,8 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
     setSaving(true);
     try {
       if (mode === 'create') {
+        console.log(outfitData, 'data');
+
         await addOutfitAsync({ outfitData, images: image });
       } else if (outfitId != null) {
         await updateOutfitAsync({ outfitId, outfitData, images: image });
@@ -243,16 +239,16 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
         <form onSubmit={handleSubmit}>
           <div className={m.body}>
             {categoriesError ? (
-              <p className={m.inlineError} role="alert">
+              <p className={m.inlineError} role='alert'>
                 의상 카테고리를 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.
               </p>
             ) : null}
             <div className={m.mainFields}>
               <InputField
-                label="의상 코드"
+                label='의상 코드'
                 required
                 error={fieldErrors.outfitCode}
-                placeholder="예: OB-2024-001"
+                placeholder='예: OB-2024-001'
                 value={form.outfitCode}
                 disabled={formDisabled}
                 onChange={(e) => {
@@ -262,7 +258,7 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
               />
               <div className={m.gridRow}>
                 <DropDownField
-                  label="의상 카테고리"
+                  label='의상 카테고리'
                   required
                   error={fieldErrors.categoryId}
                   options={categories}
@@ -274,7 +270,7 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
                   }}
                 />
                 <DropDownField
-                  label="상태"
+                  label='상태'
                   required
                   error={fieldErrors.status}
                   options={OUTFIT_STATUS_OPTIONS}
@@ -293,36 +289,38 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
                 <span className={m.sectionLabel}>운영 일정</span>
                 <div className={m.gridRow}>
                   <InputField
-                    label="운영 시작일"
+                    label='운영 시작일'
                     required
-                    error={fieldErrors.operationStartDate}
-                    type="date"
-                    value={form.operationStartDate}
+                    error={fieldErrors.startDate}
+                    type='date'
+                    value={form.startDate}
                     disabled={formDisabled}
                     onChange={(e) => {
-                      clearFieldError('operationStartDate');
-                      clearFieldError('operationEndDate');
-                      setForm({ ...form, operationStartDate: e.target.value });
+                      clearFieldError('startDate');
+                      clearFieldError('endDate');
+                      setForm({ ...form, startDate: e.target.value });
                     }}
                   />
                   <InputField
-                    label="운영 종료일"
-                    required
-                    error={fieldErrors.operationEndDate}
-                    type="date"
-                    value={form.operationEndDate}
+                    label='운영 종료일'
+                    error={fieldErrors.endDate}
+                    type='date'
+                    value={form.endDate}
                     disabled={formDisabled}
                     onChange={(e) => {
-                      clearFieldError('operationEndDate');
-                      clearFieldError('operationStartDate');
-                      setForm({ ...form, operationEndDate: e.target.value });
+                      clearFieldError('endDate');
+                      clearFieldError('startDate');
+                      setForm({ ...form, endDate: e.target.value });
                     }}
                   />
                 </div>
-                <p className={m.fieldHint}>시작일과 종료일을 모두 선택해 주세요. 종료일은 시작일 이후여야 합니다.</p>
+                <p className={m.fieldHint}>
+                  운영 시작일은 필수입니다. 종료일은 선택이며, 비우면 무기한으로 저장됩니다. 입력 시 시작일 이후여야
+                  합니다.
+                </p>
               </div>
               <MultiSelectField
-                label="설치 키오스크"
+                label='설치 키오스크'
                 required
                 error={fieldErrors.kioskIds}
                 items={kiosks}
@@ -336,7 +334,7 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
               <p className={m.fieldHint}>노출할 키오스크를 최소 1개 이상 선택해야 합니다.</p>
             </div>
             <ImageUploadField
-              label="의상 이미지 (1장)"
+              label='의상 이미지 (1장)'
               required
               error={fieldErrors.image}
               previewUrls={previewUrl}
