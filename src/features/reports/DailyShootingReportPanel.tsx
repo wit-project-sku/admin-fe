@@ -56,7 +56,10 @@ export function DailyShootingReportPanel({
                 {Array.from({ length: 6 }).map((_, idx) => (
                   <tr key={`daily-skeleton-${idx}`} className={shared.skeletonRow}>
                     {Array.from({ length: colCount }).map((__, col) => (
-                      <td key={`daily-skeleton-${idx}-${col}`} className={shared.td}>
+                      <td
+                        key={`daily-skeleton-${idx}-${col}`}
+                        className={`${shared.td} ${col === 0 ? s.shootingTimeCol : ''}`}
+                      >
                         <span className={shared.skeletonLine} />
                       </td>
                     ))}
@@ -84,7 +87,7 @@ export function DailyShootingReportPanel({
             <table className={shared.table} style={{ minWidth: 700 }}>
               <thead>
                 <tr className={s.darkHead}>
-                  <th className={s.darkTh}>Date</th>
+                  <th className={`${s.darkTh} ${s.shootingTimeCol}`}>Date</th>
                   {kioskNames.map((name) => (
                     <th key={name} className={s.darkTh} style={{ textAlign: 'center' }}>
                       {name}
@@ -100,7 +103,7 @@ export function DailyShootingReportPanel({
                     className={shared.tr}
                     style={{ background: i % 2 === 1 ? '#fafbff' : 'white' }}
                   >
-                    <td className={`${shared.td} ${shared.tdBold}`}>{row.date}</td>
+                    <td className={`${shared.td} ${shared.tdBold} ${s.shootingTimeCol}`}>{row.date}</td>
                     {kioskNames.map((name) => (
                       <td key={name} className={`${shared.td} ${shared.tdMuted}`} style={{ textAlign: 'center' }}>
                         {row[name] ?? 0}

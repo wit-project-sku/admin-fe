@@ -5,15 +5,15 @@ type UseGetAllOutfitsOptions = {
   enabled?: boolean;
 };
 
-export const useGetAllOutfits = (page: number, size: number, options?: UseGetAllOutfitsOptions) => {
+export const useGetAllOutfits = (pageNum: number, pageSize: number, options?: UseGetAllOutfitsOptions) => {
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['outfits-get-all', page, size],
+    queryKey: ['outfits-get-all', pageNum, pageSize],
     enabled: options?.enabled ?? true,
     queryFn: async () => {
       return await APIService.private.get('/admin/outfits', {
         params: {
-          page,
-          size,
+          pageNum,
+          pageSize,
         },
       });
     },

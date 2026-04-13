@@ -1,5 +1,6 @@
 import shared from '@commons/shared.module.css';
 import Pagination from '@components/common/Pagination';
+import type { MonthlyShootingSort } from '../../hooks/dashboard-api/useGetMonthlyShootingStats';
 import s from '@pages/ReportsPage.module.css';
 import { REPORT_MESSAGES } from './reportMessages';
 
@@ -11,6 +12,8 @@ type MonthlyShootingReportTableProps = {
   onPageChange: (page: number) => void;
   totalPages: number;
   totalElements: number;
+  monthSort: MonthlyShootingSort;
+  onMonthSortChange: (sort: MonthlyShootingSort) => void;
 };
 
 export function MonthlyShootingReportTable({
@@ -21,19 +24,46 @@ export function MonthlyShootingReportTable({
   onPageChange,
   totalPages,
   totalElements,
+  monthSort,
+  onMonthSortChange,
 }: MonthlyShootingReportTableProps) {
   const colCount = kioskNames.length + 2;
 
   return (
     <div className={shared.card}>
-      <div className={shared.cardHead}>
+      <div
+        className={shared.cardHead}
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+        }}
+      >
         <span className={shared.cardTitle}>월별 상세 리포트</span>
+        <div className={s.segment} role="group" aria-label="월별 정렬">
+          <button
+            type="button"
+            className={`${s.segmentBtn} ${monthSort === 'latest' ? s.segmentBtnActive : ''}`}
+            onClick={() => onMonthSortChange('latest')}
+          >
+            최신순
+          </button>
+          <button
+            type="button"
+            className={`${s.segmentBtn} ${monthSort === 'oldest' ? s.segmentBtnActive : ''}`}
+            onClick={() => onMonthSortChange('oldest')}
+          >
+            등록순
+          </button>
+        </div>
       </div>
       <div className={shared.tableResponsive}>
         <table className={shared.table} style={{ minWidth: 700 }}>
           <thead>
             <tr className={s.darkHead}>
-              <th className={s.darkTh}>Month</th>
+              <th className={`${s.darkTh} ${s.shootingTimeCol}`}>Month</th>
               {kioskNames.map((name) => (
                 <th key={name} className={s.darkTh} style={{ textAlign: 'center' }}>
                   {name}
@@ -62,7 +92,7 @@ export function MonthlyShootingReportTable({
                   className={shared.tr}
                   style={{ background: i % 2 === 1 ? '#fafbff' : 'white' }}
                 >
-                  <td className={`${shared.td} ${shared.tdBold}`}>{row.month}</td>
+                  <td className={`${shared.td} ${shared.tdBold} ${s.shootingTimeCol}`}>{row.month}</td>
                   {kioskNames.map((name) => (
                     <td key={name} className={`${shared.td} ${shared.tdMuted}`} style={{ textAlign: 'center' }}>
                       {(row[name] ?? 0).toLocaleString()}

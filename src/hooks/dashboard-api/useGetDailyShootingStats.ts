@@ -18,7 +18,6 @@ export const useGetDailyShootingStats = (
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['dailyShootingStats', start, end, pageNum, pageSize],
-    enabled,
     queryFn: async () => {
       return await APIService.private.get(
         '/admin/stats/daily',

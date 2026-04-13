@@ -77,6 +77,8 @@ export default function ReportsPage() {
           onPageChange={monthly.setPageNum}
           totalPages={monthly.totalPages}
           totalElements={monthly.totalElements}
+          monthSort={monthly.monthSort}
+          onMonthSortChange={monthly.setMonthSort}
         />
       )}
 

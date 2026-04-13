@@ -34,6 +34,14 @@
 
 .darkHead {}
 
+/* 지점별 월별/일별 상세 — Month · Date column (avoid wrapping) */
+.shootingTimeCol {
+  min-width: 11rem;
+  width: 1%;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
 .darkTh {
   padding: 12px 20px;
   background: #0f172a;
