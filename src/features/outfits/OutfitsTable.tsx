@@ -19,7 +19,8 @@ type OutfitsTableProps = {
 };
 
 const COL_COUNT = 7;
-const KIOSK_PREVIEW_LIMIT = 3;
+/** Up to this many kiosks stay in-cell only; above → summary + modal. */
+const KIOSK_MODAL_THRESHOLD = 3;
 
 function resolveKioskNames(ids: unknown, nameById: Record<string, string>): string[] {
   if (!Array.isArray(ids) || ids.length === 0) return [];
@@ -48,6 +49,13 @@ function ScheduleCell({ row }: { row: OutfitRow }) {
   );
 }
 
+function kioskCellSummary(names: string[]): string {
+  const total = names.length;
+  if (total === 0) return '';
+  if (total <= KIOSK_MODAL_THRESHOLD) return names.join(' · ');
+  return `${names.slice(0, 2).join(' · ')} · 외 ${total - 2}`;
+}
+
 function KioskCell({
   names,
   onShowAll,
@@ -60,27 +68,40 @@ function KioskCell({
   }
 
   const total = names.length;
-  const preview = names.slice(0, KIOSK_PREVIEW_LIMIT);
-  const previewText = preview.join(', ');
-  const hasOverflow = total > KIOSK_PREVIEW_LIMIT;
+  const fullTitle = names.join(', ');
+  const summary = kioskCellSummary(names);
+  const openModal = total > KIOSK_MODAL_THRESHOLD;
 
-  if (hasOverflow) {
+  const inner = (
+    <>
+      <span className={s.kioskNamesEllipsis} title={fullTitle}>
+        {summary}
+      </span>
+      {openModal ? (
+        <span className={s.kioskOpenHint} aria-hidden>
+          전체
+        </span>
+      ) : null}
+    </>
+  );
+
+  if (openModal) {
     return (
       <button
         type="button"
-        className={s.kioskCellTrigger}
-        aria-label={`설치 키오스크 총 ${total}곳 전체 보기`}
+        className={s.kioskCellCompactBtn}
+        aria-label={`설치 키오스크 ${total}곳 전체 보기`}
+        title={fullTitle}
         onClick={onShowAll}
       >
-        <span className={s.kioskNamesText}>{previewText}</span>
-        <span className={s.kioskTotalBadge}>총 {total}곳 · 전체 보기</span>
+        {inner}
       </button>
     );
   }
 
   return (
-    <div className={s.kioskCellStack}>
-      <span className={s.kioskNamesText}>{previewText}</span>
+    <div className={s.kioskCellPlain} title={fullTitle}>
+      {inner}
     </div>
   );
 }
@@ -122,7 +143,7 @@ export function OutfitsTable({
             <th className={`${shared.th} ${shared.thCenter}`}>미리보기</th>
             <th className={`${shared.th} ${shared.thLeft}`}>정보</th>
             <th className={`${shared.th} ${shared.thCenter}`}>운영 일정</th>
-            <th className={`${shared.th} ${shared.thCenter}`}>설치 키오스크</th>
+            <th className={`${shared.th} ${shared.thCenter} ${s.kioskTh}`}>설치 키오스크</th>
             <th className={`${shared.th} ${shared.thCenter}`}>상태</th>
             <th className={`${shared.th} ${shared.thRight}`}>관리</th>
           </tr>
@@ -185,7 +206,7 @@ export function OutfitsTable({
                   <td className={`${shared.td} ${shared.tdCenter}`}>
                     <ScheduleCell row={o} />
                   </td>
-                  <td className={`${shared.td} ${shared.tdCenter}`}>
+                  <td className={`${shared.td} ${shared.tdCenter} ${s.kioskTd}`}>
                     <KioskCell names={kioskNames} onShowAll={() => setKioskListModal({ names: kioskNames })} />
                   </td>
                   <td className={`${shared.td} ${shared.tdCenter}`}>
@@ -220,14 +241,18 @@ export function OutfitsTable({
       {kioskListModal ? (
         <ModalContainer onClose={() => setKioskListModal(null)} modalClassName={s.kioskListModal}>
           <ModalHeader
-            title={`설치 키오스크 · 총 ${kioskListModal.names.length}곳`}
+            title="설치 키오스크"
             onClose={() => setKioskListModal(null)}
           />
           <div className={s.kioskListBody}>
-            <ul className={s.kioskList}>
+            <p className={s.kioskListLead}>
+              총 <strong>{kioskListModal.names.length}</strong>곳에 설치되어 있습니다.
+            </p>
+            <ul className={s.kioskList} role="list">
               {kioskListModal.names.map((name, idx) => (
                 <li key={`${name}-${idx}`} className={s.kioskListItem}>
-                  {idx + 1}. {name}
+                  <span className={s.kioskListIndex}>{idx + 1}</span>
+                  <span className={s.kioskListName}>{name}</span>
                 </li>
               ))}
             </ul>

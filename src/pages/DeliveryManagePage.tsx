@@ -1,9 +1,8 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import shared from '@commons/shared.module.css';
-import { useGetAllDeliveries } from '../hooks/delivery-api/useGetAllDeliveries';
+import { useGetAllDeliveries, type Delivery } from '../hooks/delivery-api/useGetAllDeliveries';
 import { extractPaginatedResult } from '../utils/queryHelpers';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
-import { ADMIN_LIST_MAX_FETCH } from '../constants/adminListFetch';
 import DeliveryManageModal from '@modals/DeliveryManageModal';
 
 import SearchBar from '@components/common/SearchBar';
@@ -52,34 +51,7 @@ export default function DeliveryManagePage() {
     keyword: debouncedSearch || undefined,
     deliveryStatus: filter === 'all' ? undefined : filter,
   });
-  const { content: deliveries } = extractPaginatedResult(data);
-
-  const filteredAll = useMemo(() => {
-    let list = deliveries;
-    const st = (d) => d.deliveryStatus ?? d.status ?? null;
-
-    if (filter !== 'all') list = list.filter((d) => st(d) === filter);
-
-    const kw = debouncedSearch.trim().toLowerCase();
-    if (kw) {
-      list = list.filter((d) => {
-        const idStr = `DEL-${String(d.deliveryId).padStart(3, '0')}`.toLowerCase();
-        const purePhone = String(d.phoneNumber || '').replace(/\D/g, '');
-        const searchKw = kw.replace(/\D/g, '');
-
-        return (
-          idStr.includes(kw) ||
-          (d.receiverName ?? '').toLowerCase().includes(kw) ||
-          (d.address ?? '').toLowerCase().includes(kw) ||
-          purePhone.includes(searchKw || kw)
-        );
-      });
-    }
-    return list;
-  }, [deliveries, filter, debouncedSearch]);
-
-  const totalCount = filteredAll.length;
-  const totalPages = Math.max(1, Math.ceil(totalCount / DELIVERY_PAGE_SIZE));
+  const { content: deliveries, totalPages, totalElements: totalCount } = extractPaginatedResult<Delivery>(data);
 
   useEffect(() => {
     setPage(1);
@@ -88,11 +60,6 @@ export default function DeliveryManagePage() {
   useEffect(() => {
     setPage((p) => Math.min(Math.max(1, p), totalPages));
   }, [totalPages]);
-
-  const displayed = useMemo(() => {
-    const start = (page - 1) * DELIVERY_PAGE_SIZE;
-    return filteredAll.slice(start, start + DELIVERY_PAGE_SIZE);
-  }, [filteredAll, page]);
 
   const clearFilters = useCallback(() => {
     setFilter('all');
@@ -166,18 +133,18 @@ export default function DeliveryManagePage() {
                     배송 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.
                   </td>
                 </tr>
-              ) : displayed.length === 0 ? (
+              ) : deliveries.length === 0 ? (
                 <tr>
                   <td colSpan={8} className={shared.tableStateCell}>
                     해당 조건의 배송 내역이 없습니다.
                   </td>
                 </tr>
               ) : (
-                displayed.map((d) => {
+                deliveries.map((d) => {
                   const info = si(d);
                   return (
                     <tr key={d.deliveryId} className={shared.tr}>
-                      <td className={`${shared.td} ${shared.tdCenter}`}>1</td>
+                      <td className={`${shared.td} ${shared.tdCenter}`}>{d.deliveryId}</td>
                       <td className={`${shared.td} ${shared.tdMono} ${shared.tdCenter}`}>
                         {`DEL-${String(d.deliveryId).padStart(3, '0')}`}
                       </td>

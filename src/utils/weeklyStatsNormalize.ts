@@ -10,7 +10,7 @@ export type NormalizedWeeklyStats = {
   marketShare: MarketShareRow[];
 };
 
-/** Compatible with `PieSlice` in dashboard mock data. */
+/** Pie chart segment after assigning colors to market-share rows. */
 export type DashboardPieSlice = { name: string; value: number; color: string };
 
 const PIE_COLORS = ['#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe', '#dbeafe', '#6366f1', '#8b5cf6', '#a78bfa'];

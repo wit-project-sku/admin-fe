@@ -32,7 +32,7 @@ export default function OutfitsPage() {
             <SearchBar
               value={list.search}
               onChange={list.setSearch}
-              placeholder="의상 코드, 이름, 카테고리 검색..."
+              placeholder="의상명 검색..."
               minWidth="280px"
             />
           </div>

@@ -1,6 +1,4 @@
-export const PRODUCT_PAGE_SIZE = 10;
-
-export const PRODUCT_API_FETCH_SIZE = 1000;
+export const PRODUCT_PAGE_SIZE = 200;
 
 export const PRODUCT_STATUS_FILTERS = [
   { key: 'ALL', label: '전체' },

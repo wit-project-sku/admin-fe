@@ -139,94 +139,149 @@
 }
 
 .kioskListModal {
-  max-width: min(92vw, 440px);
+  max-width: min(92vw, 480px);
   width: 100%;
 }
 
 .kioskListBody {
-  padding: 16px 20px 20px;
-  max-height: min(60vh, 400px);
+  padding: 12px 20px 20px;
+  max-height: min(65vh, 420px);
   overflow-y: auto;
   border-top: 1px solid var(--border-subtle);
+}
+
+.kioskListLead {
+  margin: 0 0 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.kioskListLead strong {
+  color: var(--text-primary);
+  font-weight: 700;
 }
 
 .kioskList {
   margin: 0;
   padding: 0;
   list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+
+@media (min-width: 420px) {
+  .kioskList {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
 }
 
 .kioskListItem {
-  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 8px 10px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--text-primary);
-  padding: 10px 12px;
   background: var(--bg-muted);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  line-height: 1.3;
 }
 
-.kioskCellStack {
-  display: flex;
-  flex-direction: column;
+.kioskListIndex {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  max-width: 220px;
-  margin: 0 auto;
-  text-align: center;
-}
-
-.kioskNamesText {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  line-height: 1.45;
-  word-break: keep-all;
-}
-
-.kioskCellTrigger {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  max-width: 220px;
-  margin: 0 auto;
-  padding: 6px 8px;
-  text-align: center;
-  border: none;
-  border-radius: var(--radius-md);
-  background: transparent;
-  cursor: pointer;
-  transition: background 0.15s;
-  font: inherit;
-}
-
-.kioskCellTrigger:hover {
-  background: var(--bg-muted);
-}
-
-.kioskCellTrigger:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
-}
-
-.kioskTotalBadge {
+  justify-content: center;
   font-size: 11px;
   font-weight: 700;
   color: var(--accent);
   background: var(--blue-bg);
-  border: 1px solid var(--accent);
-  border-radius: 999px;
-  padding: 4px 10px;
-  transition: background 0.15s, color 0.15s;
+  border-radius: 6px;
 }
 
-.kioskCellTrigger:hover .kioskTotalBadge {
-  background: var(--accent);
-  color: #fff;
+.kioskListName {
+  min-width: 0;
+  flex: 1;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+/* Table — 설치 키오스크: single line, no stacked badge row */
+.kioskTh,
+.kioskTd {
+  width: 1%;
+  max-width: 200px;
+  vertical-align: middle;
+}
+
+.kioskCellPlain,
+.kioskCellCompactBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  max-width: 200px;
+  min-height: 22px;
+  margin: 0 auto;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.kioskCellPlain {
+  padding: 2px 0;
+}
+
+.kioskCellCompactBtn {
+  padding: 4px 8px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.kioskCellCompactBtn:hover {
+  background: var(--bg-muted);
+}
+
+.kioskCellCompactBtn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+  border-radius: var(--radius-sm);
+}
+
+.kioskNamesEllipsis {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.kioskCellCompactBtn .kioskNamesEllipsis {
+  color: var(--text-primary);
+}
+
+.kioskOpenHint {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: -0.02em;
 }
 
 .viewToggle {

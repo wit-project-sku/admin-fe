@@ -6,6 +6,7 @@ import { useGetStatisticSummary } from '../hooks/dashboard-api/useGetTotalShooti
 import { useGetWeeklyStats } from '../hooks/dashboard-api/useGetWeeklyStats';
 import { emptyWeeklyStats, marketShareToPieSlices } from '../utils/weeklyStatsNormalize';
 
+/** Summary = kiosk breakdown + outfit count + headline totals; total = weekly line + market share. */
 export default function DashboardPage() {
   const [drilldown, setDrilldown] = useState<'today' | 'monthly' | null>(null);
   const { data: summaryRaw } = useGetStatisticSummary();

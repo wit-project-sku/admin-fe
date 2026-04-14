@@ -53,11 +53,19 @@ interface ApiResponse<T> {
 export type GetAllDeliveriesResponse = ApiResponse<DeliveriesResponse>;
 
 export const useGetAllDeliveries = (options: UseGetAllDeliveriesOptions) => {
+  const { pageNum, pageSize, keyword, deliveryStatus } = options;
+  const kw = keyword?.trim() || undefined;
+
   const { data, isLoading, error } = useQuery<GetAllDeliveriesResponse>({
-    queryKey: ['deliveries-all', options],
+    queryKey: ['deliveries-all', pageNum, pageSize, kw ?? '', deliveryStatus ?? ''],
     queryFn: async () => {
       return await APIService.private.get('/deliveries/admin', {
-        params: options,
+        params: {
+          pageNum,
+          pageSize,
+          ...(kw ? { keyword: kw } : {}),
+          ...(deliveryStatus ? { deliveryStatus } : {}),
+        },
       });
     },
   });

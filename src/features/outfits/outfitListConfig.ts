@@ -1,7 +1,4 @@
-export const OUTFIT_PAGE_SIZE = 10;
-
-/** Single API request size; list is filtered & paginated in the client. */
-export const OUTFIT_API_FETCH_SIZE = 1000;
+export const OUTFIT_PAGE_SIZE = 20;
 
 export const OUTFIT_STATUS_FILTERS = [
   { key: 'ALL', label: '전체' },

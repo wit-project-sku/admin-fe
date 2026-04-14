@@ -1,8 +1,11 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import shared from '@commons/shared.module.css';
-import { useGetAllRefunds } from '../hooks/payment-api/useGetAllRefunds';
+import {
+  useGetAllRefunds,
+  type AdminRefundListRow,
+  type RefundListStatusFilter,
+} from '../hooks/payment-api/useGetAllRefunds';
 import { extractPaginatedResult } from '../utils/queryHelpers';
-import { ADMIN_LIST_MAX_FETCH } from '../constants/adminListFetch';
 import RefundManageModal from '@modals/RefundManageModal';
 import FilterGroup from '@components/common/FilterGroup';
 import Pagination from '@components/common/Pagination';
@@ -11,13 +14,12 @@ import { normalizePhone } from '../utils/normalizePhone';
 const STATUS_FILTERS = [
   { key: 'all', label: '전체' },
   { key: 'WAITING', label: '대기' },
-  { key: 'APPROVED', label: '승인' },
-  { key: 'REJECTED', label: '반려' },
-  { key: 'COMPLETED', label: '완료' },
+  { key: 'COMPLETE', label: '완료' },
 ];
 
-const STATUS_MAP = {
+const STATUS_MAP: Record<string, { label: string; cls: string }> = {
   WAITING: { label: '대기', cls: 'badgeAmber' },
+  COMPLETE: { label: '완료', cls: 'badgeBlue' },
   APPROVED: { label: '승인', cls: 'badgeGreen' },
   ACCEPTED: { label: '승인', cls: 'badgeGreen' },
   REJECTED: { label: '반려', cls: 'badgeRed' },
@@ -32,30 +34,23 @@ const REASON_MAP = {
   WRONG_ORDER: '오주문',
 };
 
-const REFUND_PAGE_SIZE = 7;
+const REFUND_PAGE_SIZE = 20;
+
+type RefundFilterTab = 'all' | RefundListStatusFilter;
 
 export default function RefundManagePage() {
-  const [filter, setFilter] = useState('all');
+  const [filter, setFilter] = useState<RefundFilterTab>('all');
   const [page, setPage] = useState(1);
 
   const [selected, setSelected] = useState<any>(null);
   const [showModal, setShowModal] = useState(false);
 
-  const { data, isLoading: loading, error } = useGetAllRefunds(1, ADMIN_LIST_MAX_FETCH);
-  const { content: refunds } = extractPaginatedResult(data);
-
-  const filteredAll = useMemo(() => {
-    if (filter === 'all') return refunds;
-    return refunds.filter((r) => {
-      const s = r.refundStatus ?? '';
-      if (filter === 'APPROVED') return s === 'APPROVED' || s === 'ACCEPTED';
-      if (filter === 'COMPLETED') return s === 'COMPLETED' || s === 'DONE';
-      return s === filter;
-    });
-  }, [refunds, filter]);
-
-  const totalCount = filteredAll.length;
-  const totalPages = Math.max(1, Math.ceil(totalCount / REFUND_PAGE_SIZE));
+  const { data, isLoading: loading, error } = useGetAllRefunds({
+    pageNum: page,
+    pageSize: REFUND_PAGE_SIZE,
+    refundStatus: filter === 'all' ? undefined : filter,
+  });
+  const { content: refunds, totalPages, totalElements: totalCount } = extractPaginatedResult<AdminRefundListRow>(data);
 
   useEffect(() => {
     setPage(1);
@@ -65,16 +60,12 @@ export default function RefundManagePage() {
     setPage((p) => Math.min(Math.max(1, p), totalPages));
   }, [totalPages]);
 
-  const displayed = useMemo(() => {
-    const start = (page - 1) * REFUND_PAGE_SIZE;
-    return filteredAll.slice(start, start + REFUND_PAGE_SIZE);
-  }, [filteredAll, page]);
-
   const clearFilters = useCallback(() => {
     setFilter('all');
   }, []);
 
-  const si = (r) => STATUS_MAP[r.refundStatus] ?? { label: r.refundStatus ?? '-', cls: 'badgeGray' };
+  const si = (r: AdminRefundListRow) =>
+    STATUS_MAP[r.refundStatus] ?? { label: r.refundStatus ?? '-', cls: 'badgeGray' };
 
   return (
     <div>
@@ -87,7 +78,11 @@ export default function RefundManagePage() {
 
       <div className={shared.card}>
         <div className={shared.cardHead} style={{ gap: 8, flexWrap: 'wrap' }}>
-          <FilterGroup filters={STATUS_FILTERS} current={filter} onFilterChange={setFilter} />
+          <FilterGroup
+            filters={STATUS_FILTERS}
+            current={filter}
+            onFilterChange={(key) => setFilter(key as RefundFilterTab)}
+          />
           <button
             type="button"
             className={shared.btnFilterReset}
@@ -127,18 +122,18 @@ export default function RefundManagePage() {
                     환불 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.
                   </td>
                 </tr>
-              ) : displayed.length === 0 ? (
+              ) : refunds.length === 0 ? (
                 <tr>
                   <td colSpan={7} className={shared.tableStateCell}>
                     환불 내역이 없습니다.
                   </td>
                 </tr>
               ) : (
-                displayed.map((r) => {
+                refunds.map((r) => {
                   const info = si(r);
                   return (
                     <tr key={r.id} className={shared.tr}>
-                      <td className={`${shared.td} ${shared.tdCenter}`}>{1}</td>
+                      <td className={`${shared.td} ${shared.tdCenter}`}>{r.id}</td>
                       <td className={`${shared.td} ${shared.tdMono} ${shared.tdCenter}`}>{r.transactionId ?? '-'}</td>
                       <td className={`${shared.td} ${shared.tdCenter} ${shared.tdBold}`}>{r.receiverName ?? '-'}</td>
                       <td className={`${shared.td} ${shared.tdCenter}`}>{normalizePhone(r.phoneNumber)}</td>

@@ -13,7 +13,7 @@ import { buildKioskNameById } from '../../utils/kioskHelpers';
 import { outfitContextLabels } from './outfitReportLabels';
 import type { OutfitReportFiltersState } from './useOutfitReportFilters';
 
-const OUTFIT_RANKING_PAGE_SIZE = 12;
+const OUTFIT_RANKING_PAGE_SIZE = 15;
 
 export type OutfitReportPanelModel = {
   status: OutfitReportPanelStatus;

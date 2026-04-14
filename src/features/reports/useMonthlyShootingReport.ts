@@ -25,20 +25,12 @@ export function useMonthlyShootingReport(tabIsActive: boolean) {
     monthSort,
   });
 
-  const { rows: rawRows, kioskNames, totalPages, totalElements } = useMemo(
+  const { rows, kioskNames, totalPages, totalElements } = useMemo(
     () => buildShootingStatsTableModel(data, 'month'),
     [data],
   );
 
-  const rows = useMemo(() => {
-    const list = [...rawRows];
-    list.sort((a, b) => {
-      const ka = monthSortKey(String(a.month));
-      const kb = monthSortKey(String(b.month));
-      return monthSort === 'latest' ? kb - ka : ka - kb;
-    });
-    return list;
-  }, [rawRows, monthSort]);
+
 
   const setMonthSort = useCallback((next: MonthlyShootingSort) => {
     setMonthSortState(next);

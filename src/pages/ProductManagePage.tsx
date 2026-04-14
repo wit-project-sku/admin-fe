@@ -7,7 +7,7 @@ import DeleteModal from '@modals/DeleteModal';
 import RegisterBtn from '@components/common/RegisterBtn';
 import { ProductManageTable } from '../features/products/ProductManageTable';
 import { PRODUCT_STATUS_FILTERS } from '../features/products/productListConfig';
-import { useProductManageList } from '../features/products/useProductManageList';
+import { useProductManageList, type ProductFilterTab } from '../features/products/useProductManageList';
 
 export default function ProductManagePage() {
   const list = useProductManageList();
@@ -27,7 +27,11 @@ export default function ProductManagePage() {
           className={shared.cardHead}
           style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}
         >
-          <FilterGroup filters={[...PRODUCT_STATUS_FILTERS]} current={list.filter} onFilterChange={list.setFilter} />
+          <FilterGroup
+            filters={[...PRODUCT_STATUS_FILTERS]}
+            current={list.filter}
+            onFilterChange={(key) => list.setFilter(key as ProductFilterTab)}
+          />
           <div style={{ flexShrink: 0 }}>
             <SearchBar value={list.search} onChange={list.setSearch} placeholder="상품명 검색..." minWidth="280px" />
           </div>

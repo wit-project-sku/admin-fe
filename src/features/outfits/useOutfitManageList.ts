@@ -6,9 +6,8 @@ import { useDebouncedValue } from '../../hooks/useDebouncedValue';
 import { extractPaginatedResult } from '../../utils/queryHelpers';
 import { unwrapList } from '../../utils/unwrapApi';
 import { buildKioskNameById } from '../../utils/kioskHelpers';
-import { filterOutfitsForTable } from './filterOutfitsForTable';
 import { mapOutfitListItemToRow, type OutfitRow } from './outfitListMappers';
-import { OUTFIT_API_FETCH_SIZE, OUTFIT_PAGE_SIZE, OUTFIT_TABLE_MESSAGES } from './outfitListConfig';
+import { OUTFIT_PAGE_SIZE, OUTFIT_TABLE_MESSAGES } from './outfitListConfig';
 
 export function useOutfitManageList() {
   const [search, setSearch] = useState('');
@@ -23,11 +22,16 @@ export function useOutfitManageList() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const { data: outfitsData, isLoading: loading, error: outfitsError, refetch } = useGetAllOutfits(
-    1,
-    OUTFIT_API_FETCH_SIZE,
-  );
-  const { content: outfits } = extractPaginatedResult(outfitsData);
+  const statusParam = filter === 'ACTIVE' || filter === 'INACTIVE' ? filter : undefined;
+
+  const { data: outfitsData, isLoading: loading, error: outfitsError, refetch } = useGetAllOutfits({
+    pageNum: page,
+    pageSize: OUTFIT_PAGE_SIZE,
+    keyword: debouncedSearch.trim() || undefined,
+    status: statusParam,
+  });
+
+  const { content: outfits, totalPages, totalElements } = extractPaginatedResult(outfitsData);
 
   const { data: kiosksData } = useGetKiosks();
   const kiosks = unwrapList(kiosksData) as { id: string | number; name: string }[];
@@ -35,15 +39,7 @@ export function useOutfitManageList() {
 
   const errorMessage = outfitsError ? OUTFIT_TABLE_MESSAGES.loadError : '';
 
-  const outfitRows = useMemo(() => (outfits as unknown[]).map(mapOutfitListItemToRow), [outfits]);
-
-  const filtered = useMemo(
-    () => filterOutfitsForTable(outfitRows, filter, debouncedSearch),
-    [outfitRows, filter, debouncedSearch],
-  );
-
-  const totalCount = filtered.length;
-  const totalPages = Math.max(1, Math.ceil(totalCount / OUTFIT_PAGE_SIZE));
+  const displayed = useMemo(() => (outfits as unknown[]).map(mapOutfitListItemToRow), [outfits]);
 
   useEffect(() => {
     setPage(1);
@@ -52,11 +48,6 @@ export function useOutfitManageList() {
   useEffect(() => {
     setPage((p) => Math.min(Math.max(1, p), totalPages));
   }, [totalPages]);
-
-  const displayed = useMemo(() => {
-    const start = (page - 1) * OUTFIT_PAGE_SIZE;
-    return filtered.slice(start, start + OUTFIT_PAGE_SIZE);
-  }, [filtered, page]);
 
   const { deleteOutfitAsync } = useDeleteOutfit();
 
@@ -103,7 +94,7 @@ export function useOutfitManageList() {
     errorMessage,
     displayed,
     totalPages,
-    totalCount,
+    totalCount: totalElements,
     kioskNameById,
     modalMode,
     selectedId,

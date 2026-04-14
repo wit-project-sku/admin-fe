@@ -30,15 +30,23 @@ type DashboardOverviewProps = {
   onDrillMonthly: () => void;
 };
 
-function mergeStat(
-  weeklyVal: number,
-  summaryVal: number | undefined,
-  weeklyLoading: boolean,
-  weeklyError: boolean,
+/**
+ * Headline shooting counts (`today` / `monthly` / `grand`) are taken from
+ * `/admin/stats/summary` when it is present so they match drilldown kiosk totals
+ * from the same payload. `/admin/stats/total` is authoritative only for
+ * `weeklyTrend` and `marketShare`; its duplicate total fields are used only as
+ * a fallback when summary is unavailable.
+ */
+function shootingTotalPreferSummary(
+  summary: ShootingSummary | null,
+  field: 'todayTotal' | 'monthlyTotal' | 'grandTotal',
+  weeklyFallback: number,
 ): number {
-  if (weeklyError) return summaryVal ?? 0;
-  if (weeklyLoading) return summaryVal ?? weeklyVal;
-  return weeklyVal;
+  if (summary != null) {
+    const v = summary[field];
+    if (typeof v === 'number' && Number.isFinite(v)) return v;
+  }
+  return typeof weeklyFallback === 'number' && Number.isFinite(weeklyFallback) ? weeklyFallback : 0;
 }
 
 export function DashboardOverview({
@@ -51,9 +59,9 @@ export function DashboardOverview({
   onDrillMonthly,
 }: DashboardOverviewProps) {
   const lineData = weekly.weeklyTrend;
-  const todayVal = mergeStat(weekly.todayTotal, summary?.todayTotal, weeklyLoading, weeklyError);
-  const monthlyVal = mergeStat(weekly.monthlyTotal, summary?.monthlyTotal, weeklyLoading, weeklyError);
-  const grandVal = mergeStat(weekly.grandTotal, summary?.grandTotal, weeklyLoading, weeklyError);
+  const todayVal = shootingTotalPreferSummary(summary, 'todayTotal', weekly.todayTotal);
+  const monthlyVal = shootingTotalPreferSummary(summary, 'monthlyTotal', weekly.monthlyTotal);
+  const grandVal = shootingTotalPreferSummary(summary, 'grandTotal', weekly.grandTotal);
   const totalOutfitCount = summary?.totalOutfitCount ?? 0;
 
   const lineChartBody =

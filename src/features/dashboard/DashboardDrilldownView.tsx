@@ -2,7 +2,7 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recha
 import shared from '@commons/shared.module.css';
 import s from '@pages/DashboardPage.module.css';
 import { DashboardChartFallback } from './DashboardChartFallback';
-import type { PieSlice } from './dashboardChartMockData';
+import type { DashboardPieSlice } from '@/utils/weeklyStatsNormalize';
 import type { KioskCountRow, ShootingSummary } from './dashboardSummary';
 
 export type DashboardDrillMode = 'today' | 'monthly';
@@ -10,7 +10,7 @@ export type DashboardDrillMode = 'today' | 'monthly';
 type DashboardDrilldownViewProps = {
   mode: DashboardDrillMode;
   summary: ShootingSummary | null;
-  pieSlices: PieSlice[];
+  pieSlices: DashboardPieSlice[];
   pieLoading?: boolean;
   pieError?: boolean;
   onBack: () => void;
