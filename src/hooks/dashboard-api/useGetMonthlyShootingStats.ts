@@ -15,7 +15,7 @@ type UseGetMonthlyShootingStatsOptions = {
 };
 
 function monthSortToApiSort(monthSort: MonthlyShootingSort): MonthlyShootingStatsApiSort {
-  return monthSort === 'latest' ? 'ASC' : 'DESC';
+  return monthSort === 'latest' ? 'DESC' : 'ASC';
 }
 
 export const useGetMonthlyShootingStats = (options?: UseGetMonthlyShootingStatsOptions) => {

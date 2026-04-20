@@ -6,9 +6,18 @@ type PaginationProps = {
   onPageChange: (page: number) => void;
   totalCount: number;
   unit?: string;
+  /** 총 건수 표시 포맷 (기본: `ko-KR` 쉼표) */
+  formatTotalCount?: (n: number) => string;
 };
 
-export default function Pagination({ currentPage, totalPages, onPageChange, totalCount, unit = '건' }: PaginationProps) {
+export default function Pagination({
+  currentPage,
+  totalPages,
+  onPageChange,
+  totalCount,
+  unit = '건',
+  formatTotalCount = (n) => n.toLocaleString('ko-KR'),
+}: PaginationProps) {
   const safeTotalPages = Math.max(1, Number(totalPages) || 1);
   const safeCurrentPage = Math.min(Math.max(1, Number(currentPage) || 1), safeTotalPages);
   const safeTotalCount = Number.isFinite(Number(totalCount)) ? Number(totalCount) : 0;
@@ -28,7 +37,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange, tota
   return (
     <div className={styles.container}>
       <div className={styles.leftInfo}>
-        총 <strong>{safeTotalCount.toLocaleString()}</strong>
+        총 <strong>{formatTotalCount(safeTotalCount)}</strong>
         {unit}
       </div>
       <div className={styles.centerControls}>

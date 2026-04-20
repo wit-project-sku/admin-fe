@@ -29,58 +29,55 @@ export function DashboardDrilldownView({
   const locationData: KioskCountRow[] = isToday ? (summary?.todayByKiosk ?? []) : (summary?.monthlyByKiosk ?? []);
   const label = isToday ? '오늘 지점별 현황' : '이번 달 지점별 현황';
 
-  const pieSection =
-    pieLoading ? (
-      <DashboardChartFallback variant='loading' />
-    ) : pieError ? (
-      <DashboardChartFallback variant='error' />
-    ) : pieSlices.length === 0 ? (
-      <DashboardChartFallback variant='empty' message='지점 점유 데이터가 없습니다.' />
-    ) : (
-      <ResponsiveContainer width='100%' height='100%'>
-        <PieChart>
-          <Pie
-            data={pieSlices}
-            dataKey='value'
-            nameKey='name'
-            cx='50%'
-            cy='45%'
-            innerRadius={55}
-            outerRadius={80}
-            paddingAngle={4}
-            label={({ name, percent }) => {
-              const pct = percent != null ? (percent * 100).toFixed(0) : '0';
-              return  `${pct}%`;
-            }}
-            labelLine={{ stroke: 'var(--text-muted, #94a3b8)', strokeWidth: 1 }}
-          >
-            {pieSlices.map((e, i) => (
-              <Cell key={i} fill={e.color} />
-            ))}
-          </Pie>
-          <Tooltip
-            formatter={(value, _n, item) => {
-              const row = item?.payload as { name?: string } | undefined;
-              const place = row?.name ?? _n;
-              return [`${value}건`, place];
-            }}
-            contentStyle={{
-              borderRadius: 10,
-              border: 'none',
-              boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
-              fontSize: 12,
-              fontWeight: 600,
-            }}
-          />
-          <Legend
-            verticalAlign='bottom'
-            iconType='circle'
-            iconSize={8}
-            wrapperStyle={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary, #64748b)', paddingTop: 8 }}
-          />
-        </PieChart>
-      </ResponsiveContainer>
-    );
+  const pieSection = pieLoading ? (
+    <DashboardChartFallback variant='loading' />
+  ) : pieError ? (
+    <DashboardChartFallback variant='error' />
+  ) : pieSlices.length === 0 ? (
+    <DashboardChartFallback variant='empty' message='지점 점유 데이터가 없습니다.' />
+  ) : (
+    <ResponsiveContainer width='100%' height='100%'>
+      <PieChart>
+        <Pie
+          data={pieSlices}
+          dataKey='value'
+          nameKey='name'
+          cx='50%'
+          cy='45%'
+          innerRadius={55}
+          outerRadius={80}
+          paddingAngle={4}
+          label={({ percent }) => `${percent * 100}%`}
+          labelLine={{ stroke: 'var(--text-muted, #94a3b8)', strokeWidth: 1 }}
+        >
+          {pieSlices.map((e, i) => (
+            <Cell key={i} fill={e.color} />
+          ))}
+        </Pie>
+        <Tooltip
+          formatter={(value, _n, item) => {
+            const row = item?.payload as { name?: string; count?: number } | undefined;
+            const place = row?.name ?? _n;
+            const count = typeof row?.count === 'number' ? row.count : Number(value);
+            return [`${count.toLocaleString()}건`, place];
+          }}
+          contentStyle={{
+            borderRadius: 10,
+            border: 'none',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+            fontSize: 12,
+            fontWeight: 600,
+          }}
+        />
+        <Legend
+          verticalAlign='bottom'
+          iconType='circle'
+          iconSize={8}
+          wrapperStyle={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary, #64748b)', paddingTop: 8 }}
+        />
+      </PieChart>
+    </ResponsiveContainer>
+  );
 
   return (
     <div>

@@ -1,6 +1,7 @@
 .sidebar {
   width: var(--sidebar-w);
   background: var(--sidebar-bg);
+  font-family: var(--font-sans);
   position: sticky;
   top: 0;
   overflow-y: auto;
@@ -35,14 +36,15 @@
   gap: 4px;
 }
 
+/* Korean section titles: avoid Latin-style uppercase + wide tracking (looks wrong on Hangul) */
 .groupLabel {
-  font-size: 10px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 700;
   color: var(--sidebar-muted);
-  letter-spacing: 0.12em;
+  letter-spacing: -0.02em;
+  line-height: 1.35;
   padding: 0 12px;
   margin-bottom: 2px;
-  text-transform: uppercase;
   display: block;
 }
 
@@ -62,6 +64,8 @@
   text-decoration: none;
   font-size: 13px;
   font-weight: 600;
+  line-height: 1.45;
+  letter-spacing: -0.02em;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 
@@ -144,8 +148,8 @@
   color: #f8fafc;
   font-size: 14px;
   font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
+  letter-spacing: -0.03em;
+  line-height: 1.25;
 }
 
 .logoSub {
@@ -166,8 +170,11 @@
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--sidebar-muted);
+  font-family: inherit;
   font-size: 12px;
   font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: -0.02em;
   padding: 10px 12px;
   border-radius: var(--radius-md);
   cursor: pointer;

@@ -126,13 +126,19 @@ export function DashboardOverview({
             outerRadius={72}
             paddingAngle={4}
             dataKey='value'
-            label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+            label={({ percent }) => `${(percent * 100)}%`}
           >
             {weeklyPieSlices.map((e, i) => (
               <Cell key={i} fill={e.color} />
             ))}
           </Pie>
-          <Tooltip formatter={(v) => [`${v}건`]} />
+          <Tooltip
+            formatter={(value, _name, item) => {
+              const row = item?.payload as { count?: number } | undefined;
+              const count = typeof row?.count === 'number' ? row.count : Number(value);
+              return `${count.toLocaleString()}건`;
+            }}
+          />
           <Legend
             verticalAlign='bottom'
             iconType='circle'
@@ -227,7 +233,7 @@ export function DashboardOverview({
 
         <div className={`${shared.card} ${s.pieChartCard}`}>
           <div className={shared.cardHead}>
-            <span className={s.pieLabel}>Market Share</span>
+            <span className={s.pieLabel}>Monthly Market Share</span>
           </div>
           <div className={s.chartArea}>{pieChartBody}</div>
         </div>

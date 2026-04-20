@@ -1,6 +1,6 @@
 export type WeeklyTrendRow = { day: string; thisWeek: number; lastWeek: number };
 
-export type MarketShareRow = { name: string; value: number };
+export type MarketShareRow = { name: string; value: number; count: number };
 
 export type NormalizedWeeklyStats = {
   todayTotal: number;
@@ -11,7 +11,7 @@ export type NormalizedWeeklyStats = {
 };
 
 /** Pie chart segment after assigning colors to market-share rows. */
-export type DashboardPieSlice = { name: string; value: number; color: string };
+export type DashboardPieSlice = { name: string; value: number; count: number; color: string };
 
 const PIE_COLORS = ['#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe', '#dbeafe', '#6366f1', '#8b5cf6', '#a78bfa'];
 
@@ -63,7 +63,7 @@ function coerceMarketRow(row: unknown): MarketShareRow | null {
       '',
   ).trim();
   const value = num(r.value ?? r.count ?? r.share ?? r.shots ?? r.total);
-  return { name: name || '기타', value: Math.max(0, value) };
+  return { name: name || '기타', value: Math.max(0, value) , count: num(r.count ?? r.value ?? r.shots ?? r.total) };
 }
 
 export function emptyWeeklyStats(): NormalizedWeeklyStats {
@@ -86,9 +86,7 @@ export function normalizeWeeklyStatsPayload(raw: unknown): NormalizedWeeklyStats
   const trendRaw = inner.weeklyTrend ?? inner.weekly_trend;
   const marketRaw = inner.marketShare ?? inner.market_share;
 
-  const weeklyTrend = Array.isArray(trendRaw)
-    ? (trendRaw.map(coerceTrendRow).filter(Boolean) as WeeklyTrendRow[])
-    : [];
+  const weeklyTrend = Array.isArray(trendRaw) ? (trendRaw.map(coerceTrendRow).filter(Boolean) as WeeklyTrendRow[]) : [];
 
   const marketShare = Array.isArray(marketRaw)
     ? (marketRaw.map(coerceMarketRow).filter(Boolean) as MarketShareRow[])
@@ -107,6 +105,7 @@ export function marketShareToPieSlices(share: MarketShareRow[]): DashboardPieSli
   return share.map((item, i) => ({
     name: item.name,
     value: item.value,
+    count: item.count,
     color: PIE_COLORS[i % PIE_COLORS.length]!,
   }));
 }

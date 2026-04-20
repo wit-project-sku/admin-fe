@@ -8,6 +8,8 @@
 
 /* Enterprise admin — shared design tokens */
 :root {
+  /* Pretendard: unified Latin + Hangul metrics; system fonts as fallback */
+  --font-sans: 'Pretendard Variable', 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Segoe UI', sans-serif;
   --sidebar-w: 220px;
   --sidebar-collapsed-w: 76px;
   --header-h: 52px;
@@ -52,14 +54,16 @@
 }
 
 body {
-  font-family: 'Pretendard Variable', 'Pretendard', 'Noto Sans KR', 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont,
-    'Segoe UI', sans-serif;
+  font-family: var(--font-sans);
   background: var(--bg-canvas);
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
   font-size: 13px;
-  line-height: 1.5;
+  line-height: 1.55;
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 
 a {
