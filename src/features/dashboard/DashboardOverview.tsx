@@ -126,7 +126,7 @@ export function DashboardOverview({
             outerRadius={72}
             paddingAngle={4}
             dataKey='value'
-            label={({ percent }) => `${(percent * 100)}%`}
+            label={({ percent }) => `${(percent * 100).toFixed(1)}%`}
           >
             {weeklyPieSlices.map((e, i) => (
               <Cell key={i} fill={e.color} />

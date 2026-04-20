@@ -47,7 +47,7 @@ export function DashboardDrilldownView({
           innerRadius={55}
           outerRadius={80}
           paddingAngle={4}
-          label={({ percent }) => `${percent * 100}%`}
+          label={({ percent }) => `${(percent * 100).toFixed(1)}%`}
           labelLine={{ stroke: 'var(--text-muted, #94a3b8)', strokeWidth: 1 }}
         >
           {pieSlices.map((e, i) => (
