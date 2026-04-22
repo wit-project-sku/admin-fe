@@ -124,7 +124,7 @@ export function KioskButtonEditModal({ open, onClose, button, onSuccess }: Props
           <div className={styles.modalBody}>
             <p className={styles.formHint} style={{ marginTop: 0 }}>
               버튼 ID <code className={styles.monoCode}>{button.id}</code>
-              {button.kioskName != null ? ` · ${button.kioskName}` : button.kioskId != null ? ` · 키오스크 #${button.kioskId}` : null}
+              {button.kioskName != null ? ` · ${button.kioskName}` : button.kioskId != null ? ` · WITH #${button.kioskId}` : null}
             </p>
             <div className={styles.field}>
               <label className={styles.fieldLabel} htmlFor={`${uid}-name`}>

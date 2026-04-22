@@ -13,8 +13,8 @@ export default function KioskAnalyticsPage() {
     <div className={styles.shell}>
       <div className={shared.pageHeader}>
         <div>
-          <h1 className={shared.pageTitle}>키오스크 분석 대시보드</h1>
-          <p className={shared.pageSubtitle}>Kiosk Analytics Dashboard</p>
+          <h1 className={shared.pageTitle}>WITH 분석 대시보드</h1>
+          <p className={shared.pageSubtitle}>WITH Analytics Dashboard</p>
         </div>
       </div>
 

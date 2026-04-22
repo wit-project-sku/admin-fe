@@ -4,15 +4,8 @@ import { useGetMonthlyShootingStats } from '../../hooks/dashboard-api/useGetMont
 import { buildShootingStatsTableModel } from './shootingStatsMappers';
 import { REPORT_MESSAGES } from './reportMessages';
 
-const MONTHLY_SHOOTING_PAGE_SIZE = 10;
+const MONTHLY_SHOOTING_PAGE_SIZE = 20;
 
-function monthSortKey(month: string): number {
-  const s = month.trim();
-  const m = s.match(/^(\d{4})[-/.]?(\d{1,2})/);
-  if (m) return Number(m[1]) * 100 + Number(m[2]);
-  const t = Date.parse(s);
-  return Number.isFinite(t) ? t : 0;
-}
 
 export function useMonthlyShootingReport(tabIsActive: boolean) {
   const [pageNum, setPageNum] = useState(1);

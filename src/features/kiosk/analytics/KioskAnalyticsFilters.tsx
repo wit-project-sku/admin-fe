@@ -97,11 +97,11 @@ export function KioskAnalyticsFilters({
         </div>
 
         <div className={`${styles.filterField} ${styles.kioskSelect}`}>
-          <span className={styles.filterLabel}>키오스크</span>
+          <span className={styles.filterLabel}>WITH</span>
           <SearchableSelect
-            aria-label='키오스크 필터'
-            placeholder={kiosksLoading ? '불러오는 중…' : '전체 키오스크'}
-            options={[{ value: '', label: '전체 키오스크' }, ...kioskOptions]}
+            aria-label='WITH 필터'
+            placeholder={kiosksLoading ? '불러오는 중…' : '전체 WITH'}
+            options={[{ value: '', label: '전체 WITH' }, ...kioskOptions]}
             value={filters.kioskId}
             onChange={(kioskId) => {
               setFilters((f) => ({ ...f, kioskId }));

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { DashboardCommerceOverview } from '../features/dashboard/DashboardCommerceOverview';
 import { DashboardDrilldownView } from '../features/dashboard/DashboardDrilldownView';
 import { DashboardOverview } from '../features/dashboard/DashboardOverview';
@@ -8,8 +9,11 @@ import { useGetWeeklyStats } from '../hooks/dashboard-api/useGetWeeklyStats';
 import { emptyWeeklyStats, marketShareToPieSlices } from '../utils/weeklyStatsNormalize';
 import ds from './DashboardPage.module.css';
 
+const KIOSK_ANALYTICS_PATH = '/admin/kiosk-analytics';
+
 /** Summary = kiosk breakdown + outfit count + headline totals; total = weekly line + market share. */
 export default function DashboardPage() {
+  const navigate = useNavigate();
   const [dashboardTab, setDashboardTab] = useState<'analytics' | 'commerce'>('analytics');
   const [drilldown, setDrilldown] = useState<'today' | 'monthly' | null>(null);
   const { data: summaryRaw } = useGetStatisticSummary();
@@ -40,14 +44,17 @@ export default function DashboardPage() {
           className={`${ds.tab} ${dashboardTab === 'analytics' ? ds.tabActive : ''}`}
           onClick={() => setDashboardTab('analytics')}
         >
-          촬영 · 운영 분석
+          AR착장 오버뷰
+        </button>
+        <button type='button' className={ds.tab} onClick={() => navigate(KIOSK_ANALYTICS_PATH)}>
+          WITH사용 오버뷰
         </button>
         <button
           type='button'
           className={`${ds.tab} ${dashboardTab === 'commerce' ? ds.tabActive : ''}`}
           onClick={() => setDashboardTab('commerce')}
         >
-          커머스 오버뷰
+          위드마켓 오버뷰
         </button>
       </nav>
       {dashboardTab === 'analytics' ? (

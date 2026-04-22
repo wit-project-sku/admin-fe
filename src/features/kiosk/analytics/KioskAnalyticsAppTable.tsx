@@ -41,7 +41,7 @@ export function KioskAnalyticsAppTable({
           <thead className={shared.thead}>
             <tr>
               <th className={shared.th}>버튼</th>
-              <th className={shared.th}>키오스크</th>
+              <th className={shared.th}>WITH</th>
               <th className={`${shared.th} ${shared.thRight}`}>총 클릭</th>
               <th className={`${shared.th} ${shared.thRight}`}>총 사용 시간</th>
               <th className={`${shared.th} ${shared.thRight}`}>평균 체류</th>

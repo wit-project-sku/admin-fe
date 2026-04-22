@@ -66,7 +66,7 @@ export function useKioskButtonManagePage() {
     [kiosks, byKioskId],
   );
 
-  /** “전체 버튼” 탭에서 키오스크 열·부제 표시 */
+  /** “전체 버튼” 탭에서 WITH 열·부제 표시 */
   const showKioskColumn = tab === 'all';
 
   return {

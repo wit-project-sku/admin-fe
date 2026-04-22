@@ -116,8 +116,8 @@ export default function KioskButtonManagePage() {
     <div>
       <div className={shared.pageHeader}>
         <div>
-          <h1 className={shared.pageTitle}>키오스크 버튼 관리</h1>
-          <p className={shared.pageSubtitle}>Kiosk Button Management</p>
+          <h1 className={shared.pageTitle}>WITH 버튼 관리</h1>
+          <p className={shared.pageSubtitle}>WITH Button Management</p>
         </div>
       </div>
 
@@ -140,7 +140,7 @@ export default function KioskButtonManagePage() {
               className={`${styles.tab} ${m.tab === 'byKiosk' ? styles.tabActive : ''}`}
               onClick={() => m.setTab('byKiosk')}
             >
-              키오스크별
+              WITH별
             </button>
           </div>
           <div className={styles.tabBarActions}>
@@ -150,7 +150,7 @@ export default function KioskButtonManagePage() {
           </div>
         </div>
         <p className={styles.tabBarHint}>
-          버튼 위치 1–{m.maxButtonsPerKiosk} · 키오스크당 최대 {m.maxButtonsPerKiosk}개 · 아이콘은 프리셋에서 선택
+          버튼 위치 1–{m.maxButtonsPerKiosk} · WITH당 최대 {m.maxButtonsPerKiosk}개 · 아이콘은 프리셋에서 선택
         </p>
       </div>
 

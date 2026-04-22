@@ -16,7 +16,7 @@ type Props = {
   open: boolean;
   onClose: () => void;
   kioskOptions: KioskSelectOption[];
-  /** When set (e.g. 키오스크별 탭), pre-fill kiosk. */
+  /** When set (e.g. WITH별 탭), pre-fill WITH. */
   defaultKioskId?: string;
 };
 
@@ -76,9 +76,9 @@ export function KioskButtonAddModal({ open, onClose, kioskOptions, defaultKioskI
       const nextErrors: FormErrors = {};
       setFormError(null);
       if (kioskOptions.length === 0) {
-        nextErrors.kioskId = '선택 가능한 키오스크가 없습니다.';
+        nextErrors.kioskId = '선택 가능한 WITH가 없습니다.';
       } else if (kioskId === '' || !kioskOptions.some((o) => o.value === kioskId)) {
-        nextErrors.kioskId = '키오스크를 선택해주세요.';
+        nextErrors.kioskId = 'WITH를 선택해주세요.';
       }
       const typeTrim = buttonType.trim();
       const nameTrim = buttonName.trim();
@@ -140,15 +140,15 @@ export function KioskButtonAddModal({ open, onClose, kioskOptions, defaultKioskI
         <form onSubmit={onSubmit}>
           <div className={styles.modalBody}>
             {kioskOptions.length === 0 ? (
-              <p className={styles.formHint}>키오스크 목록을 불러오는 중이거나 등록된 키오스크가 없습니다.</p>
+              <p className={styles.formHint}>WITH 목록을 불러오는 중이거나 등록된 WITH가 없습니다.</p>
             ) : (
               <>
                 <div className={styles.field}>
                   <label className={styles.fieldLabel} htmlFor={`${uid}-kiosk`}>
-                    키오스크
+                    WITH
                   </label>
                   <SearchableSelect
-                    aria-label='키오스크'
+                    aria-label='WITH'
                     options={kioskOptions}
                     value={kioskId}
                     onChange={(v) => {

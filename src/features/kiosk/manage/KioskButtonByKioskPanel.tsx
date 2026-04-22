@@ -49,10 +49,10 @@ export function KioskButtonByKioskPanel({
     <div className={styles.byKioskPanel}>
       <div className={styles.byKioskSelectRow}>
         <div className={`${styles.field} ${styles.fieldCompact}`}>
-          <span className={styles.fieldLabel}>키오스크</span>
+          <span className={styles.fieldLabel}>WITH</span>
           <div className={styles.byKioskSelectWrap}>
             <SearchableSelect
-              aria-label='키오스크 선택'
+              aria-label='WITH 선택'
               options={kioskOptions}
               value={byKioskId}
               onChange={onByKioskId}
@@ -91,7 +91,7 @@ export function KioskButtonByKioskPanel({
               ) : buttons.length === 0 ? (
                 <tr>
                   <td colSpan={onEditButton ? 7 : 6} className={shared.tableStateCell}>
-                    이 키오스크에 등록된 버튼이 없습니다.
+                    이 WITH에 등록된 버튼이 없습니다.
                   </td>
                 </tr>
               ) : (

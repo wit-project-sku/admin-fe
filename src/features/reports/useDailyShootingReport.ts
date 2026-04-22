@@ -2,12 +2,25 @@ import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useGetDailyShootingStats } from '../../hooks/dashboard-api/useGetDailyShootingStats';
 import { buildShootingStatsTableModel } from './shootingStatsMappers';
 import { REPORT_MESSAGES } from './reportMessages';
+import { getFirstOfMonthYmd, getLocalTodayYmd } from '../../utils/dateUtils';
 
-const DAILY_SHOOTING_PAGE_SIZE = 10;
+const DAILY_SHOOTING_PAGE_SIZE = 20;
+
+/**
+ * Default range: start = 1st of the current month, end = today (local calendar).
+ * Derived once at mount so the two dates stay consistent and `start <= end` always holds,
+ * including on the 1st of the month where `start === end`.
+ */
+function computeDefaultRange() {
+  const today = getLocalTodayYmd();
+  const first = getFirstOfMonthYmd();
+  return { start: first, end: today };
+}
 
 export function useDailyShootingReport(tabIsActive: boolean) {
-  const [dateDraft, setDateDraft] = useState({ start: '', end: '' });
-  const [committedRange, setCommittedRange] = useState({ start: '', end: '' });
+  const defaultRange = useMemo(computeDefaultRange, []);
+  const [dateDraft, setDateDraft] = useState(defaultRange);
+  const [committedRange, setCommittedRange] = useState(defaultRange);
   const [pageNum, setPageNum] = useState(1);
 
   const runQuery = useCallback(() => {

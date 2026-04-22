@@ -1,6 +1,6 @@
 import type { AnalyticsFilters, DatePreset } from '../kioskAnalyticsMock';
 
-export const TABLE_PAGE_SIZE = 8;
+export const TABLE_PAGE_SIZE = 10;
 
 export const DATE_PRESETS: ReadonlyArray<[DatePreset, string]> = [
   ['today', '오늘'],

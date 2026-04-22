@@ -190,7 +190,7 @@ export function useKioskAnalyticsPageModel() {
   const topKioskUsageData = useMemo(
     () =>
       (block?.kioskUsageGraph ?? []).map((r, i) => ({
-        name: r.buttonType?.trim() || `키오스크 ${i + 1}`,
+        name: r.buttonType?.trim() || `WITH ${i + 1}`,
         usageSeconds: r.value,
       })),
     [block],

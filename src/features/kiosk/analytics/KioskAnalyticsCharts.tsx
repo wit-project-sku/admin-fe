@@ -279,13 +279,13 @@ export function KioskAnalyticsCharts({
 
       <div className={`${styles.chartCard} ${styles.chartSpan2}`}>
         <div className={styles.chartHead}>
-          <h2 className={styles.chartTitle}>키오스크별 사용</h2>
+          <h2 className={styles.chartTitle}>WITH별 사용</h2>
         </div>
         <div className={styles.chartBody}>
           <ChartBody
             isLoading={isLoading}
             isEmpty={topKioskUsageData.length === 0}
-            emptyMessage='키오스크별 사용 데이터가 없습니다.'
+            emptyMessage='WITH별 사용 데이터가 없습니다.'
           >
             <ResponsiveContainer width='100%' height='100%'>
               <BarChart data={topKioskUsageData} margin={{ top: 8, right: 8, left: 0, bottom: 4 }}>

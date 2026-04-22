@@ -66,7 +66,7 @@ export function KioskButtonCatalogGrid({
           const toggling = togglingButtonId === b.id;
           const busy = deleting || toggling;
           const kioskLine = showKioskColumn
-            ? (b.kioskName ?? (b.kioskId != null ? `키오스크 #${b.kioskId}` : '—'))
+            ? (b.kioskName ?? (b.kioskId != null ? `WITH #${b.kioskId}` : '—'))
             : null;
           return (
             <article key={`${b.kioskId ?? 'all'}-${b.id}-${b.position}`} className={styles.card}>
