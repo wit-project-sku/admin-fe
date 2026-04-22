@@ -11,7 +11,7 @@ export const DATE_PRESETS: ReadonlyArray<[DatePreset, string]> = [
 
 export function defaultAnalyticsFilters(): AnalyticsFilters {
   return {
-    preset: '7d',
+    preset: 'today',
     customStart: '',
     customEnd: '',
     city: '',
