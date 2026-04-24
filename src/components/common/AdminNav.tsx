@@ -1,8 +1,10 @@
 import { NavLink } from 'react-router-dom';
-import type { ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import styles from './AdminNav.module.css';
 import { useNavigate } from 'react-router-dom';
 import { authStoreApi } from '../../stores/authStore';
+import { useQueryClient } from '@tanstack/react-query';
+import { useGetMe, ME_QUERY_KEY, ROLE_USER } from '../../hooks/auth-api/useGetMe';
 
 type NavItemDef = {
   label: string;
@@ -81,6 +83,19 @@ const WITH_USAGE_GROUP: NavGroupDef = {
   ],
 };
 
+const WITH_MARKET_DASHBOARD_ITEM: NavItemDef = {
+  label: '위드마켓 대시보드',
+  path: '/admin/dashboard',
+  icon: (
+    <svg width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
+      <rect x='3' y='3' width='7' height='7' />
+      <rect x='14' y='3' width='7' height='7' />
+      <rect x='14' y='14' width='7' height='7' />
+      <rect x='3' y='14' width='7' height='7' />
+    </svg>
+  ),
+};
+
 const WITH_MARKET_GROUP: NavGroupDef = {
   label: '위드마켓 오버뷰',
   items: [
@@ -132,6 +147,13 @@ const WITH_MARKET_GROUP: NavGroupDef = {
 
 const NAV_GROUPS: NavGroupDef[] = [AR_OUTFIT_GROUP, WITH_USAGE_GROUP, WITH_MARKET_GROUP];
 
+const USER_NAV_GROUPS: NavGroupDef[] = [
+  {
+    label: '위드마켓 오버뷰',
+    items: [WITH_MARKET_DASHBOARD_ITEM, ...WITH_MARKET_GROUP.items],
+  },
+];
+
 function NavItem({ item, collapsed }: { item: NavItemDef; collapsed: boolean }) {
   return (
     <NavLink
@@ -151,9 +173,17 @@ type AdminNavProps = {
 
 export default function AdminNav({ collapsed = false }: AdminNavProps) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { data: me } = useGetMe();
+
+  const visibleGroups = useMemo<NavGroupDef[]>(
+    () => (me?.role === ROLE_USER ? USER_NAV_GROUPS : NAV_GROUPS),
+    [me?.role],
+  );
 
   const handleLogout = () => {
     authStoreApi.clearAuth();
+    queryClient.removeQueries({ queryKey: ME_QUERY_KEY });
     navigate('/admin/login');
   };
 
@@ -169,7 +199,7 @@ export default function AdminNav({ collapsed = false }: AdminNavProps) {
             </div>
           </div>
         </div>
-        {NAV_GROUPS.map((group) => (
+        {visibleGroups.map((group) => (
           <div key={group.label} className={styles.group}>
             <span className={styles.groupLabel}>{group.label}</span>
             {group.items.map((item) => (

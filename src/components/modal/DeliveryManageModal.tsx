@@ -141,14 +141,10 @@ export default function DeliveryManageModal({ open, mode, deliveryId, onClose, o
 
   const isEdit = mode === 'edit';
 
-  // 주문 내역 더미 데이터
-  const orderItems =
-    data?.orderProducts && data.orderProducts.length > 0
-      ? data.orderProducts
-      : [
-          { productName: 'WITH > AR합성 아크릴 키링', quantity: 1, price: 14900 },
-          { productName: 'WITH > AR합성 머그컵', quantity: 1, price: 24900 },
-        ];
+  const orderItems: Array<Record<string, any>> =
+    (data?.productListResponses as Array<Record<string, any>> | undefined) ??
+    (data?.orderProducts as Array<Record<string, any>> | undefined) ??
+    [];
 
   // 상세 보기 시 라벨 표시용
   const currentStatusLabel = STATUS_OPTIONS.find((o) => o.value === data?.deliveryStatus)?.label || '-';
@@ -170,16 +166,16 @@ export default function DeliveryManageModal({ open, mode, deliveryId, onClose, o
                   isEdit={isEdit}
                   form={form}
                   setForm={setForm}
-                  label='주문번호'
-                  value={`DEL-${String(data?.deliveryId || '003').padStart(3, '0')}`}
-                  required
+                  label='송장 번호'
+                  value={data?.trackingNumber ?? '-'}
+                  field='trackingNumber'
                 />
                 <DeliveryFormField
                   isEdit={isEdit}
                   form={form}
                   setForm={setForm}
                   label='주문 날짜'
-                  value={data?.orderDate ?? '2026-01-30'}
+                  value={data?.orderDate ?? '-'}
                   required
                 />
               </div>
@@ -230,24 +226,15 @@ export default function DeliveryManageModal({ open, mode, deliveryId, onClose, o
                 field='addressDetail'
                 fullWidth
               />
-              <div className={m.fieldRow}>
-                <DeliveryFormField
-                  isEdit={isEdit}
-                  form={form}
-                  setForm={setForm}
-                  label='배송 상태'
-                  value={currentStatusLabel}
-                  field='deliveryStatus'
-                />
-                <DeliveryFormField
-                  isEdit={isEdit}
-                  form={form}
-                  setForm={setForm}
-                  label='송장번호'
-                  value={data?.trackingNumber}
-                  field='trackingNumber'
-                />
-              </div>
+              <DeliveryFormField
+                isEdit={isEdit}
+                form={form}
+                setForm={setForm}
+                label='배송 상태'
+                value={currentStatusLabel}
+                field='deliveryStatus'
+                fullWidth
+              />
               <div className={m.fieldRow}>
                 <DeliveryFormField
                   isEdit={isEdit}
@@ -262,7 +249,7 @@ export default function DeliveryManageModal({ open, mode, deliveryId, onClose, o
                   form={form}
                   setForm={setForm}
                   label='총 상품 개수'
-                  value={`${data?.orderProducts?.length ?? 0}개`}
+                  value={`${orderItems.length}개`}
                   required
                 />
               </div>
@@ -273,20 +260,29 @@ export default function DeliveryManageModal({ open, mode, deliveryId, onClose, o
                 주문 내역
               </label>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {orderItems.map((item, i) => (
-                  <div key={i} className={m.orderItem}>
-                    <div className={m.orderItemDot} />
-                    <div className={m.orderItemName}>{item.productName}</div>
-                    <div className={m.orderItemInfo}>
-                      <div className={m.infoTag}>
-                        수량 <b>{item.quantity}개</b>
+                {orderItems.length === 0 ? (
+                  <div style={{ color: '#6b7280', fontSize: 13 }}>주문 내역이 없습니다.</div>
+                ) : (
+                  orderItems.map((item, i) => {
+                    const name = item.productName ?? '-';
+                    const quantity = item.productQuantity ?? item.quantity ?? 0;
+                    const price = item.productPrice ?? item.price ?? 0;
+                    return (
+                      <div key={item.productId ?? i} className={m.orderItem}>
+                        <div className={m.orderItemDot} />
+                        <div className={m.orderItemName}>{name}</div>
+                        <div className={m.orderItemInfo}>
+                          <div className={m.infoTag}>
+                            수량 <b>{quantity}개</b>
+                          </div>
+                          <div className={m.infoTag}>
+                            가격 <b>{Number(price).toLocaleString()}원</b>
+                          </div>
+                        </div>
                       </div>
-                      <div className={m.infoTag}>
-                        가격 <b>{Number(item.price).toLocaleString()}원</b>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                    );
+                  })
+                )}
               </div>
             </div>
           </>

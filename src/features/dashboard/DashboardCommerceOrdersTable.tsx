@@ -45,7 +45,7 @@ export function DashboardCommerceOrdersTable({
           </div>
           <div>
             <h2 className={s.ordersSectionTitle}>최근 실시간 주문 내역</h2>
-            <p className={s.ordersDesc}>오늘 들어온 주문 및 상태를 바로 확인하세요</p>
+            <p className={s.ordersDesc}>주문 및 상태를 바로 확인하세요</p>
           </div>
         </div>
         <Link to='/admin/deliveries' className={s.viewAllBtn}>

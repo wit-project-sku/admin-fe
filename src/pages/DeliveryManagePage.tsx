@@ -29,7 +29,7 @@ const STATUS_MAP = {
   READY: { label: '배송준비', cls: 'badgeBlue' },
 };
 
-const DELIVERY_PAGE_SIZE = 5;
+const DELIVERY_PAGE_SIZE = 20;
 
 export default function DeliveryManagePage() {
   const [filter, setFilter] = useState('all');
@@ -107,7 +107,7 @@ export default function DeliveryManagePage() {
             <thead className={shared.thead}>
               <tr>
                 <th className={`${shared.th} ${shared.thCenter}`}>ID</th>
-                <th className={`${shared.th} ${shared.thCenter}`}>주문번호</th>
+                <th className={`${shared.th} ${shared.thCenter}`}>송장 번호</th>
                 <th className={`${shared.th} ${shared.thCenter}`}>수령인</th>
                 <th className={`${shared.th} ${shared.thCenter}`}>전화번호</th>
                 <th className={`${shared.th} ${shared.thCenter}`}>주소</th>
@@ -146,7 +146,7 @@ export default function DeliveryManagePage() {
                     <tr key={d.deliveryId} className={shared.tr}>
                       <td className={`${shared.td} ${shared.tdCenter}`}>{d.deliveryId}</td>
                       <td className={`${shared.td} ${shared.tdMono} ${shared.tdCenter}`}>
-                        {`DEL-${String(d.deliveryId).padStart(3, '0')}`}
+                        {d.trackingNumber ?? '-'}
                       </td>
                       <td className={`${shared.td} ${shared.tdCenter} ${shared.tdBold}`}>{d.receiverName ?? '-'}</td>
                       <td className={`${shared.td} ${shared.tdCenter} ${shared.tdMuted}`}>

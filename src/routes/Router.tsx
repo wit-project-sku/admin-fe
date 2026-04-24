@@ -1,10 +1,13 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { lazy, Suspense, type ReactNode } from 'react';
 import AdminLayout from '@layouts/AdminLayout';
 import { useAuthStore } from '../stores/authStore';
+import { ROLE_USER, useGetMe } from '../hooks/auth-api/useGetMe';
+import { isPathAllowedForRole, ROLE_DEFAULT_LANDING } from '../utils/roleAccess';
 
 const LoginPage = lazy(() => import('@pages/LoginPage'));
 const DashboardPage = lazy(() => import('@pages/DashboardPage'));
+const WithMarketDashboardPage = lazy(() => import('@pages/WithMarketDashboardPage'));
 const ProductManagePage = lazy(() => import('@pages/ProductManagePage'));
 const PaymentManagePage = lazy(() => import('@pages/PaymentManagePage'));
 const DeliveryManagePage = lazy(() => import('@pages/DeliveryManagePage'));
@@ -44,6 +47,27 @@ function LoginGuard({ children }: { children: ReactNode }) {
   return isAuthenticated ? <Navigate to="/admin/dashboard" replace /> : children;
 }
 
+/** Authorizes the current pathname against the user's role. Blocks any path the role cannot access. */
+function RoleGuard({ children }: { children: ReactNode }) {
+  const { pathname } = useLocation();
+  const { data: me, isLoading, isError } = useGetMe();
+
+  if (isLoading && !me) return <Loader />;
+  if (isError || !me) return <>{children}</>;
+
+  if (!isPathAllowedForRole(me.role, pathname)) {
+    return <Navigate to={ROLE_DEFAULT_LANDING[me.role]} replace />;
+  }
+  return <>{children}</>;
+}
+
+/** Dashboard dispatcher: ROLE_USER sees a dedicated 위드마켓 dashboard, ROLE_ADMIN sees the full dashboard. */
+function RoleAwareDashboard() {
+  const { data: me } = useGetMe();
+  if (me?.role === ROLE_USER) return <WithMarketDashboardPage />;
+  return <DashboardPage />;
+}
+
 export default function AppRouter() {
   return (
     <Router>
@@ -62,12 +86,14 @@ export default function AppRouter() {
             path="/admin/*"
             element={
               <Guard>
-                <AdminLayout />
+                <RoleGuard>
+                  <AdminLayout />
+                </RoleGuard>
               </Guard>
             }
           >
             <Route index element={<Navigate to="dashboard" replace />} />
-            <Route path="dashboard" element={<DashboardPage />} />
+            <Route path="dashboard" element={<RoleAwareDashboard />} />
             <Route path="products" element={<ProductManagePage />} />
             <Route path="payments" element={<PaymentManagePage />} />
             <Route path="deliveries" element={<DeliveryManagePage />} />

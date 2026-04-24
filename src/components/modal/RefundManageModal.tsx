@@ -8,6 +8,7 @@ const STATUS_MAP = {
   APPROVED: { label: '승인', bg: '#f0fdf4', color: '#16a34a' },
   ACCEPTED: { label: '승인', bg: '#f0fdf4', color: '#16a34a' },
   REJECTED: { label: '반려', bg: '#fef2f2', color: '#dc2626' },
+  COMPLETE: { label: '완료', bg: '#eff6ff', color: '#2563eb' },
   COMPLETED: { label: '완료', bg: '#eff6ff', color: '#2563eb' },
   DONE: { label: '완료', bg: '#eff6ff', color: '#2563eb' },
 };

@@ -1,5 +1,7 @@
 import styles from './AdminHeader.module.css';
 import { useAuthStore } from '../../stores/authStore';
+import { useGetMe } from '../../hooks/auth-api/useGetMe';
+import { getRoleLabel } from '../../utils/roleAccess';
 
 type AdminHeaderProps = {
   collapsed?: boolean;
@@ -8,6 +10,9 @@ type AdminHeaderProps = {
 
 export default function AdminHeader({ collapsed = false, onToggleSidebar }: AdminHeaderProps) {
   const username = useAuthStore((state) => state.username);
+  const { data: me } = useGetMe();
+  const displayName = me?.name || me?.username || username;
+  const roleLabel = getRoleLabel(me?.role);
 
   return (
     <header className={styles.header}>
@@ -27,13 +32,13 @@ export default function AdminHeader({ collapsed = false, onToggleSidebar }: Admi
       </div>
 
       <div className={styles.right}>
-        {username ? (
+        {displayName ? (
           <>
             <div className={styles.account}>
-              <div className={styles.avatar}>{username.slice(0, 2).toUpperCase()}</div>
+              <div className={styles.avatar}>{displayName.slice(0, 2).toUpperCase()}</div>
               <div className={styles.infoWrapper}>
-                <span className={styles.accountName}>{username}</span>
-                <span className={styles.accountRole}>관리자</span>
+                <span className={styles.accountName}>{displayName}</span>
+                <span className={styles.accountRole}>{roleLabel}</span>
               </div>
             </div>
           </>
