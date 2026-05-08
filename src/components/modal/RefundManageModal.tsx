@@ -13,7 +13,14 @@ const STATUS_MAP = {
   DONE: { label: '완료', bg: '#eff6ff', color: '#2563eb' },
 };
 
-const REASON_MAP = { ETC: '기타', DEFECT: '상품불량', CHANGE_OF_MIND: '단순변심', WRONG_ORDER: '오주문' };
+const REASON_MAP = {
+  ETC: '기타',
+  DEFECT: '상품불량',
+  CHANGE_OF_MIND: '단순변심',
+  WRONG_ORDER: '오주문',
+  SCRATCH: '긁힘/손상',
+  PRINT: '인쇄 불량',
+};
 
 export default function RefundManageModal({ open, refund: r, onClose }) {
   useEffect(() => {
@@ -27,6 +34,10 @@ export default function RefundManageModal({ open, refund: r, onClose }) {
 
   if (!open || !r) return null;
   const si = STATUS_MAP[r.refundStatus] ?? { label: r.refundStatus ?? '-', bg: '#f8fafc', color: '#64748b' };
+
+  const imageUrls = (Array.isArray(r.images) ? r.images : [])
+    .map((img: { imageUrl?: string; url?: string }) => img.imageUrl ?? img.url)
+    .filter(Boolean) as string[];
 
   const InfoField = ({ label, value }) => (
     <div className={m.field}>
@@ -64,6 +75,24 @@ export default function RefundManageModal({ open, refund: r, onClose }) {
             <label className={m.label}>설명</label>
             <div className={m.textarea}>{r.description ?? '설명 내용이 없습니다.'}</div>
           </div>
+          {imageUrls.length > 0 && (
+            <div className={m.field}>
+              <label className={m.label}>첨부 이미지</label>
+              <div className={m.imageGrid}>
+                {imageUrls.map((src, i) => (
+                  <a
+                    key={`${src}-${i}`}
+                    className={m.imageLink}
+                    href={src}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <img className={m.imageThumb} src={src} alt={`환불 첨부 ${i + 1}`} loading="lazy" />
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
         <div className={m.footer}>
           <button className={shared.btnPrimary} onClick={onClose}>

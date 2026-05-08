@@ -32,6 +32,8 @@ const REASON_MAP = {
   DEFECT: '상품불량',
   CHANGE_OF_MIND: '단순변심',
   WRONG_ORDER: '오주문',
+  SCRATCH: '긁힘/손상',
+  PRINT: '인쇄 불량',
 };
 
 const REFUND_PAGE_SIZE = 20;

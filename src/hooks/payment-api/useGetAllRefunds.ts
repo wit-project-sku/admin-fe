@@ -1,6 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { APIService } from '../../utils/axios';
 
+export type AdminRefundImage = {
+  id: number;
+  imageUrl: string;
+};
+
 export type AdminRefundListRow = {
   id: number;
   transactionId: string;
@@ -8,6 +13,8 @@ export type AdminRefundListRow = {
   phoneNumber: string;
   refundReason: string;
   refundStatus: string;
+  description?: string;
+  images?: AdminRefundImage[];
 };
 
 type RefundsAdminPage = {
