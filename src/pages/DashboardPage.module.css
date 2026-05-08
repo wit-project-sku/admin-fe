@@ -43,6 +43,8 @@
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
   margin-bottom: 22px;
+  /* Cards keep intrinsic height; don’t stretch short cards to match the tallest row. */
+  align-items: start;
 }
 
 .statCard {
@@ -117,6 +119,105 @@
   font-size: 13px;
   font-weight: 600;
   margin-left: 2px;
+}
+
+.todayShootBreakdownWrap {
+  margin-bottom: 22px;
+}
+
+.todayShootBreakdownCard {
+  box-shadow: var(--shadow-sm);
+}
+
+.todayShootBreakdownHead {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-card);
+}
+
+.todayShootBreakdownBody {
+  padding: 4px 0;
+  background: var(--bg-card);
+  min-height: 72px;
+  display: flex;
+  align-items: stretch;
+}
+
+.todayShootBreakdownBody > .todayShootBreakdownMuted,
+.todayShootBreakdownBody > .todayShootBreakdownError {
+  margin: auto;
+  padding: 20px;
+}
+
+.todayShootBreakdownRow {
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.todayShootBreakdownCell {
+  min-width: 0;
+  padding: 16px 14px;
+  text-align: center;
+}
+
+.todayShootBreakdownCell:not(:last-child) {
+  border-right: 1px solid var(--border-subtle);
+}
+
+.todayShootBreakdownLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  line-height: 1.35;
+  margin-bottom: 6px;
+  letter-spacing: -0.02em;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.todayShootBreakdownValue {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.todayShootBreakdownUnit {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-left: 3px;
+}
+
+.todayShootBreakdownMuted {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.todayShootBreakdownError {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #dc2626;
+}
+
+@media (max-width: 900px) {
+  .todayShootBreakdownRow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .todayShootBreakdownCell:nth-child(2) {
+    border-right: none;
+  }
+
+  .todayShootBreakdownCell:nth-child(1),
+  .todayShootBreakdownCell:nth-child(2) {
+    border-bottom: 1px solid var(--border-subtle);
+  }
 }
 
 .chartsGrid {

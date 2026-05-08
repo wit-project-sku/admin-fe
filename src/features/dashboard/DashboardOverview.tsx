@@ -16,6 +16,7 @@ import s from '@pages/DashboardPage.module.css';
 import { DashboardChartFallback } from './DashboardChartFallback';
 import { DashboardPopularOutfits } from './DashboardPopularOutfits';
 import { DashboardStatCard } from './DashboardStatCard';
+import { DashboardTodayShootBreakdownCard } from './DashboardTodayShootBreakdownCard';
 import { DashboardWeekdayAxisTick } from './DashboardWeekdayAxisTick';
 import type { ShootingSummary } from './dashboardSummary';
 import type { DashboardPieSlice, NormalizedWeeklyStats } from '@/utils/weeklyStatsNormalize';
@@ -33,9 +34,8 @@ type DashboardOverviewProps = {
 /**
  * Headline shooting counts (`today` / `monthly` / `grand`) are taken from
  * `/admin/stats/summary` when it is present so they match drilldown kiosk totals
- * from the same payload. `/admin/stats/total` is authoritative only for
- * `weeklyTrend` and `marketShare`; its duplicate total fields are used only as
- * a fallback when summary is unavailable.
+ * from the same payload. `/admin/stats/total` supplies `weeklyTrend`, `marketShare`,
+ * 오늘 클릭 분해(`todayMainCameraClicks` 등), and fallback totals when summary is unavailable.
  */
 function shootingTotalPreferSummary(
   summary: ShootingSummary | null,
@@ -60,6 +60,7 @@ export function DashboardOverview({
 }: DashboardOverviewProps) {
   const lineData = weekly.weeklyTrend;
   const todayVal = shootingTotalPreferSummary(summary, 'todayTotal', weekly.todayTotal);
+  const todayShootAbandonCount = Math.max(0, weekly.todayMainCameraClicks - weekly.todayTotal);
   const monthlyVal = shootingTotalPreferSummary(summary, 'monthlyTotal', weekly.monthlyTotal);
   const grandVal = shootingTotalPreferSummary(summary, 'grandTotal', weekly.grandTotal);
   const totalOutfitCount = summary?.totalOutfitCount ?? 0;
@@ -208,6 +209,19 @@ export function DashboardOverview({
           onClick={() => {
             window.location.href = '/admin/outfits';
           }}
+        />
+      </div>
+
+      <div className={s.todayShootBreakdownWrap}>
+        <DashboardTodayShootBreakdownCard
+          loading={weeklyLoading}
+          error={weeklyError}
+          items={[
+            { label: '메인 카메라 버튼 터치', value: weekly.todayMainCameraClicks },
+            { label: '혼자찍기 버튼 터치', value: weekly.todaySoloClicks },
+            { label: '같이찍기 버튼 터치', value: weekly.todayTogetherClicks },
+            { label: '촬영 포기 횟수', value: todayShootAbandonCount },
+          ]}
         />
       </div>
 

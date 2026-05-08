@@ -6,6 +6,10 @@ export type NormalizedWeeklyStats = {
   todayTotal: number;
   monthlyTotal: number;
   grandTotal: number;
+  /** From `/admin/stats/total` — 오늘 촬영 수 카드 하단 분해 */
+  todayMainCameraClicks: number;
+  todaySoloClicks: number;
+  todayTogetherClicks: number;
   weeklyTrend: WeeklyTrendRow[];
   marketShare: MarketShareRow[];
 };
@@ -63,7 +67,7 @@ function coerceMarketRow(row: unknown): MarketShareRow | null {
       '',
   ).trim();
   const value = num(r.value ?? r.count ?? r.share ?? r.shots ?? r.total);
-  return { name: name || '기타', value: Math.max(0, value) , count: num(r.count ?? r.value ?? r.shots ?? r.total) };
+  return { name: name || '기타', value: Math.max(0, value), count: num(r.count ?? r.value ?? r.shots ?? r.total) };
 }
 
 export function emptyWeeklyStats(): NormalizedWeeklyStats {
@@ -71,6 +75,9 @@ export function emptyWeeklyStats(): NormalizedWeeklyStats {
     todayTotal: 0,
     monthlyTotal: 0,
     grandTotal: 0,
+    todayMainCameraClicks: 0,
+    todaySoloClicks: 0,
+    todayTogetherClicks: 0,
     weeklyTrend: [],
     marketShare: [],
   };
@@ -96,6 +103,9 @@ export function normalizeWeeklyStatsPayload(raw: unknown): NormalizedWeeklyStats
     todayTotal: num(inner.todayTotal ?? inner.today_total),
     monthlyTotal: num(inner.monthlyTotal ?? inner.monthly_total),
     grandTotal: num(inner.grandTotal ?? inner.grand_total),
+    todayMainCameraClicks: num(inner.todayMainCameraClicks ?? inner.today_main_camera_clicks),
+    todaySoloClicks: num(inner.todaySoloClicks ?? inner.today_solo_clicks),
+    todayTogetherClicks: num(inner.todayTogetherClicks ?? inner.today_together_clicks),
     weeklyTrend,
     marketShare,
   };

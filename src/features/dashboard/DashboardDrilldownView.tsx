@@ -2,26 +2,25 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recha
 import shared from '@commons/shared.module.css';
 import s from '@pages/DashboardPage.module.css';
 import { DashboardChartFallback } from './DashboardChartFallback';
-import type { DashboardPieSlice } from '@/utils/weeklyStatsNormalize';
 import type { KioskCountRow, ShootingSummary } from './dashboardSummary';
 
 export type DashboardDrillMode = 'today' | 'monthly';
 
+const PIE_COLORS = ['#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe', '#dbeafe', '#6366f1', '#8b5cf6', '#a78bfa'];
+
 type DashboardDrilldownViewProps = {
   mode: DashboardDrillMode;
   summary: ShootingSummary | null;
-  pieSlices: DashboardPieSlice[];
-  pieLoading?: boolean;
-  pieError?: boolean;
+  summaryLoading?: boolean;
+  summaryError?: boolean;
   onBack: () => void;
 };
 
 export function DashboardDrilldownView({
   mode,
   summary,
-  pieSlices,
-  pieLoading = false,
-  pieError = false,
+  summaryLoading = false,
+  summaryError = false,
   onBack,
 }: DashboardDrilldownViewProps) {
   const isToday = mode === 'today';
@@ -29,9 +28,16 @@ export function DashboardDrilldownView({
   const locationData: KioskCountRow[] = isToday ? (summary?.todayByKiosk ?? []) : (summary?.monthlyByKiosk ?? []);
   const label = isToday ? '오늘 지점별 현황' : '이번 달 지점별 현황';
 
-  const pieSection = pieLoading ? (
+  const pieSlices = locationData.map((loc, i) => ({
+    name: loc.kioskName,
+    value: loc.count,
+    count: loc.count,
+    color: PIE_COLORS[i % PIE_COLORS.length]!,
+  }));
+
+  const pieSection = summaryLoading ? (
     <DashboardChartFallback variant='loading' />
-  ) : pieError ? (
+  ) : summaryError ? (
     <DashboardChartFallback variant='error' />
   ) : pieSlices.length === 0 ? (
     <DashboardChartFallback variant='empty' message='지점 점유 데이터가 없습니다.' />

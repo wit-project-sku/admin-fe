@@ -16,7 +16,8 @@ export default function DashboardPage() {
   const navigate = useNavigate();
   const [dashboardTab, setDashboardTab] = useState<'analytics' | 'commerce'>('analytics');
   const [drilldown, setDrilldown] = useState<'today' | 'monthly' | null>(null);
-  const { data: summaryRaw } = useGetStatisticSummary();
+  const { data: summaryRaw, isLoading: summaryLoading, error: summaryErrorRaw } = useGetStatisticSummary();
+  const summaryError = Boolean(summaryErrorRaw);
   const summary = parseShootingSummaryPayload(summaryRaw);
 
   const { data: weeklyData, isLoading: weekLoading, isError: weekError } = useGetWeeklyStats();
@@ -28,9 +29,8 @@ export default function DashboardPage() {
       <DashboardDrilldownView
         mode={drilldown}
         summary={summary}
-        pieSlices={weeklyPieSlices}
-        pieLoading={weekLoading}
-        pieError={weekError}
+        summaryLoading={summaryLoading}
+        summaryError={summaryError}
         onBack={() => setDrilldown(null)}
       />
     );

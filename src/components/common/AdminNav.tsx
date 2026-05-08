@@ -1,7 +1,6 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useMemo, type ReactNode } from 'react';
 import styles from './AdminNav.module.css';
-import { useNavigate } from 'react-router-dom';
 import { authStoreApi } from '../../stores/authStore';
 import { useQueryClient } from '@tanstack/react-query';
 import { useGetMe, ME_QUERY_KEY, ROLE_USER } from '../../hooks/auth-api/useGetMe';
@@ -10,12 +9,17 @@ type NavItemDef = {
   label: string;
   path: string;
   icon: ReactNode;
+  /** Opens in a new tab (e.g. external storage); when set, `path` is only used as a React key. */
+  externalHref?: string;
 };
 
 type NavGroupDef = {
   label: string;
   items: NavItemDef[];
 };
+
+const AR_OUTFIT_PHOTOS_DRIVE_URL =
+  'https://drive.google.com/drive/folders/1Bfj3CrYzCIXaujhm4UcleprSKKWftWSo';
 
 const AR_OUTFIT_GROUP: NavGroupDef = {
   label: 'AR 착장 오버뷰',
@@ -49,6 +53,16 @@ const AR_OUTFIT_GROUP: NavGroupDef = {
           <line x1='18' y1='20' x2='18' y2='10' />
           <line x1='12' y1='20' x2='12' y2='4' />
           <line x1='6' y1='20' x2='6' y2='14' />
+        </svg>
+      ),
+    },
+    {
+      label: 'AR착장 사진데이터',
+      path: '__nav_external_ar_outfit_photos__',
+      externalHref: AR_OUTFIT_PHOTOS_DRIVE_URL,
+      icon: (
+        <svg width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
+          <path d='M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z' />
         </svg>
       ),
     },
@@ -145,7 +159,25 @@ const WITH_MARKET_GROUP: NavGroupDef = {
   ],
 };
 
-const NAV_GROUPS: NavGroupDef[] = [AR_OUTFIT_GROUP, WITH_USAGE_GROUP, WITH_MARKET_GROUP];
+const SYSTEM_GROUP: NavGroupDef = {
+  label: '시스템 관리',
+  items: [
+    {
+      label: '사용자 관리',
+      path: '/admin/users',
+      icon: (
+        <svg width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
+          <path d='M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2' />
+          <circle cx='9' cy='7' r='4' />
+          <path d='M23 21v-2a4 4 0 0 0-3-3.87' />
+          <path d='M16 3.13a4 4 0 0 1 0 7.75' />
+        </svg>
+      ),
+    },
+  ],
+};
+
+const NAV_GROUPS: NavGroupDef[] = [AR_OUTFIT_GROUP, WITH_USAGE_GROUP, WITH_MARKET_GROUP, SYSTEM_GROUP];
 
 const USER_NAV_GROUPS: NavGroupDef[] = [
   {
@@ -155,6 +187,21 @@ const USER_NAV_GROUPS: NavGroupDef[] = [
 ];
 
 function NavItem({ item, collapsed }: { item: NavItemDef; collapsed: boolean }) {
+  if (item.externalHref) {
+    return (
+      <a
+        href={item.externalHref}
+        target='_blank'
+        rel='noopener noreferrer'
+        className={styles.item}
+        title={collapsed ? item.label : undefined}
+      >
+        <span className={styles.icon}>{item.icon}</span>
+        <span className={styles.label}>{item.label}</span>
+      </a>
+    );
+  }
+
   return (
     <NavLink
       to={item.path}
@@ -190,15 +237,18 @@ export default function AdminNav({ collapsed = false }: AdminNavProps) {
   return (
     <aside className={`${styles.sidebar} ${collapsed ? styles.sidebarCollapsed : ''}`}>
       <nav className={styles.nav}>
-        <div>
-          <div className={styles.logo}>
-            <div className={styles.logoMark}>W</div>
-            <div className={styles.logoText}>
-              <span className={styles.logoName}>Wit Global</span>
-              <span className={styles.logoSub}>ADMIN HUB</span>
-            </div>
+        <button
+          type='button'
+          className={styles.logo}
+          onClick={() => navigate('/admin/dashboard')}
+          aria-label='대시보드로 이동'
+        >
+          <div className={styles.logoMark}>W</div>
+          <div className={styles.logoText}>
+            <span className={styles.logoName}>Wit Global</span>
+            <span className={styles.logoSub}>ADMIN HUB</span>
           </div>
-        </div>
+        </button>
         {visibleGroups.map((group) => (
           <div key={group.label} className={styles.group}>
             <span className={styles.groupLabel}>{group.label}</span>

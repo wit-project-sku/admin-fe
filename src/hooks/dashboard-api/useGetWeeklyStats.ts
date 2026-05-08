@@ -9,7 +9,7 @@ import {
 export type { MarketShareRow, NormalizedWeeklyStats, WeeklyTrendRow } from '../../utils/weeklyStatsNormalize';
 
 /**
- * `/admin/stats/total` — weekly line series + market share (and redundant totals the UI may ignore).
+ * `/admin/stats/total` — weekly line series, market share, 오늘 클릭 분해, and redundant headline totals.
  * `select` always returns a stable object on success; check `isError` for network/API failures.
  */
 export const useGetWeeklyStats = () => {
