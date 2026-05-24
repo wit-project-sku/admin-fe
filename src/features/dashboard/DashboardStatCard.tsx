@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import s from '@pages/DashboardPage.module.css';
 
 export type DashboardStatCardProps = {
@@ -11,6 +11,15 @@ export type DashboardStatCardProps = {
   onClick?: () => void;
 };
 
+function statCardTheme(accent: string): CSSProperties {
+  return {
+    ['--stat-accent' as string]: accent,
+    ['--stat-card-bg' as string]: `color-mix(in srgb, ${accent} 12%, var(--bg-card))`,
+    ['--stat-icon-bg' as string]: accent,
+    ['--stat-border' as string]: `color-mix(in srgb, ${accent} 26%, var(--border))`,
+  };
+}
+
 export function DashboardStatCard({
   title,
   value,
@@ -21,11 +30,13 @@ export function DashboardStatCard({
   onClick,
 }: DashboardStatCardProps) {
   return (
-    <div className={`${s.statCard} ${onClick ? s.clickable : ''}`} onClick={onClick}>
+    <div
+      className={`${s.statCard} ${onClick ? s.clickable : ''}`}
+      style={statCardTheme(color)}
+      onClick={onClick}
+    >
       <div className={s.statTop}>
-        <div className={s.statIcon} style={{ background: color }}>
-          {icon}
-        </div>
+        <div className={s.statIcon}>{icon}</div>
         {trendPct ? <span className={s.trendBadge}>▲ {trendPct}%</span> : null}
         {onClick && !trendPct ? <span className={s.viewBadge}>VIEW</span> : null}
       </div>

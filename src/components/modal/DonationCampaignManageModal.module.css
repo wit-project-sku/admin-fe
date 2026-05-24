@@ -1,0 +1,102 @@
+.body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-height: min(70vh, 640px);
+  overflow-y: auto;
+}
+
+.amountSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.amountLabel {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.amountRequired {
+  color: var(--red-text, #dc2626);
+}
+
+.amountChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 32px;
+}
+
+.amountChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--blue-bg, #eff6ff);
+  color: var(--blue-text, #1d4ed8);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.amountChipRemove {
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+.amountChipRemove:hover {
+  opacity: 1;
+}
+
+.amountAddRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.amountInput {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.amountAddBtn {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border, #e2e8f0);
+  background: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.amountAddBtn:hover {
+  background: var(--gray-bg, #f8fafc);
+}
+
+.fieldError {
+  font-size: 11px;
+  color: var(--red-text, #dc2626);
+  font-weight: 600;
+}
+
+.imageHint {
+  margin: -4px 0 0;
+  font-size: 11px;
+  color: var(--text-muted, #64748b);
+  line-height: 1.4;
+}

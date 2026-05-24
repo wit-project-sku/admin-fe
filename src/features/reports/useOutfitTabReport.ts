@@ -98,9 +98,11 @@ export function useOutfitTabReport(tab: 'ranking' | 'stats', outfit: OutfitRepor
     [rankingRaw],
   );
 
+  /** Do not clamp while the query has no data — parsers default totalPages to 1 and would snap page back to 1 mid-fetch. */
   useEffect(() => {
+    if (rankingRaw == null) return;
     setPageNum((p) => Math.min(Math.max(1, p), Math.max(1, totalPages)));
-  }, [totalPages]);
+  }, [totalPages, rankingRaw]);
 
   const panel: OutfitReportPanelModel = useMemo(() => {
     if (submitted == null) {

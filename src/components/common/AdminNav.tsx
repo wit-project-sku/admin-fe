@@ -21,6 +21,11 @@ type NavGroupDef = {
 const AR_OUTFIT_PHOTOS_DRIVE_URL =
   'https://drive.google.com/drive/folders/1Bfj3CrYzCIXaujhm4UcleprSKKWftWSo';
 
+const GOOGLE_DRIVE_HOME_URL = 'https://drive.google.com/drive/home';
+
+const GOOGLE_SHEETS_ACCOUNT_URL =
+  'https://docs.google.com/spreadsheets/d/1UX8ETM2u2892yMIS8PxVp7Tnv4vNRM7re5bsrukbd7g/edit?gid=961778831#gid=961778831';
+
 const AR_OUTFIT_GROUP: NavGroupDef = {
   label: 'AR 착장 오버뷰',
   items: [
@@ -63,6 +68,30 @@ const AR_OUTFIT_GROUP: NavGroupDef = {
       icon: (
         <svg width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
           <path d='M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z' />
+        </svg>
+      ),
+    },
+    {
+      label: '구글 드라이브',
+      path: '__nav_external_google_drive_home__',
+      externalHref: GOOGLE_DRIVE_HOME_URL,
+      icon: (
+        <svg width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
+          <path d='M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z' />
+        </svg>
+      ),
+    },
+    {
+      label: '구글 엑셀(계정)',
+      path: '__nav_external_google_sheets_account__',
+      externalHref: GOOGLE_SHEETS_ACCOUNT_URL,
+      icon: (
+        <svg width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
+          <rect x='3' y='3' width='18' height='18' rx='2' />
+          <line x1='3' y1='9' x2='21' y2='9' />
+          <line x1='3' y1='15' x2='21' y2='15' />
+          <line x1='9' y1='3' x2='9' y2='21' />
+          <line x1='15' y1='3' x2='15' y2='21' />
         </svg>
       ),
     },
@@ -159,6 +188,21 @@ const WITH_MARKET_GROUP: NavGroupDef = {
   ],
 };
 
+const DONATION_GROUP: NavGroupDef = {
+  label: '기부 관리',
+  items: [
+    {
+      label: '기부 관리',
+      path: '/admin/donations',
+      icon: (
+        <svg width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
+          <path d='M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z' />
+        </svg>
+      ),
+    },
+  ],
+};
+
 const SYSTEM_GROUP: NavGroupDef = {
   label: '시스템 관리',
   items: [
@@ -177,7 +221,7 @@ const SYSTEM_GROUP: NavGroupDef = {
   ],
 };
 
-const NAV_GROUPS: NavGroupDef[] = [AR_OUTFIT_GROUP, WITH_USAGE_GROUP, WITH_MARKET_GROUP, SYSTEM_GROUP];
+const NAV_GROUPS: NavGroupDef[] = [AR_OUTFIT_GROUP, WITH_USAGE_GROUP, WITH_MARKET_GROUP, DONATION_GROUP, SYSTEM_GROUP];
 
 const USER_NAV_GROUPS: NavGroupDef[] = [
   {
@@ -236,8 +280,9 @@ export default function AdminNav({ collapsed = false }: AdminNavProps) {
 
   return (
     <aside className={`${styles.sidebar} ${collapsed ? styles.sidebarCollapsed : ''}`}>
-      <nav className={styles.nav}>
-        <button
+      <nav className={styles.nav} aria-label='관리자 메뉴'>
+        <div className={styles.navHeader}>
+          <button
           type='button'
           className={styles.logo}
           onClick={() => navigate('/admin/dashboard')}
@@ -249,6 +294,9 @@ export default function AdminNav({ collapsed = false }: AdminNavProps) {
             <span className={styles.logoSub}>ADMIN HUB</span>
           </div>
         </button>
+        </div>
+
+        <div className={styles.navScroll}>
         {visibleGroups.map((group) => (
           <div key={group.label} className={styles.group}>
             <span className={styles.groupLabel}>{group.label}</span>
@@ -257,7 +305,9 @@ export default function AdminNav({ collapsed = false }: AdminNavProps) {
             ))}
           </div>
         ))}
-        <div className={styles.navBottom}>
+        </div>
+
+        <div className={styles.navFooter}>
           <button type='button' className={styles.logoutBtn} title='로그아웃' onClick={handleLogout}>
             <svg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
               <path d='M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4' />

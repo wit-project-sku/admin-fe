@@ -48,9 +48,11 @@ export function useDailyShootingReport(tabIsActive: boolean) {
     [data],
   );
 
+  /** Avoid clamping during fetch when `data` is undefined — table model uses totalPages 1 and would reset the page. */
   useEffect(() => {
+    if (data == null) return;
     setPageNum((p) => Math.min(Math.max(1, p), Math.max(1, totalPages)));
-  }, [totalPages]);
+  }, [totalPages, data]);
 
   const errorMessage = error ? REPORT_MESSAGES.dailyLoadError : '';
 

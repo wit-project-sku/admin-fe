@@ -48,12 +48,15 @@
 }
 
 .statCard {
-  background: var(--bg-card);
+  background: var(--stat-card-bg, var(--bg-card));
   border-radius: var(--radius-lg);
   padding: 18px 20px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--stat-border, var(--border));
   box-shadow: var(--shadow-sm);
-  transition: box-shadow 0.2s, border-color 0.2s;
+  transition:
+    box-shadow 0.2s,
+    border-color 0.2s,
+    background 0.2s;
 }
 
 .clickable {
@@ -62,7 +65,8 @@
 
 .clickable:hover {
   box-shadow: var(--shadow-md);
-  border-color: var(--border-md);
+  background: color-mix(in srgb, var(--stat-accent) 17%, var(--bg-card));
+  border-color: color-mix(in srgb, var(--stat-accent) 34%, var(--border));
 }
 
 .clickable:active {
@@ -77,12 +81,14 @@
 }
 
 .statIcon {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
+  background: var(--stat-icon-bg, var(--stat-accent));
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--stat-accent) 38%, transparent);
 }
 
 .trendBadge {
