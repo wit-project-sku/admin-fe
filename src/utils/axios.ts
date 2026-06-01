@@ -51,7 +51,7 @@ const onRefreshed = (newToken: string) => {
 
 const forceLogout = () => {
   authStoreApi.clearAuth();
-  window.location.href = '/admin/login';
+  window.location.hash = '#/admin/login';
 };
 
 const extractTokenFromRefreshBody = (raw: unknown): string | null => {

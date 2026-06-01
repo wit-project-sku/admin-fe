@@ -207,7 +207,7 @@ export function DashboardOverview({
             </svg>
           }
           onClick={() => {
-            window.location.href = '/admin/outfits';
+            window.location.hash = '#/admin/outfits';
           }}
         />
       </div>
