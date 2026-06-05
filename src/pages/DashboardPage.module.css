@@ -48,10 +48,10 @@
 }
 
 .statCard {
-  background: var(--stat-card-bg, var(--bg-card));
+  background: white;
   border-radius: var(--radius-lg);
   padding: 18px 20px;
-  border: 1px solid var(--stat-border, var(--border));
+  border: 1px solid #e2e8f0;
   box-shadow: var(--shadow-sm);
   transition:
     box-shadow 0.2s,
@@ -64,45 +64,63 @@
 }
 
 .clickable:hover {
-  box-shadow: var(--shadow-md);
-  background: color-mix(in srgb, var(--stat-accent) 17%, var(--bg-card));
-  border-color: color-mix(in srgb, var(--stat-accent) 34%, var(--border));
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  background: #f8fafc;
+  border-color: #cbd5e1;
 }
 
 .clickable:active {
   transform: translateY(1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .statTop {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   margin-bottom: 14px;
+  gap: 12px;
 }
 
 .statIcon {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--stat-icon-bg, var(--stat-accent));
   box-shadow: 0 2px 8px color-mix(in srgb, var(--stat-accent) 38%, transparent);
+  flex-shrink: 0;
 }
 
 .trendBadge {
-  color: var(--green-text);
-  font-size: 11px;
-  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.trendUp {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.trendDown {
+  background: #fee2e2;
+  color: #991b1b;
 }
 
 .viewBadge {
-  background: var(--blue-bg);
-  color: var(--blue-text);
-  font-size: 9px;
-  font-weight: 600;
-  padding: 3px 8px;
+  background: #dbeafe;
+  color: #1e40af;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 6px 12px;
   border-radius: 999px;
   letter-spacing: 0.04em;
 }
@@ -235,6 +253,25 @@
 .chartArea {
   height: 260px;
   padding: 8px 16px 16px;
+}
+
+.kioskBreakdownGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+@media (max-width: 1200px) {
+  .kioskBreakdownGrid {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .kioskBreakdownGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .chartLegend {

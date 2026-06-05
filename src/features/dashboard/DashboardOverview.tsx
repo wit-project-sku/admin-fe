@@ -65,6 +65,9 @@ export function DashboardOverview({
   const grandVal = shootingTotalPreferSummary(summary, 'grandTotal', weekly.grandTotal);
   const totalOutfitCount = summary?.totalOutfitCount ?? 0;
 
+  const lastMonthTotal = summary?.lastMonthTotal ?? 0;
+  const monthlyGrowthDiff = monthlyVal - lastMonthTotal;
+
   const lineChartBody =
     weeklyLoading ? (
       <DashboardChartFallback variant='loading' />
@@ -183,6 +186,7 @@ export function DashboardOverview({
               <path d='M16 3.13a4 4 0 0 1 0 7.75' />
             </svg>
           }
+          trendDiff={monthlyGrowthDiff}
           onClick={onDrillMonthly}
         />
         <DashboardStatCard

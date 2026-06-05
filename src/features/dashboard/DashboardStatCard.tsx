@@ -7,7 +7,7 @@ export type DashboardStatCardProps = {
   unit?: string;
   color: string;
   icon: ReactNode;
-  trendPct?: number;
+  trendDiff?: number;
   onClick?: () => void;
 };
 
@@ -26,7 +26,7 @@ export function DashboardStatCard({
   unit = '건',
   color,
   icon,
-  trendPct,
+  trendDiff,
   onClick,
 }: DashboardStatCardProps) {
   return (
@@ -37,8 +37,12 @@ export function DashboardStatCard({
     >
       <div className={s.statTop}>
         <div className={s.statIcon}>{icon}</div>
-        {trendPct ? <span className={s.trendBadge}>▲ {trendPct}%</span> : null}
-        {onClick && !trendPct ? <span className={s.viewBadge}>VIEW</span> : null}
+        {trendDiff !== undefined && trendDiff !== 0 ? (
+          <span className={`${s.trendBadge} ${trendDiff < 0 ? s.trendDown : s.trendUp}`}>
+            {trendDiff < 0 ? '▼' : '▲'} {Math.abs(trendDiff).toLocaleString()}
+          </span>
+        ) : null}
+        {onClick && (trendDiff === undefined || trendDiff === 0) ? <span className={s.viewBadge}>VIEW</span> : null}
       </div>
       <p className={s.statLabel}>{title}</p>
       <h3 className={s.statValue}>

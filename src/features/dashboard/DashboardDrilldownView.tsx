@@ -2,6 +2,7 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recha
 import shared from '@commons/shared.module.css';
 import s from '@pages/DashboardPage.module.css';
 import { DashboardChartFallback } from './DashboardChartFallback';
+import { DashboardKioskBreakdownCard } from './DashboardKioskBreakdownCard';
 import type { KioskCountRow, ShootingSummary } from './dashboardSummary';
 
 export type DashboardDrillMode = 'today' | 'monthly';
@@ -85,6 +86,11 @@ export function DashboardDrilldownView({
     </ResponsiveContainer>
   );
 
+  const yesterdayData = summary?.yesterdayByKiosk ?? [];
+  const twoDayAgoData = summary?.twoDayAgoByKiosk ?? [];
+  const yesterdayTotal = yesterdayData.reduce((sum, loc) => sum + loc.count, 0);
+  const twoDayAgoTotal = twoDayAgoData.reduce((sum, loc) => sum + loc.count, 0);
+
   return (
     <div>
       <button type='button' className={s.backBtn} onClick={onBack}>
@@ -132,6 +138,29 @@ export function DashboardDrilldownView({
           </div>
         </div>
       </div>
+
+      {(yesterdayData.length > 0 || twoDayAgoData.length > 0) && (
+        <div className={s.kioskBreakdownGrid} style={{ marginTop: 22 }}>
+          {yesterdayData.length > 0 && (
+            <DashboardKioskBreakdownCard
+              title='어제 지점별 현황'
+              totalValue={yesterdayTotal}
+              locationData={yesterdayData}
+              loading={summaryLoading}
+              error={summaryError}
+            />
+          )}
+          {twoDayAgoData.length > 0 && (
+            <DashboardKioskBreakdownCard
+              title='2일 전 지점별 현황'
+              totalValue={twoDayAgoTotal}
+              locationData={twoDayAgoData}
+              loading={summaryLoading}
+              error={summaryError}
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 }
