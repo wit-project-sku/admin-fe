@@ -1,18 +1,16 @@
 import type { CSSProperties, ReactNode } from 'react';
 import s from '@pages/DashboardPage.module.css';
 
-export type StatComparison = {
-  label: string;
-  value: number;
-};
-
 export type DashboardStatCardProps = {
   title: string;
   value: ReactNode;
   unit?: string;
   color: string;
   icon: ReactNode;
-  comparison?: StatComparison;
+  /** Positive = up vs prior period, negative = down. Badge shows absolute difference. */
+  trendDiff?: number;
+  /** When true, renders the trend badge (including when diff is 0). */
+  hasTrendBadge?: boolean;
   onClick?: () => void;
 };
 
@@ -31,9 +29,16 @@ export function DashboardStatCard({
   unit = '건',
   color,
   icon,
-  comparison,
+  trendDiff,
+  hasTrendBadge = false,
   onClick,
 }: DashboardStatCardProps) {
+  const showTrend = hasTrendBadge;
+  const diff = typeof trendDiff === 'number' && Number.isFinite(trendDiff) ? trendDiff : 0;
+  const trendMagnitude = Math.abs(diff);
+  const trendClass = diff < 0 ? s.trendDown : diff > 0 ? s.trendUp : s.trendFlat;
+  const trendIcon = diff < 0 ? '▼' : diff > 0 ? '▲' : '—';
+
   return (
     <div
       className={`${s.statCard} ${onClick ? s.clickable : ''}`}
@@ -42,7 +47,7 @@ export function DashboardStatCard({
     >
       <div className={s.statTop}>
         <div className={s.statIcon}>{icon}</div>
-        {onClick ? <span className={s.viewBadge}>VIEW</span> : null}
+        {onClick && !showTrend ? <span className={s.viewBadge}>VIEW</span> : null}
       </div>
       <p className={s.statLabel}>{title}</p>
       <div className={s.statValueRow}>
@@ -50,17 +55,10 @@ export function DashboardStatCard({
           {typeof value === 'number' ? value.toLocaleString() : value}
           <span className={s.statUnit}>{unit}</span>
         </h3>
-        {comparison ? (
-          <>
-            <div className={s.statValueDivider} aria-hidden='true' />
-            <div className={s.statValueSecondary}>
-              <span className={s.statCompareLabel}>{comparison.label}</span>
-              <p className={s.statCompareValue}>
-                {comparison.value.toLocaleString()}
-                <span className={s.statUnit}>{unit}</span>
-              </p>
-            </div>
-          </>
+        {showTrend ? (
+          <span className={`${s.trendBadge} ${trendClass}`}>
+            {trendIcon} {trendMagnitude.toLocaleString()}
+          </span>
         ) : null}
       </div>
     </div>

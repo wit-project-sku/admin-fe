@@ -1,7 +1,8 @@
 import { HashRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { lazy, Suspense, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, type ReactNode } from 'react';
 import AdminLayout from '@layouts/AdminLayout';
 import { useAuthStore } from '../stores/authStore';
+import { bootstrapAuthSession } from '../utils/axios';
 import { ROLE_USER, useGetMe } from '../hooks/auth-api/useGetMe';
 import { isPathAllowedForRole, ROLE_DEFAULT_LANDING } from '../utils/roleAccess';
 
@@ -35,6 +36,21 @@ const Loader = () => (
     불러오는 중...
   </div>
 );
+
+function AuthBootstrap({ children }: { children: ReactNode }) {
+  const hasHydrated = useAuthStore((state) => state.hasHydrated);
+  const authBootstrapped = useAuthStore((state) => state.authBootstrapped);
+
+  useEffect(() => {
+    if (!hasHydrated || authBootstrapped) return;
+    void bootstrapAuthSession().finally(() => {
+      useAuthStore.getState().setAuthBootstrapped(true);
+    });
+  }, [hasHydrated, authBootstrapped]);
+
+  if (!hasHydrated || !authBootstrapped) return <Loader />;
+  return children;
+}
 
 function Guard({ children }: { children: ReactNode }) {
   const hasHydrated = useAuthStore((state) => state.hasHydrated);
@@ -73,8 +89,9 @@ function RoleAwareDashboard() {
 export default function AppRouter() {
   return (
     <Router>
-      <Suspense fallback={<Loader />}>
-        <Routes>
+      <AuthBootstrap>
+        <Suspense fallback={<Loader />}>
+          <Routes>
           <Route path="/" element={<Navigate to="/admin" replace />} />
           <Route
             path="/admin/login"
@@ -112,6 +129,7 @@ export default function AppRouter() {
           <Route path="*" element={<Navigate to="/admin/login" replace />} />
         </Routes>
       </Suspense>
+      </AuthBootstrap>
     </Router>
   );
 }

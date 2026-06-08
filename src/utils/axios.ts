@@ -1,5 +1,7 @@
 import axios, { type AxiosError, type AxiosInstance, type AxiosRequestConfig, AxiosHeaders } from 'axios';
 import { authStoreApi } from '../stores/authStore';
+import { isAccessTokenExpired } from './authToken';
+import { parseAuthSessionResponse } from './authResponse';
 
 const PUBLIC_API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const LOCAL_API_BASE_URL = import.meta.env.VITE_API_LOCAL_URL;
@@ -54,15 +56,64 @@ const forceLogout = () => {
   window.location.hash = '#/admin/login';
 };
 
-const extractTokenFromRefreshBody = (raw: unknown): string | null => {
-  if (typeof raw === 'string') return raw;
-  if (raw && typeof raw === 'object') {
-    const o = raw as { data?: unknown; accessToken?: unknown };
-    if (typeof o.data === 'string') return o.data;
-    if (typeof o.accessToken === 'string') return o.accessToken;
+export const extractTokenFromRefreshBody = (raw: unknown) => parseAuthSessionResponse(raw)?.accessToken ?? null;
+
+/** Calls `/auths/refresh` and stores renewed session tokens. Shared by 401 interceptor and app bootstrap. */
+export async function performTokenRefresh(): Promise<string> {
+  const refreshToken = authStoreApi.getRefreshToken();
+  if (!refreshToken) {
+    throw new Error('리프레시 토큰이 없습니다.');
   }
-  return null;
-};
+
+  if (isRefreshing) {
+    return new Promise((resolve, reject) => {
+      subscribeTokenRefresh((newToken) => resolve(newToken));
+      setTimeout(() => reject(new Error('토큰 재발급 대기 시간이 초과되었습니다.')), REQUEST_TIMEOUT);
+    });
+  }
+
+  isRefreshing = true;
+
+  try {
+    const res = await publicApi.post(REFRESH_ENDPOINT, { refreshToken });
+    const session = parseAuthSessionResponse(res.data);
+
+    if (!session?.accessToken) {
+      throw new Error('리프레시 응답에 토큰이 없습니다.');
+    }
+
+    authStoreApi.refreshAccessToken(session.accessToken, session.refreshToken, session.username);
+    onRefreshed(session.accessToken);
+    return session.accessToken;
+  } finally {
+    isRefreshing = false;
+  }
+}
+
+/**
+ * On reload, silently renew an expired/missing access token when a refresh token is still valid.
+ * Returns true when the session should be treated as authenticated.
+ */
+export async function bootstrapAuthSession(): Promise<boolean> {
+  const accessToken = authStoreApi.getAccessToken();
+  const refreshToken = authStoreApi.getRefreshToken();
+
+  if (!refreshToken) {
+    return Boolean(accessToken);
+  }
+
+  if (accessToken && !isAccessTokenExpired(accessToken)) {
+    return true;
+  }
+
+  try {
+    await performTokenRefresh();
+    return true;
+  } catch {
+    authStoreApi.clearAuth();
+    return false;
+  }
+}
 
 privateApi.interceptors.response.use(
   (response) => response,
@@ -80,7 +131,6 @@ privateApi.interceptors.response.use(
     config._retry = true;
 
     const refreshToken = authStoreApi.getRefreshToken();
-
     if (!refreshToken) {
       forceLogout();
       return Promise.reject(error);
@@ -97,35 +147,13 @@ privateApi.interceptors.response.use(
       });
     }
 
-    isRefreshing = true;
-
     try {
-      const res = await publicApi.post(
-        REFRESH_ENDPOINT,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${refreshToken}`,
-          },
-        },
-      );
-      const newToken = extractTokenFromRefreshBody(res.data);
-
-      if (!newToken) {
-        throw new Error('리프레시 응답에 토큰이 없습니다.');
-      }
-
-      authStoreApi.refreshAccessToken(newToken);
-      isRefreshing = false;
-      onRefreshed(newToken);
-
+      const newToken = await performTokenRefresh();
       const headers = AxiosHeaders.from(config.headers ?? {});
       headers.set('Authorization', `Bearer ${newToken}`);
       config.headers = headers;
-
       return privateApi(config);
     } catch (refreshError) {
-      isRefreshing = false;
       forceLogout();
       return Promise.reject(refreshError);
     }

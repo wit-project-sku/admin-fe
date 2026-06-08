@@ -18,7 +18,7 @@ import { DashboardPopularOutfits } from './DashboardPopularOutfits';
 import { DashboardStatCard } from './DashboardStatCard';
 import { DashboardTodayShootBreakdownCard } from './DashboardTodayShootBreakdownCard';
 import { DashboardWeekdayAxisTick } from './DashboardWeekdayAxisTick';
-import type { ShootingSummary } from './dashboardSummary';
+import { resolveYesterdayTotal, type ShootingSummary } from './dashboardSummary';
 import type { DashboardPieSlice, NormalizedWeeklyStats } from '@/utils/weeklyStatsNormalize';
 
 type DashboardOverviewProps = {
@@ -66,7 +66,11 @@ export function DashboardOverview({
   const totalOutfitCount = summary?.totalOutfitCount ?? 0;
 
   const lastMonthTotal = summary?.lastMonthTotal ?? 0;
-  const yesterdayTotal = (summary?.yesterdayByKiosk ?? []).reduce((sum, loc) => sum + loc.count, 0);
+  const yesterdayTotal = resolveYesterdayTotal(summary, weekly.weeklyTrend);
+  const todayHasTrendBadge = yesterdayTotal !== null;
+  const todayTrendDiff = todayHasTrendBadge ? todayVal - (yesterdayTotal as number) : 0;
+  const monthlyHasTrendBadge = summary != null;
+  const monthlyTrendDiff = monthlyVal - lastMonthTotal;
 
   const lineChartBody =
     weeklyLoading ? (
@@ -172,7 +176,8 @@ export function DashboardOverview({
               <polygon points='13 2 3 14 12 14 11 22 21 10 12 10 13 2' />
             </svg>
           }
-          comparison={{ label: '어제', value: yesterdayTotal }}
+          hasTrendBadge={todayHasTrendBadge}
+          trendDiff={todayTrendDiff}
           onClick={onDrillToday}
         />
         <DashboardStatCard
@@ -187,7 +192,8 @@ export function DashboardOverview({
               <path d='M16 3.13a4 4 0 0 1 0 7.75' />
             </svg>
           }
-          comparison={{ label: '지난달', value: lastMonthTotal }}
+          hasTrendBadge={monthlyHasTrendBadge}
+          trendDiff={monthlyTrendDiff}
           onClick={onDrillMonthly}
         />
         <DashboardStatCard

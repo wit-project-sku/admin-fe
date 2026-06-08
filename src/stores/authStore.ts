@@ -1,15 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-
-const parseUsernameFromToken = (token: string | null): string | null => {
-  if (!token) return null;
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]!)) as { sub?: string; username?: string };
-    return payload?.sub ?? payload?.username ?? null;
-  } catch {
-    return null;
-  }
-};
+import { usernameFromAccessToken } from '../utils/authToken';
 
 export type AuthState = {
   accessToken: string | null;
@@ -17,11 +8,17 @@ export type AuthState = {
   username: string | null;
   isAuthenticated: boolean;
   hasHydrated: boolean;
-  setTokens: (accessToken: string, refreshToken?: string | null) => void;
+  authBootstrapped: boolean;
+  setTokens: (accessToken: string, refreshToken?: string | null, username?: string | null) => void;
   clearAuth: () => void;
-  refreshAccessToken: (accessToken: string) => void;
+  refreshAccessToken: (accessToken: string, refreshToken?: string | null, username?: string | null) => void;
+  setAuthBootstrapped: (value: boolean) => void;
   getAuthSnapshot: () => AuthState;
 };
+
+function computeIsAuthenticated(accessToken: string | null, refreshToken: string | null): boolean {
+  return Boolean(accessToken || refreshToken);
+}
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -31,12 +28,13 @@ export const useAuthStore = create<AuthState>()(
       username: null,
       isAuthenticated: false,
       hasHydrated: false,
-      setTokens: (accessToken, refreshToken = null) =>
+      authBootstrapped: false,
+      setTokens: (accessToken, refreshToken = null, username = null) =>
         set({
           accessToken,
           refreshToken,
-          username: parseUsernameFromToken(accessToken),
-          isAuthenticated: Boolean(accessToken),
+          username: username ?? usernameFromAccessToken(accessToken),
+          isAuthenticated: computeIsAuthenticated(accessToken, refreshToken),
           hasHydrated: true,
         }),
       clearAuth: () =>
@@ -47,13 +45,15 @@ export const useAuthStore = create<AuthState>()(
           isAuthenticated: false,
           hasHydrated: true,
         }),
-      refreshAccessToken: (accessToken) =>
-        set({
+      refreshAccessToken: (accessToken, refreshToken = null, username = null) =>
+        set((state) => ({
           accessToken,
-          username: parseUsernameFromToken(accessToken),
-          isAuthenticated: Boolean(accessToken),
+          refreshToken: refreshToken ?? state.refreshToken,
+          username: username ?? usernameFromAccessToken(accessToken) ?? state.username,
+          isAuthenticated: computeIsAuthenticated(accessToken, refreshToken ?? state.refreshToken),
           hasHydrated: true,
-        }),
+        })),
+      setAuthBootstrapped: (value) => set({ authBootstrapped: value }),
       getAuthSnapshot: () => get(),
     }),
     {
@@ -64,9 +64,10 @@ export const useAuthStore = create<AuthState>()(
       }),
       onRehydrateStorage: () => (state) => {
         if (!state) return;
-        state.username = parseUsernameFromToken(state.accessToken);
-        state.isAuthenticated = Boolean(state.accessToken);
+        state.username = usernameFromAccessToken(state.accessToken);
+        state.isAuthenticated = computeIsAuthenticated(state.accessToken, state.refreshToken);
         state.hasHydrated = true;
+        state.authBootstrapped = false;
       },
     },
   ),
@@ -75,7 +76,10 @@ export const useAuthStore = create<AuthState>()(
 export const authStoreApi = {
   getAccessToken: () => useAuthStore.getState().accessToken,
   getRefreshToken: () => useAuthStore.getState().refreshToken,
-  setTokens: (accessToken: string, refreshToken?: string | null) => useAuthStore.getState().setTokens(accessToken, refreshToken),
+  setTokens: (accessToken: string, refreshToken?: string | null, username?: string | null) =>
+    useAuthStore.getState().setTokens(accessToken, refreshToken, username),
   clearAuth: () => useAuthStore.getState().clearAuth(),
-  refreshAccessToken: (accessToken: string) => useAuthStore.getState().refreshAccessToken(accessToken),
+  refreshAccessToken: (accessToken: string, refreshToken?: string | null, username?: string | null) =>
+    useAuthStore.getState().refreshAccessToken(accessToken, refreshToken, username),
+  setAuthBootstrapped: (value: boolean) => useAuthStore.getState().setAuthBootstrapped(value),
 };
