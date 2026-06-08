@@ -1,13 +1,18 @@
 import type { CSSProperties, ReactNode } from 'react';
 import s from '@pages/DashboardPage.module.css';
 
+export type StatComparison = {
+  label: string;
+  value: number;
+};
+
 export type DashboardStatCardProps = {
   title: string;
   value: ReactNode;
   unit?: string;
   color: string;
   icon: ReactNode;
-  trendDiff?: number;
+  comparison?: StatComparison;
   onClick?: () => void;
 };
 
@@ -26,7 +31,7 @@ export function DashboardStatCard({
   unit = '건',
   color,
   icon,
-  trendDiff,
+  comparison,
   onClick,
 }: DashboardStatCardProps) {
   return (
@@ -37,18 +42,27 @@ export function DashboardStatCard({
     >
       <div className={s.statTop}>
         <div className={s.statIcon}>{icon}</div>
-        {trendDiff !== undefined && trendDiff !== 0 ? (
-          <span className={`${s.trendBadge} ${trendDiff < 0 ? s.trendDown : s.trendUp}`}>
-            {trendDiff < 0 ? '▼' : '▲'} {Math.abs(trendDiff).toLocaleString()}
-          </span>
-        ) : null}
-        {onClick && (trendDiff === undefined || trendDiff === 0) ? <span className={s.viewBadge}>VIEW</span> : null}
+        {onClick ? <span className={s.viewBadge}>VIEW</span> : null}
       </div>
       <p className={s.statLabel}>{title}</p>
-      <h3 className={s.statValue}>
-        {typeof value === 'number' ? value.toLocaleString() : value}
-        <span className={s.statUnit}>{unit}</span>
-      </h3>
+      <div className={s.statValueRow}>
+        <h3 className={s.statValue}>
+          {typeof value === 'number' ? value.toLocaleString() : value}
+          <span className={s.statUnit}>{unit}</span>
+        </h3>
+        {comparison ? (
+          <>
+            <div className={s.statValueDivider} aria-hidden='true' />
+            <div className={s.statValueSecondary}>
+              <span className={s.statCompareLabel}>{comparison.label}</span>
+              <p className={s.statCompareValue}>
+                {comparison.value.toLocaleString()}
+                <span className={s.statUnit}>{unit}</span>
+              </p>
+            </div>
+          </>
+        ) : null}
+      </div>
     </div>
   );
 }

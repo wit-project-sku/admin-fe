@@ -14,6 +14,31 @@ type DashboardKioskBreakdownCardProps = {
   error?: boolean;
 };
 
+function KioskRankList({ locationData, totalValue }: { locationData: KioskCountRow[]; totalValue: number }) {
+  if (locationData.length === 0) {
+    return (
+      <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: 'var(--text-muted, #64748b)' }}>
+        표시할 지점 데이터가 없습니다.
+      </p>
+    );
+  }
+
+  return locationData.map((loc) => (
+    <div key={String(loc.kioskId)} className={s.rankRow}>
+      <div className={s.rankMeta}>
+        <span className={s.rankName}>{loc.kioskName}</span>
+        <span className={s.rankVal}>{loc.count.toLocaleString()}건</span>
+      </div>
+      <div className={s.rankTrack}>
+        <div
+          className={s.rankFill}
+          style={{ width: `${totalValue > 0 ? (loc.count / totalValue) * 100 : 0}%` }}
+        />
+      </div>
+    </div>
+  ));
+}
+
 export function DashboardKioskBreakdownCard({
   title,
   totalValue,
@@ -84,31 +109,15 @@ export function DashboardKioskBreakdownCard({
       <div className={shared.cardHead}>
         <span className={shared.cardTitle}>{title}</span>
       </div>
-      <div style={{ padding: '18px 22px' }}>
-        <p className={s.drillTotal}>{totalValue.toLocaleString()}건</p>
-      </div>
-      <div style={{ padding: '0 22px 18px', height: 280 }}>{pieSection}</div>
-      <div style={{ padding: '18px 22px', borderTop: '1px solid #e2e8f0' }}>
-        {locationData.length === 0 ? (
-          <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: 'var(--text-muted, #64748b)' }}>
-            표시할 지점 데이터가 없습니다.
-          </p>
-        ) : (
-          locationData.map((loc) => (
-            <div key={String(loc.kioskId)} className={s.rankRow}>
-              <div className={s.rankMeta}>
-                <span className={s.rankName}>{loc.kioskName}</span>
-                <span className={s.rankVal}>{loc.count.toLocaleString()}건</span>
-              </div>
-              <div className={s.rankTrack}>
-                <div
-                  className={s.rankFill}
-                  style={{ width: `${totalValue > 0 ? (loc.count / totalValue) * 100 : 0}%` }}
-                />
-              </div>
-            </div>
-          ))
-        )}
+      <div className={s.drillBreakdownContent}>
+        <div className={s.drillChartPane}>
+          <p className={s.drillTotal}>{totalValue.toLocaleString()}건</p>
+          <div className={s.drillChartArea}>{pieSection}</div>
+        </div>
+        <div className={s.drillRankPane}>
+          <p className={s.drillRankTitle}>지점 랭킹</p>
+          <KioskRankList locationData={locationData} totalValue={totalValue} />
+        </div>
       </div>
     </div>
   );
