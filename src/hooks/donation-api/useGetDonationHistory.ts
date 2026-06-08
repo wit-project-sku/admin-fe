@@ -48,7 +48,7 @@ export const useGetDonationHistory = (params: GetDonationHistoryParams) => {
   return useQuery<GetDonationHistoryResponse>({
     queryKey: [DONATION_HISTORY_QUERY_KEY, pageNum, pageSize, keyword ?? ''],
     queryFn: () =>
-      APIService.private.get('/donations/admin/history', {
+      APIService.private.get('/donations/admin/payment/history', {
         params: {
           pageNum,
           pageSize,
