@@ -8,6 +8,7 @@ import EditBtn from '@components/common/EditBtn';
 import DeleteBtn from '@components/common/DeleteBtn';
 import DeleteModal from '@modals/DeleteModal';
 import DonationCampaignManageModal from '@modals/DonationCampaignManageModal';
+import DonationCampaignDetailModal from '@modals/DonationCampaignDetailModal';
 import DonationHistoryDetailModal from '@modals/DonationHistoryDetailModal';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import {
@@ -29,12 +30,13 @@ import {
 import {
   extractCampaignResult,
   formatAmountOptions,
+  formatCampaignProgress,
   formatIsoDateTime,
   formatKrw,
 } from '../features/donations/donationFormatters';
 import { useDonationCampaignManage } from '../features/donations/useDonationCampaignManage';
 
-const CAMPAIGN_COLS = 8;
+const CAMPAIGN_COLS = 9;
 const HISTORY_COLS = 9;
 
 export default function DonationManagePage() {
@@ -46,6 +48,8 @@ export default function DonationManagePage() {
   const debouncedHistorySearch = useDebouncedValue(historySearch, 300);
 
   const campaignManage = useDonationCampaignManage();
+  const [selectedCampaignDetail, setSelectedCampaignDetail] = useState<DonationCampaign | null>(null);
+  const [showCampaignDetailModal, setShowCampaignDetailModal] = useState(false);
   const [selectedHistory, setSelectedHistory] = useState<DonationHistoryItem | null>(null);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
 
@@ -105,6 +109,11 @@ export default function DonationManagePage() {
     setTab(key as DonationTab);
   }, []);
 
+  const openCampaignDetail = (campaign: DonationCampaign) => {
+    setSelectedCampaignDetail(campaign);
+    setShowCampaignDetailModal(true);
+  };
+
   const openHistoryDetail = (item: DonationHistoryItem) => {
     setSelectedHistory(item);
     setShowHistoryModal(true);
@@ -158,6 +167,8 @@ export default function DonationManagePage() {
                   <th className={`${shared.th} ${shared.thCenter}`}>ID</th>
                   <th className={`${shared.th} ${shared.thCenter}`}>이미지</th>
                   <th className={shared.th}>캠페인명</th>
+                  <th className={`${shared.th} ${shared.thRight}`}>목표 / 모금</th>
+                  <th className={`${shared.th} ${shared.thCenter}`}>달성률</th>
                   <th className={shared.th}>금액 옵션</th>
                   <th className={`${shared.th} ${shared.thCenter}`}>상태</th>
                   <th className={`${shared.th} ${shared.thCenter}`}>등록일</th>
@@ -202,8 +213,32 @@ export default function DonationManagePage() {
                           '-'
                         )}
                       </td>
-                      <td className={shared.td}>{c.name}</td>
-                      <td className={`${shared.td} ${shared.tdMuted}`} style={{ fontSize: 11 }}>
+                      <td className={shared.td}>
+                        <button
+                          type='button'
+                          onClick={() => openCampaignDetail(c)}
+                          style={{
+                            border: 'none',
+                            background: 'none',
+                            padding: 0,
+                            font: 'inherit',
+                            fontWeight: 600,
+                            color: 'var(--blue-text, #1d4ed8)',
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                          }}
+                        >
+                          {c.name}
+                        </button>
+                      </td>
+                      <td className={`${shared.td} ${shared.tdRight} ${shared.tdMuted}`} style={{ fontSize: 11 }}>
+                        <div>{formatKrw(c.targetAmount)}</div>
+                        <div style={{ color: 'var(--text-secondary)' }}>{formatKrw(c.accumulatedAmount)}</div>
+                      </td>
+                      <td className={`${shared.td} ${shared.tdCenter} ${shared.tdBold}`}>
+                        {formatCampaignProgress(c.accumulatedAmount, c.targetAmount)}
+                      </td>
+                      <td className={`${shared.td} ${shared.tdMuted}`} style={{ fontSize: 11, maxWidth: 180 }}>
                         {formatAmountOptions(c.amountOptions)}
                       </td>
                       <td className={`${shared.td} ${shared.tdCenter}`}>
@@ -343,6 +378,14 @@ export default function DonationManagePage() {
           loading={campaignManage.isDeleting}
           onConfirm={campaignManage.confirmDelete}
           onClose={() => campaignManage.setShowDeleteModal(false)}
+        />
+      ) : null}
+
+      {showCampaignDetailModal ? (
+        <DonationCampaignDetailModal
+          open={showCampaignDetailModal}
+          campaign={selectedCampaignDetail}
+          onClose={() => setShowCampaignDetailModal(false)}
         />
       ) : null}
 

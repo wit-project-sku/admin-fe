@@ -1,5 +1,5 @@
 .wideModal {
-  max-width: 560px;
+  max-width: 640px;
 }
 
 .body {
@@ -7,6 +7,8 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  max-height: min(78vh, 720px);
+  overflow-y: auto;
 }
 
 .imageWrap {
@@ -27,6 +29,13 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
 }
 
 .fieldRow {
@@ -53,4 +62,37 @@
   font-weight: 600;
   color: var(--text-primary);
   line-height: 1.5;
+}
+
+.contentCard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 10px;
+  background: var(--gray-bg, #f8fafc);
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+
+.cardDesc {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.sectionImage {
+  width: 100%;
+  max-height: 160px;
+  object-fit: cover;
+  border-radius: 8px;
 }

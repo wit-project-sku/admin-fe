@@ -1,3 +1,5 @@
+import type { CampaignAmountOption } from '../../hooks/donation-api/donationApiTypes';
+
 export function formatIsoDateTime(iso: string | null | undefined): string {
   if (!iso) return '-';
   const d = new Date(iso);
@@ -10,14 +12,31 @@ export function formatIsoDateTime(iso: string | null | undefined): string {
   return `${yyyy}.${mm}.${dd} ${hh}:${mi}`;
 }
 
-export function formatAmountOptions(amounts: number[] | null | undefined): string {
-  if (!amounts?.length) return '-';
-  return amounts.map((n) => `${Number(n).toLocaleString('ko-KR')}원`).join(' · ');
-}
-
 export function formatKrw(amount: number | null | undefined): string {
   if (amount == null || Number.isNaN(Number(amount))) return '-';
   return `${Number(amount).toLocaleString('ko-KR')}원`;
+}
+
+export function formatAmountOptions(options: CampaignAmountOption[] | null | undefined): string {
+  if (!options?.length) return '-';
+  return options
+    .map((opt) => {
+      const label = opt.label?.trim();
+      const amount = formatKrw(opt.amount);
+      return label ? `${label} (${amount})` : amount;
+    })
+    .join(' · ');
+}
+
+export function formatCampaignProgress(
+  accumulated: number | null | undefined,
+  target: number | null | undefined,
+): string {
+  const acc = Number(accumulated);
+  const tgt = Number(target);
+  if (!Number.isFinite(acc) || !Number.isFinite(tgt) || tgt <= 0) return '-';
+  const pct = Math.min(100, Math.round((acc / tgt) * 100));
+  return `${pct}%`;
 }
 
 type CampaignPagePayload<T> = {

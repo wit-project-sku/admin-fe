@@ -1,5 +1,6 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { APIService } from '../../utils/axios';
+import type { CampaignAmountOption, CampaignProgram, CampaignSection } from './donationApiTypes';
 
 export type DonationCampaignStatus = 'ACTIVE' | 'INACTIVE' | string;
 
@@ -9,7 +10,11 @@ export type DonationCampaign = {
   description: string;
   imageUrl: string;
   status: DonationCampaignStatus;
-  amountOptions: number[];
+  targetAmount: number;
+  accumulatedAmount: number;
+  amountOptions: CampaignAmountOption[];
+  sections: CampaignSection[];
+  programs: CampaignProgram[];
   createdAt: string;
 };
 
