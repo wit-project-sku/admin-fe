@@ -97,6 +97,24 @@ const WITH_USAGE_GROUP: NavGroupDef = {
   ],
 };
 
+const KIOSK_CONTENT_GROUP: NavGroupDef = {
+  label: '키오스크 컨텐츠 관리',
+  items: [
+    {
+      label: '상점 등록 관리',
+      path: '/admin/shops',
+      icon: (
+        <svg width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
+          <path d='M3 9l1.5-5h15L21 9' />
+          <path d='M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9' />
+          <path d='M3 9h18' />
+          <path d='M9 20v-6h6v6' />
+        </svg>
+      ),
+    },
+  ],
+};
+
 const WITH_MARKET_DASHBOARD_ITEM: NavItemDef = {
   label: '위드마켓 대시보드',
   path: '/admin/dashboard',
@@ -177,7 +195,13 @@ const SYSTEM_GROUP: NavGroupDef = {
   ],
 };
 
-const NAV_GROUPS: NavGroupDef[] = [AR_OUTFIT_GROUP, WITH_USAGE_GROUP, WITH_MARKET_GROUP, SYSTEM_GROUP];
+const NAV_GROUPS: NavGroupDef[] = [
+  AR_OUTFIT_GROUP,
+  WITH_USAGE_GROUP,
+  KIOSK_CONTENT_GROUP,
+  WITH_MARKET_GROUP,
+  SYSTEM_GROUP,
+];
 
 const USER_NAV_GROUPS: NavGroupDef[] = [
   {

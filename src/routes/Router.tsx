@@ -9,6 +9,7 @@ const LoginPage = lazy(() => import('@pages/LoginPage'));
 const DashboardPage = lazy(() => import('@pages/DashboardPage'));
 const WithMarketDashboardPage = lazy(() => import('@pages/WithMarketDashboardPage'));
 const ProductManagePage = lazy(() => import('@pages/ProductManagePage'));
+const ShopsManagePage = lazy(() => import('@pages/ShopsManagePage'));
 const PaymentManagePage = lazy(() => import('@pages/PaymentManagePage'));
 const DeliveryManagePage = lazy(() => import('@pages/DeliveryManagePage'));
 const RefundManagePage = lazy(() => import('@pages/RefundManagePage'));
@@ -96,6 +97,7 @@ export default function AppRouter() {
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<RoleAwareDashboard />} />
             <Route path="products" element={<ProductManagePage />} />
+            <Route path="shops" element={<ShopsManagePage />} />
             <Route path="payments" element={<PaymentManagePage />} />
             <Route path="deliveries" element={<DeliveryManagePage />} />
             <Route path="refunds" element={<RefundManagePage />} />
