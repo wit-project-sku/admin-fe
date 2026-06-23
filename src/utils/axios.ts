@@ -54,12 +54,19 @@ const forceLogout = () => {
   window.location.href = '/admin/login';
 };
 
-const extractTokenFromRefreshBody = (raw: unknown): string | null => {
-  if (typeof raw === 'string') return raw;
-  if (raw && typeof raw === 'object') {
-    const o = raw as { data?: unknown; accessToken?: unknown };
-    if (typeof o.data === 'string') return o.data;
-    if (typeof o.accessToken === 'string') return o.accessToken;
+/**
+ * refresh 응답에서 토큰 추출. 백엔드는 `BaseResponse<TokenResponse>` =
+ * `{ data: { accessToken, refreshToken } }` 형태(중첩)로 응답하므로 nested data 까지 본다.
+ * accessToken 은 바디가 바로 문자열인 경우도 허용.
+ */
+const pickRefreshField = (raw: unknown, field: 'accessToken' | 'refreshToken'): string | null => {
+  if (field === 'accessToken' && typeof raw === 'string') return raw;
+  if (!raw || typeof raw !== 'object') return null;
+  const o = raw as Record<string, unknown>;
+  if (typeof o[field] === 'string') return o[field] as string;
+  if (o.data && typeof o.data === 'object') {
+    const inner = (o.data as Record<string, unknown>)[field];
+    if (typeof inner === 'string') return inner;
   }
   return null;
 };
@@ -100,22 +107,22 @@ privateApi.interceptors.response.use(
     isRefreshing = true;
 
     try {
-      const res = await publicApi.post(
-        REFRESH_ENDPOINT,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${refreshToken}`,
-          },
-        },
-      );
-      const newToken = extractTokenFromRefreshBody(res.data);
+      // 백엔드 `/api/auths/refresh` 는 RefreshRequest{ refreshToken } 를 @RequestBody 로 받는다.
+      // (헤더가 아니라 바디로 보내야 함 — 헤더로 보내면 NotBlank 검증 실패로 400)
+      const res = await publicApi.post(REFRESH_ENDPOINT, { refreshToken });
+      const newToken = pickRefreshField(res.data, 'accessToken');
+      const newRefreshToken = pickRefreshField(res.data, 'refreshToken');
 
       if (!newToken) {
         throw new Error('리프레시 응답에 토큰이 없습니다.');
       }
 
-      authStoreApi.refreshAccessToken(newToken);
+      // 백엔드가 리프레시 토큰을 회전(새 값 발급)하면 함께 갱신해야 다음 갱신도 성공한다.
+      if (newRefreshToken) {
+        authStoreApi.setTokens(newToken, newRefreshToken);
+      } else {
+        authStoreApi.refreshAccessToken(newToken);
+      }
       isRefreshing = false;
       onRefreshed(newToken);
 

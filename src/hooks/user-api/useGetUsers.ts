@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { APIService } from '../../utils/axios';
 
 export type AdminUserRole = 'ROLE_ADMIN' | 'ROLE_USER';
@@ -80,6 +80,7 @@ export const useGetUsers = (params: GetUsersParams = {}) => {
 
   return useQuery({
     queryKey: USER_LIST_QUERY_KEY(params),
+    placeholderData: keepPreviousData,
     queryFn: (): Promise<UsersResponse> =>
       APIService.private.get<UsersResponse>('/users', {
         params: {

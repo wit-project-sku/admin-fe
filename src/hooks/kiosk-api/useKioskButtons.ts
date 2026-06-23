@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { APIService } from '@/utils/axios';
 import type { KioskButtonDto, KioskButtonsListResponse } from './kioskButtonsTypes';
 
@@ -110,6 +110,7 @@ export function useKioskButtonsPaged(options: UseKioskButtonsPagedOptions) {
   return useQuery({
     queryKey: ['admin-kiosk-buttons-paged', pageNum, pageSize, kioskId ?? '', cityQ ?? '', districtQ ?? ''],
     enabled,
+    placeholderData: keepPreviousData,
     queryFn: () => fetchKioskButtonsPage({ pageNum, pageSize, kioskId, city: cityQ, district: districtQ }),
     staleTime: 60 * 1000,
   });

@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { APIService } from '../../utils/axios';
 
 /** Row shape from `GET /payments/admin` `data.content[]`. */
@@ -51,6 +51,7 @@ export const useGetAllPayments = (params: GetAllPaymentsQueryParams) => {
 
   const { data, isLoading, error } = useQuery<GetAllPaymentsResponse>({
     queryKey: ['payments', pageNum, pageSize, kw ?? '', startDate ?? '', endDate ?? ''],
+    placeholderData: keepPreviousData,
     queryFn: async () => {
       return await APIService.private.get('/payments/admin', {
         params: {
