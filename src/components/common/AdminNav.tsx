@@ -112,6 +112,15 @@ const KIOSK_CONTENT_GROUP: NavGroupDef = {
         </svg>
       ),
     },
+    {
+      label: '기부 관리',
+      path: '/admin/donations',
+      icon: (
+        <svg width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
+          <path d='M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z' />
+        </svg>
+      ),
+    },
   ],
 };
 
