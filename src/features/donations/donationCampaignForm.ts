@@ -40,6 +40,8 @@ export type CampaignFormState = {
   name: string;
   description: string;
   status: 'ACTIVE' | 'INACTIVE';
+  /** 주최 단체 ID. null = 단체 미지정. */
+  organizationId: number | null;
   targetAmount: string;
 };
 
@@ -64,7 +66,7 @@ export type CampaignFieldErrors = Partial<
 >;
 
 export function emptyCampaignForm(): CampaignFormState {
-  return { name: '', description: '', status: 'ACTIVE', targetAmount: '0' };
+  return { name: '', description: '', status: 'ACTIVE', organizationId: null, targetAmount: '0' };
 }
 
 export function emptyCampaignLists(): CampaignFormLists {
@@ -136,6 +138,7 @@ export function campaignToFormState(campaign: DonationCampaign): CampaignFormSta
     name: campaign.name ?? '',
     description: campaign.description ?? '',
     status: campaign.status === 'INACTIVE' ? 'INACTIVE' : 'ACTIVE',
+    organizationId: campaign.organization?.id ?? null,
     targetAmount: campaign.targetAmount != null ? String(campaign.targetAmount) : '0',
   };
 }
@@ -276,6 +279,7 @@ export function buildCampaignWriteBody(form: CampaignFormState, lists: CampaignF
     name: form.name.trim(),
     description: form.description.trim(),
     status: form.status,
+    organizationId: form.organizationId,
     targetAmount,
     amountOptions,
     programs,

@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { APIService } from '../../utils/axios';
 
 export type MonthlyShootingSort = 'latest' | 'oldest';
@@ -27,6 +27,7 @@ export const useGetMonthlyShootingStats = (options?: UseGetMonthlyShootingStatsO
   const { data, isLoading, error } = useQuery({
     queryKey: ['monthlyShootingStats', pageNum, pageSize, sort],
     enabled: options?.enabled ?? true,
+    placeholderData: keepPreviousData,
     queryFn: async () => {
       return await APIService.private.get('/admin/stats/monthly', {
         params: {

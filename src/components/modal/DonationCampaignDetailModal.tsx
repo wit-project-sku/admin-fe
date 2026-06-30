@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import m from './DonationCampaignDetailModal.module.css';
 import { InfoField, ModalContainer, ModalFooter, ModalHeader } from './ModalElements';
 import type { DonationCampaign } from '../../hooks/donation-api/useGetDonationCampaigns';
-import { CAMPAIGN_STATUS_MAP } from '../../features/donations/donationListConfig';
+import { CAMPAIGN_STATUS_MAP, DONATION_TYPE_LABEL } from '../../features/donations/donationListConfig';
 import {
   formatAmountOptions,
   formatCampaignProgress,
@@ -56,6 +56,17 @@ export default function DonationCampaignDetailModal({ open, campaign, onClose }:
             </div>
           </div>
           <InfoField label='캠페인명' value={campaign.name} />
+          <div className={m.fieldRow}>
+            <InfoField label='주최 단체' value={campaign.organization?.name ?? '미지정'} />
+            <InfoField
+              label='기부 종류'
+              value={
+                campaign.organization
+                  ? (DONATION_TYPE_LABEL[campaign.organization.type] ?? campaign.organization.type)
+                  : '-'
+              }
+            />
+          </div>
           <InfoField label='설명' value={campaign.description || '-'} />
           <div className={m.fieldRow}>
             <InfoField label='목표 금액' value={formatKrw(campaign.targetAmount)} />

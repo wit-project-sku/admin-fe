@@ -4,6 +4,7 @@ import { InfoField, ModalContainer, ModalFooter, ModalHeader } from './ModalElem
 import type { DonationHistoryItem } from '../../hooks/donation-api/useGetDonationHistory';
 import {
   DONATION_STATUS_MAP,
+  DONATION_TYPE_LABEL,
   PAYMENT_METHOD_MAP,
 } from '../../features/donations/donationListConfig';
 import { formatIsoDateTime, formatKrw } from '../../features/donations/donationFormatters';
@@ -52,6 +53,13 @@ export default function DonationHistoryDetailModal({ open, item, onClose }: Prop
           <div className={m.fieldRow}>
             <InfoField label='캠페인' value={item.campaignName} />
             <InfoField label='기부자' value={item.donatorName} />
+          </div>
+          <div className={m.fieldRow}>
+            <InfoField label='주최 단체' value={item.organizationName ?? '미지정'} />
+            <InfoField
+              label='기부 종류'
+              value={item.type ? (DONATION_TYPE_LABEL[item.type] ?? item.type) : '-'}
+            />
           </div>
           <div className={m.fieldRow}>
             <InfoField label='기부 금액' value={formatKrw(item.totalAmount)} />

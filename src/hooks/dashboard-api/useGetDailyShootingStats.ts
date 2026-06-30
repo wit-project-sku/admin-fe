@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { APIService } from '../../utils/axios';
 
 export type UseGetDailyShootingStatsOptions = {
@@ -18,6 +18,8 @@ export const useGetDailyShootingStats = (
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['dailyShootingStats', start, end, pageNum, pageSize],
+    enabled,
+    placeholderData: keepPreviousData,
     queryFn: async () => {
       return await APIService.private.get(
         '/admin/stats/daily',

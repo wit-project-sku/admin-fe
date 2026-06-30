@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { APIService } from '../../utils/axios';
 
 export type OutfitListStatus = 'ACTIVE' | 'INACTIVE';
@@ -19,6 +19,7 @@ export const useGetAllOutfits = (params: UseGetAllOutfitsParams) => {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['outfits-get-all', pageNum, pageSize, keyword ?? '', status ?? ''],
     enabled,
+    placeholderData: keepPreviousData,
     queryFn: async () => {
       const requestParams: Record<string, string | number> = { pageNum, pageSize };
       const kw = keyword?.trim();

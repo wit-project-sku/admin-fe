@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { APIService } from '../../utils/axios';
 import type { ProductStatus } from './productApiTypes';
 
@@ -32,6 +32,7 @@ export const useGetAllProducts = (params: GetAllProductsQueryParams) => {
 
   const { data, isLoading, error, refetch } = useQuery<GetAllProductsResponse>({
     queryKey: ['products-all', pageNum, pageSize, productStatus ?? '', kw ?? ''],
+    placeholderData: keepPreviousData,
     queryFn: async () => {
       return await APIService.private.get('/admin/products', {
         params: {

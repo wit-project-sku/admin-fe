@@ -1,6 +1,12 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { APIService } from '../../utils/axios';
-import type { CampaignAmountOption, CampaignProgram, CampaignSection } from './donationApiTypes';
+import type {
+  CampaignAmountOption,
+  CampaignProgram,
+  CampaignSection,
+  DonationOrganizationSummary,
+  DonationTypeCode,
+} from './donationApiTypes';
 
 export type DonationCampaignStatus = 'ACTIVE' | 'INACTIVE' | string;
 
@@ -10,6 +16,8 @@ export type DonationCampaign = {
   description: string;
   imageUrl: string;
   status: DonationCampaignStatus;
+  /** 주최 단체. 미지정 캠페인은 null. */
+  organization: DonationOrganizationSummary | null;
   targetAmount: number;
   accumulatedAmount: number;
   amountOptions: CampaignAmountOption[];
@@ -21,6 +29,10 @@ export type DonationCampaign = {
 export type GetDonationCampaignsParams = {
   pageNum: number;
   pageSize: number;
+  /** 기부 종류 필터 (미전송 시 전체). */
+  type?: DonationTypeCode | '';
+  /** 단체 ID 필터 (미전송 시 전체). */
+  organizationId?: number | null;
 };
 
 type DonationCampaignsPage = {
@@ -43,12 +55,19 @@ export const DONATION_CAMPAIGNS_QUERY_KEY = 'donation-campaigns';
 
 export const useGetDonationCampaigns = (params: GetDonationCampaignsParams) => {
   const { pageNum, pageSize } = params;
+  const type = params.type || undefined;
+  const organizationId = params.organizationId ?? undefined;
 
   return useQuery<GetDonationCampaignsResponse>({
-    queryKey: [DONATION_CAMPAIGNS_QUERY_KEY, pageNum, pageSize],
+    queryKey: [DONATION_CAMPAIGNS_QUERY_KEY, pageNum, pageSize, type ?? '', organizationId ?? ''],
     queryFn: () =>
-      APIService.private.get('/donations/campaigns/admin', {
-        params: { pageNum, pageSize },
+      APIService.private.get<GetDonationCampaignsResponse>('/donations/campaigns/admin', {
+        params: {
+          pageNum,
+          pageSize,
+          ...(type ? { type } : {}),
+          ...(organizationId != null ? { organizationId } : {}),
+        },
       }),
     placeholderData: keepPreviousData,
   });

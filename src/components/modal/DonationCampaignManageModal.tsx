@@ -13,7 +13,12 @@ import type { DonationCampaign } from '../../hooks/donation-api/useGetDonationCa
 import { useGetDonationCampaignById } from '../../hooks/donation-api/useGetDonationCampaignById';
 import { useCreateDonationCampaign } from '../../hooks/donation-api/useCreateDonationCampaign';
 import { useUpdateDonationCampaign } from '../../hooks/donation-api/useUpdateDonationCampaign';
-import { CAMPAIGN_STATUS_OPTIONS, CAMPAIGN_TABLE_MESSAGES } from '../../features/donations/donationListConfig';
+import { useGetDonationOrganizations } from '../../hooks/donation-api/useDonationOrganizations';
+import {
+  CAMPAIGN_STATUS_OPTIONS,
+  CAMPAIGN_TABLE_MESSAGES,
+  DONATION_TYPE_LABEL,
+} from '../../features/donations/donationListConfig';
 import {
   buildCampaignMultipartFiles,
   buildCampaignWriteBody,
@@ -53,6 +58,13 @@ export default function DonationCampaignManageModal({ open, mode, campaign, onCl
 
   const { data: detailData, isLoading: isDetailLoading } = useGetDonationCampaignById(campaignId, open && isEdit);
 
+  // 주최 단체 선택지(활성 단체만). 종류 라벨을 붙여 NGO/학교를 구분해 표시한다.
+  const { data: organizationsData } = useGetDonationOrganizations({ active: true, pageSize: 200 });
+  const organizationOptions = (organizationsData?.data?.content ?? []).map((org) => ({
+    value: org.id,
+    label: `[${DONATION_TYPE_LABEL[org.type] ?? org.type}] ${org.name}`,
+  }));
+
   const [form, setForm] = useState<CampaignFormState>(emptyCampaignForm);
   const [lists, setLists] = useState<CampaignFormLists>(emptyCampaignLists);
   const [amountDraft, setAmountDraft] = useState<AmountOptionForm>({ label: '', amount: '' });
@@ -62,7 +74,8 @@ export default function DonationCampaignManageModal({ open, mode, campaign, onCl
   const [saving, setSaving] = useState(false);
 
   const isBusy = saving || isCreating || isUpdating;
-  const sourceCampaign = isEdit ? (detailData?.data ?? campaign) : null;
+  const detailCampaign: DonationCampaign | null = detailData?.data ?? null;
+  const sourceCampaign = isEdit ? (detailCampaign ?? campaign) : null;
 
   useEffect(() => {
     if (!open) return;
@@ -80,11 +93,11 @@ export default function DonationCampaignManageModal({ open, mode, campaign, onCl
     setAmountDraft({ label: '', amount: '' });
     setImageFile(null);
     setFieldErrors({});
-  }, [open, isEdit, campaignId, detailData?.data, campaign]);
+  }, [open, isEdit, campaignId, detailCampaign, campaign]);
 
   useEffect(() => {
     if (!open) return;
-    const fn = (e: KeyboardEvent) => {
+    const fn = (e: globalThis.KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', fn);
@@ -206,7 +219,7 @@ export default function DonationCampaignManageModal({ open, mode, campaign, onCl
     }
   };
 
-  const showLoading = isEdit && isDetailLoading && !detailData?.data;
+  const showLoading = isEdit && isDetailLoading && !detailCampaign;
 
   return (
     <ModalContainer onClose={onClose} modalClassName={styles.wideModal}>
@@ -245,6 +258,21 @@ export default function DonationCampaignManageModal({ open, mode, campaign, onCl
                     setForm({ ...form, description: e.target.value });
                   }}
                 />
+              </div>
+
+              <div className={styles.spanFull}>
+                <DropDownField
+                  label='주최 단체'
+                  options={organizationOptions}
+                  value={form.organizationId ?? ''}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setForm({ ...form, organizationId: v ? Number(v) : null });
+                  }}
+                />
+                <p className={styles.sectionHint}>
+                  단체를 지정하지 않으면 미지정 캠페인으로 등록됩니다. (기부 종류는 단체에 따라 결정)
+                </p>
               </div>
 
               <DropDownField

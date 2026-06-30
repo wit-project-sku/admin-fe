@@ -11,9 +11,10 @@ export type GetDonationCampaignByIdResponse = {
 };
 
 export const useGetDonationCampaignById = (campaignId: number | string | null | undefined, enabled = true) => {
-  return useQuery<GetDonationCampaignByIdResponse>({
+  return useQuery({
     queryKey: [DONATION_CAMPAIGNS_QUERY_KEY, 'detail', campaignId],
-    queryFn: () => APIService.private.get(`/donations/campaigns/${campaignId}`),
+    queryFn: (): Promise<GetDonationCampaignByIdResponse> =>
+      APIService.private.get<GetDonationCampaignByIdResponse>(`/donations/campaigns/${campaignId}`),
     enabled: enabled && campaignId != null && campaignId !== '',
   });
 };

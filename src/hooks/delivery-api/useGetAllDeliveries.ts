@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { APIService } from '../../utils/axios';
 
 type UseGetAllDeliveriesOptions = {
@@ -58,6 +58,7 @@ export const useGetAllDeliveries = (options: UseGetAllDeliveriesOptions) => {
 
   const { data, isLoading, error } = useQuery<GetAllDeliveriesResponse>({
     queryKey: ['deliveries-all', pageNum, pageSize, kw ?? '', deliveryStatus ?? ''],
+    placeholderData: keepPreviousData,
     queryFn: async () => {
       return await APIService.private.get('/deliveries/admin', {
         params: {

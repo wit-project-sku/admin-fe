@@ -5,7 +5,7 @@ import { useGetOutfitById } from '../../hooks/inventory-api/useGetOutfitById';
 import { useAddOutfit } from '../../hooks/inventory-api/useAddOutfit';
 import { useUpdateOutfit } from '../../hooks/inventory-api/useUpdateOutfit';
 import { useGetAllOutfitCategories } from '../../hooks/inventory-api/useGetAllOutfitCategories';
-import type { OutfitWriteBody } from '../../hooks/inventory-api/outfitApiTypes';
+import type { OutfitType, OutfitWriteBody } from '../../hooks/inventory-api/outfitApiTypes';
 import {
   extractKioskIdsFromDetail,
   normalizeOutfitStatus,
@@ -32,10 +32,16 @@ const OUTFIT_STATUS_OPTIONS = [
   { value: 'INACTIVE', label: '비활성화' },
 ];
 
+const OUTFIT_TYPE_OPTIONS = [
+  { value: 'NORMAL', label: '일반 (NORMAL)' },
+  { value: 'PREMIUM', label: '프리미엄 (PREMIUM)' },
+];
+
 type OutfitFormState = {
   outfitCode: string;
   categoryId: string;
   status: 'ACTIVE' | 'INACTIVE';
+  type: OutfitType;
   kioskIds: (string | number)[];
   startDate: string;
   endDate: string;
@@ -81,6 +87,7 @@ function buildOutfitWriteBody(form: OutfitFormState): OutfitWriteBody {
   return {
     outfitCode: form.outfitCode.trim(),
     status: form.status,
+    type: form.type,
     categoryId: Number(form.categoryId),
     kioskIds: form.kioskIds.map((k) => Number(k)).filter((n) => Number.isFinite(n) && n > 0),
     startDate: form.startDate.trim(),
@@ -110,6 +117,7 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
     outfitCode: '',
     categoryId: '',
     status: 'ACTIVE',
+    type: 'NORMAL',
     kioskIds: [],
     startDate: '',
     endDate: '',
@@ -128,6 +136,7 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
         outfitCode: '',
         categoryId: '',
         status: 'ACTIVE',
+        type: 'NORMAL',
         kioskIds: [],
         startDate: '',
         endDate: '',
@@ -147,6 +156,7 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
       outfitCode: pickOutfitCodeForInput(d),
       categoryId: resolveOutfitCategoryId(d, categories),
       status: normalizeOutfitStatus(d.status),
+      type: d.type === 'PREMIUM' ? 'PREMIUM' : 'NORMAL',
       kioskIds: extractKioskIdsFromDetail(d),
       startDate: pickOperationStartFromDetail(d),
       endDate: pickOperationEndFromDetail(d),
@@ -285,6 +295,19 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
                   }}
                 />
               </div>
+              <DropDownField
+                label='의상 유형'
+                required
+                options={OUTFIT_TYPE_OPTIONS}
+                value={String(form.type)}
+                disabled={formDisabled}
+                onChange={(e) => {
+                  setForm({
+                    ...form,
+                    type: e.target.value === 'PREMIUM' ? 'PREMIUM' : 'NORMAL',
+                  });
+                }}
+              />
               <div className={m.scheduleSection}>
                 <span className={m.sectionLabel}>운영 일정</span>
                 <div className={m.gridRow}>
