@@ -143,7 +143,16 @@ export default function DeliveryManagePage() {
                 deliveries.map((d) => {
                   const info = si(d);
                   return (
-                    <tr key={d.deliveryId} className={shared.tr}>
+                    <tr
+                      key={d.deliveryId}
+                      className={shared.tr}
+                      onClick={() => {
+                        setSelected(d);
+                        setMode('view');
+                        setShowModal(true);
+                      }}
+                      style={{ cursor: 'pointer' }}
+                    >
                       <td className={`${shared.td} ${shared.tdCenter}`}>{d.deliveryId}</td>
                       <td className={`${shared.td} ${shared.tdMono} ${shared.tdCenter}`}>
                         {d.trackingNumber ?? '-'}
@@ -165,7 +174,7 @@ export default function DeliveryManagePage() {
                         <span className={`${shared.badge} ${shared[info.cls]}`}>{info.label}</span>
                       </td>
                       <td className={shared.td}>
-                        <div className={shared.actionGroup}>
+                        <div className={shared.actionGroup} onClick={(e) => e.stopPropagation()}>
                           <button
                             className={shared.btnOutline}
                             onClick={() => {

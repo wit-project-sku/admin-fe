@@ -1,14 +1,18 @@
+import { useState } from 'react';
 import shared from '@commons/shared.module.css';
 import RegisterBtn from '@components/common/RegisterBtn';
 import Pagination from '@components/common/Pagination';
 import DeleteModal from '@modals/DeleteModal';
 import UserManageModal from '@modals/UserManageModal';
+import DetailModal from '@modals/DetailModal';
 import { UserManageTable } from '../features/users/UserManageTable';
-import { USER_FILTER_TABS } from '../features/users/userListConfig';
+import type { UserRow } from '../features/users/userListMappers';
+import { USER_FILTER_TABS, USER_ROLE_LABELS } from '../features/users/userListConfig';
 import { useUserManageList } from '../features/users/useUserManageList';
 
 export default function UserManagePage() {
   const list = useUserManageList();
+  const [detailRow, setDetailRow] = useState<UserRow | null>(null);
 
   return (
     <div className={shared.pageContainer}>
@@ -55,6 +59,7 @@ export default function UserManagePage() {
           onEdit={list.openEdit}
           onDelete={list.openDelete}
           onStatusChange={list.handleStatusChange}
+          onRowClick={setDetailRow}
         />
 
         <Pagination
@@ -89,6 +94,25 @@ export default function UserManagePage() {
           onClose={() => list.setShowDeleteModal(false)}
         />
       ) : null}
+
+      <DetailModal
+        open={!!detailRow}
+        title={detailRow ? `사용자 상세 — ${detailRow.username}` : '사용자 상세'}
+        onClose={() => setDetailRow(null)}
+        fields={
+          detailRow
+            ? [
+                { label: 'ID', value: detailRow.userId },
+                { label: '아이디', value: detailRow.username },
+                { label: '이름', value: detailRow.name },
+                { label: '역할', value: USER_ROLE_LABELS[detailRow.role] ?? detailRow.role },
+                { label: '상태', value: detailRow.isActive ? '활성' : '비활성' },
+                { label: '이메일', value: detailRow.email },
+                { label: '전화번호', value: detailRow.phoneNumber },
+              ]
+            : []
+        }
+      />
     </div>
   );
 }

@@ -4,7 +4,12 @@ import { KioskButtonAddModal } from '@/features/kiosk/manage/KioskButtonAddModal
 import { KioskButtonByKioskPanel } from '@/features/kiosk/manage/KioskButtonByKioskPanel';
 import { KioskButtonCatalogGrid } from '@/features/kiosk/manage/KioskButtonCatalogGrid';
 import { KioskButtonEditModal } from '@/features/kiosk/manage/KioskButtonEditModal';
-import { isKioskButtonStatusActive, resolveKioskButtonIconKey } from '@/features/kiosk/manage/kioskButtonDisplay';
+import {
+  formatKioskButtonStatusLabel,
+  isKioskButtonStatusActive,
+  resolveKioskButtonIconKey,
+} from '@/features/kiosk/manage/kioskButtonDisplay';
+import DetailModal from '@modals/DetailModal';
 import styles from '@/features/kiosk/manage/KioskAppManagePage.module.css';
 import { useKioskButtonManagePage } from '@/features/kiosk/manage/useKioskButtonManagePage';
 import { useDeleteKioskButton } from '@/hooks/kiosk-api/useDeleteKioskButton';
@@ -19,6 +24,7 @@ export default function KioskButtonManagePage() {
   const { updateKioskButtonAsync } = useUpdateKioskButton();
   const [modal, setModal] = useState<PlaceholderModal>(null);
   const [editButton, setEditButton] = useState<KioskButtonDto | null>(null);
+  const [viewButton, setViewButton] = useState<KioskButtonDto | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<KioskButtonDto | null>(null);
   const [deletingButtonId, setDeletingButtonId] = useState<number | null>(null);
   const [togglingButtonId, setTogglingButtonId] = useState<number | null>(null);
@@ -78,7 +84,11 @@ export default function KioskButtonManagePage() {
   }, [deleteTarget, deleteKioskButtonAsync]);
 
   const onCatalogCardAction = useCallback(
-    async (action: 'edit' | 'toggle' | 'delete', button: KioskButtonDto) => {
+    async (action: 'edit' | 'toggle' | 'delete' | 'view', button: KioskButtonDto) => {
+      if (action === 'view') {
+        setViewButton(button);
+        return;
+      }
       if (action === 'edit') {
         setEditButton(button);
         return;
@@ -166,6 +176,25 @@ export default function KioskButtonManagePage() {
       {editButton ? (
         <KioskButtonEditModal open onClose={closeEditModal} button={editButton} onSuccess={setNotice} />
       ) : null}
+
+      <DetailModal
+        open={!!viewButton}
+        title={viewButton ? `버튼 상세 — ${viewButton.buttonType}` : '버튼 상세'}
+        onClose={() => setViewButton(null)}
+        fields={
+          viewButton
+            ? [
+                { label: '버튼 종류', value: viewButton.buttonType },
+                { label: '버튼명', value: viewButton.buttonName },
+                { label: '위치', value: viewButton.position },
+                { label: '상태', value: formatKioskButtonStatusLabel(viewButton.status) },
+                { label: 'WITH(키오스크)', value: viewButton.kioskName ?? viewButton.kioskId },
+                { label: '아이콘 키', value: resolveKioskButtonIconKey(viewButton.iconKey) },
+                { label: '총 클릭', value: viewButton.totalClicks?.toLocaleString() },
+              ]
+            : []
+        }
+      />
 
       {deleteTarget ? (
         <div className={styles.overlay} role='presentation' onClick={closeDeleteModal}>

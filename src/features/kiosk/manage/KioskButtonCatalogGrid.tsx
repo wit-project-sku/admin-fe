@@ -20,7 +20,7 @@ type Props = {
   totalPages: number;
   totalElements: number;
   onPageChange: (page: number) => void;
-  onCardAction: (action: 'edit' | 'toggle' | 'delete', button: KioskButtonDto) => void;
+  onCardAction: (action: 'edit' | 'toggle' | 'delete' | 'view', button: KioskButtonDto) => void;
 };
 
 function formatTotalDurationSec(sec: number): string {
@@ -69,7 +69,12 @@ export function KioskButtonCatalogGrid({
             ? (b.kioskName ?? (b.kioskId != null ? `WITH #${b.kioskId}` : '—'))
             : null;
           return (
-            <article key={`${b.kioskId ?? 'all'}-${b.id}-${b.position}`} className={styles.card}>
+            <article
+              key={`${b.kioskId ?? 'all'}-${b.id}-${b.position}`}
+              className={styles.card}
+              onClick={() => onCardAction('view', b)}
+              style={{ cursor: 'pointer' }}
+            >
               <div className={styles.cardTop}>
                 <KioskAppIconVisual iconKey={resolvedIcon} />
                 <div className={styles.meta}>
@@ -90,7 +95,7 @@ export function KioskButtonCatalogGrid({
                   사용 시간 <strong>{formatTotalDurationSec(b.totalDuration)}</strong>
                 </span>
               </div>
-              <div className={styles.actions}>
+              <div className={styles.actions} onClick={(e) => e.stopPropagation()}>
                 <button type='button' className={shared.btnOutline} onClick={() => onCardAction('edit', b)} disabled={busy}>
                   수정
                 </button>

@@ -16,6 +16,7 @@ type OutfitsTableProps = {
   kioskNameById: Record<string, string>;
   onEdit: (row: OutfitRow) => void;
   onDelete: (row: OutfitRow) => void;
+  onRowClick?: (row: OutfitRow) => void;
 };
 
 const COL_COUNT = 7;
@@ -118,6 +119,7 @@ export function OutfitsTable({
   kioskNameById,
   onEdit,
   onDelete,
+  onRowClick,
 }: OutfitsTableProps) {
   const [imagePreview, setImagePreview] = useState<ImagePreviewState>(null);
   const [kioskListModal, setKioskListModal] = useState<KioskListState>(null);
@@ -177,7 +179,12 @@ export function OutfitsTable({
               const kioskNames = resolveKioskNames(o.kioskIds, kioskNameById);
               const previewTitle = [o.name, o.outfitCode].filter(Boolean).join(' · ') || '의상 미리보기';
               return (
-                <tr key={String(o.id)} className={shared.tr}>
+                <tr
+                  key={String(o.id)}
+                  className={shared.tr}
+                  onClick={() => onRowClick?.(o)}
+                  style={{ cursor: onRowClick ? 'pointer' : undefined }}
+                >
                   <td className={`${shared.td} ${shared.tdMuted} ${shared.tdCenter}`}>
                     #{String((page - 1) * pageSize + i + 1).padStart(3, '0')}
                   </td>
@@ -188,7 +195,10 @@ export function OutfitsTable({
                           type="button"
                           className={s.thumbButton}
                           aria-label={`${previewTitle} 이미지 크게 보기`}
-                          onClick={() => setImagePreview({ src, title: previewTitle })}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setImagePreview({ src, title: previewTitle });
+                          }}
                         >
                           <img src={src} alt="" className={s.tableThumb} />
                         </button>
@@ -206,7 +216,7 @@ export function OutfitsTable({
                   <td className={`${shared.td} ${shared.tdCenter}`}>
                     <ScheduleCell row={o} />
                   </td>
-                  <td className={`${shared.td} ${shared.tdCenter} ${s.kioskTd}`}>
+                  <td className={`${shared.td} ${shared.tdCenter} ${s.kioskTd}`} onClick={(e) => e.stopPropagation()}>
                     <KioskCell names={kioskNames} onShowAll={() => setKioskListModal({ names: kioskNames })} />
                   </td>
                   <td className={`${shared.td} ${shared.tdCenter}`}>
@@ -217,7 +227,11 @@ export function OutfitsTable({
                     </span>
                   </td>
                   <td className={shared.td}>
-                    <div className={shared.actionGroup} style={{ justifyContent: 'flex-end' }}>
+                    <div
+                      className={shared.actionGroup}
+                      style={{ justifyContent: 'flex-end' }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <EditBtn onClick={() => onEdit(o)} />
                       <DeleteBtn onClick={() => onDelete(o)} />
                     </div>

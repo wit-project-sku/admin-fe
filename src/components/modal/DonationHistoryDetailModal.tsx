@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import m from './DonationHistoryDetailModal.module.css';
 import { InfoField, ModalContainer, ModalFooter, ModalHeader } from './ModalElements';
+import ImageZoom from '@components/common/ImageZoom';
 import type { DonationHistoryItem } from '../../hooks/donation-api/useGetDonationHistory';
 import {
   DONATION_STATUS_MAP,
@@ -41,7 +42,7 @@ export default function DonationHistoryDetailModal({ open, item, onClose }: Prop
       <div className={m.body}>
         {item.photoUrl ? (
           <div className={m.imageWrap}>
-            <img src={item.photoUrl} alt={item.donatorName} className={m.photo} />
+            <ImageZoom src={item.photoUrl} alt={item.donatorName} title={item.donatorName} className={m.photo} />
           </div>
         ) : null}
 

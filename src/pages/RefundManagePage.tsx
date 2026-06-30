@@ -134,7 +134,15 @@ export default function RefundManagePage() {
                 refunds.map((r) => {
                   const info = si(r);
                   return (
-                    <tr key={r.id} className={shared.tr}>
+                    <tr
+                      key={r.id}
+                      className={shared.tr}
+                      onClick={() => {
+                        setSelected(r);
+                        setShowModal(true);
+                      }}
+                      style={{ cursor: 'pointer' }}
+                    >
                       <td className={`${shared.td} ${shared.tdCenter}`}>{r.id}</td>
                       <td className={`${shared.td} ${shared.tdMono} ${shared.tdCenter}`}>{r.transactionId ?? '-'}</td>
                       <td className={`${shared.td} ${shared.tdCenter} ${shared.tdBold}`}>{r.receiverName ?? '-'}</td>
@@ -146,7 +154,7 @@ export default function RefundManagePage() {
                         <span className={`${shared.badge} ${shared[info.cls]}`}>{info.label}</span>
                       </td>
                       <td className={shared.td}>
-                        <div className={shared.actionGroup}>
+                        <div className={shared.actionGroup} onClick={(e) => e.stopPropagation()}>
                           <button
                             className={shared.btnOutline}
                             onClick={() => {

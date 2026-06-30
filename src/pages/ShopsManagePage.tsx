@@ -1,14 +1,18 @@
+import { useState } from 'react';
 import shared from '@commons/shared.module.css';
 import FilterGroup from '@components/common/FilterGroup';
 import Pagination from '@components/common/Pagination';
 import ShopsManageModal from '@modals/ShopsManageModal';
 import DeleteModal from '@modals/DeleteModal';
+import DetailModal from '@modals/DetailModal';
 import RegisterBtn from '@components/common/RegisterBtn';
 import { ShopsManageTable } from '../features/shops/ShopsManageTable';
+import type { ShopRow } from '../features/shops/shopsListMappers';
 import { useShopsManageList } from '../features/shops/useShopsManageList';
 
 export default function ShopsManagePage() {
   const list = useShopsManageList();
+  const [detailRow, setDetailRow] = useState<ShopRow | null>(null);
 
   return (
     <div className={shared.pageContainer}>
@@ -38,6 +42,7 @@ export default function ShopsManagePage() {
           rows={list.displayedShops}
           onEdit={list.openEdit}
           onDelete={list.openDelete}
+          onRowClick={setDetailRow}
         />
 
         <Pagination
@@ -73,6 +78,26 @@ export default function ShopsManagePage() {
           onClose={() => list.setShowDeleteModal(false)}
         />
       ) : null}
+
+      <DetailModal
+        open={!!detailRow}
+        title={detailRow ? `상점 상세 — ${detailRow.name}` : '상점 상세'}
+        onClose={() => setDetailRow(null)}
+        fields={
+          detailRow
+            ? [
+                { label: 'ID', value: `#${String(detailRow.id).padStart(3, '0')}` },
+                { label: '상점명', value: detailRow.name },
+                { label: '카테고리', value: detailRow.category },
+                { label: '키오스크', value: detailRow.kioskId },
+                { label: '전화', value: detailRow.tel },
+                { label: '이미지 수', value: `${detailRow.imageCount}장` },
+                { label: '주소', value: detailRow.address, full: true },
+              ]
+            : []
+        }
+        images={detailRow?.imageUrl ? [{ src: detailRow.imageUrl, title: detailRow.name }] : []}
+      />
     </div>
   );
 }

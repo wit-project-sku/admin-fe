@@ -6,6 +6,7 @@ import Pagination from '@components/common/Pagination';
 import RegisterBtn from '@components/common/RegisterBtn';
 import EditBtn from '@components/common/EditBtn';
 import DeleteBtn from '@components/common/DeleteBtn';
+import ImageZoom from '@components/common/ImageZoom';
 import DeleteModal from '@modals/DeleteModal';
 import DonationCampaignManageModal from '@modals/DonationCampaignManageModal';
 import DonationCampaignDetailModal from '@modals/DonationCampaignDetailModal';
@@ -410,13 +411,18 @@ export default function DonationManagePage() {
                   </tr>
                 ) : (
                   campaigns.map((c) => (
-                    <tr key={c.id} className={shared.tr}>
+                    <tr
+                      key={c.id}
+                      className={shared.tr}
+                      onClick={() => openCampaignDetail(c)}
+                      style={{ cursor: 'pointer' }}
+                    >
                       <td className={`${shared.td} ${shared.tdMuted} ${shared.tdCenter}`}>{c.id}</td>
                       <td className={`${shared.td} ${shared.tdCenter}`}>
                         {c.imageUrl ? (
-                          <img
+                          <ImageZoom
                             src={c.imageUrl}
-                            alt=''
+                            title={c.name}
                             style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 8 }}
                           />
                         ) : (
@@ -459,7 +465,7 @@ export default function DonationManagePage() {
                         {formatIsoDateTime(c.createdAt)}
                       </td>
                       <td className={`${shared.td} ${shared.tdRight}`}>
-                        <div className={shared.actionGroup}>
+                        <div className={shared.actionGroup} onClick={(e) => e.stopPropagation()}>
                           <EditBtn onClick={() => campaignManage.openEdit(c)} />
                           <DeleteBtn onClick={() => campaignManage.openDelete(c)} />
                         </div>
@@ -510,16 +516,21 @@ export default function DonationManagePage() {
                   </tr>
                 ) : (
                   historyItems.map((h) => (
-                    <tr key={h.id} className={shared.tr}>
+                    <tr
+                      key={h.id}
+                      className={shared.tr}
+                      onClick={() => openHistoryDetail(h)}
+                      style={{ cursor: 'pointer' }}
+                    >
                       <td className={`${shared.td} ${shared.tdMuted} ${shared.tdCenter}`}>{h.id}</td>
                       <td className={shared.td}>{h.campaignName}</td>
                       <td className={shared.td}>{orgCell(h.type, h.organizationName)}</td>
                       <td className={shared.td}>{h.donatorName}</td>
                       <td className={`${shared.td} ${shared.tdCenter}`}>
                         {h.photoUrl ? (
-                          <img
+                          <ImageZoom
                             src={h.photoUrl}
-                            alt=''
+                            title={h.donatorName}
                             style={{ width: 36, height: 36, objectFit: 'cover', borderRadius: 6 }}
                           />
                         ) : (
@@ -537,7 +548,11 @@ export default function DonationManagePage() {
                         {formatIsoDateTime(h.donatedAt)}
                       </td>
                       <td className={shared.td}>
-                        <div className={shared.actionGroup} style={{ justifyContent: 'center' }}>
+                        <div
+                          className={shared.actionGroup}
+                          style={{ justifyContent: 'center' }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <button type='button' className={shared.btnOutline} onClick={() => openHistoryDetail(h)}>
                             상세보기
                           </button>

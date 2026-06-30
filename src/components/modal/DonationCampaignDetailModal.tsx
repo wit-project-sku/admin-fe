@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import m from './DonationCampaignDetailModal.module.css';
 import { InfoField, ModalContainer, ModalFooter, ModalHeader } from './ModalElements';
+import ImageZoom from '@components/common/ImageZoom';
 import type { DonationCampaign } from '../../hooks/donation-api/useGetDonationCampaigns';
 import { CAMPAIGN_STATUS_MAP, DONATION_TYPE_LABEL } from '../../features/donations/donationListConfig';
 import {
@@ -41,7 +42,7 @@ export default function DonationCampaignDetailModal({ open, campaign, onClose }:
       <div className={m.body}>
         {campaign.imageUrl ? (
           <div className={m.imageWrap}>
-            <img src={campaign.imageUrl} alt={campaign.name} className={m.campaignImage} />
+            <ImageZoom src={campaign.imageUrl} alt={campaign.name} title={campaign.name} className={m.campaignImage} />
           </div>
         ) : null}
 
@@ -108,7 +109,7 @@ export default function DonationCampaignDetailModal({ open, campaign, onClose }:
                 </p>
                 <p className={m.cardDesc}>{section.desc}</p>
                 {section.img ? (
-                  <img src={section.img} alt='' className={m.sectionImage} />
+                  <ImageZoom src={section.img} alt='' title={campaign.name} className={m.sectionImage} />
                 ) : null}
               </div>
             ))}

@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import m from './RefundManageModal.module.css';
 import shared from '@commons/shared.module.css';
+import ImageZoom from '@components/common/ImageZoom';
 import { normalizePhone } from '../../utils/normalizePhone';
 
 const STATUS_MAP = {
@@ -80,15 +81,13 @@ export default function RefundManageModal({ open, refund: r, onClose }) {
               <label className={m.label}>첨부 이미지</label>
               <div className={m.imageGrid}>
                 {imageUrls.map((src, i) => (
-                  <a
+                  <ImageZoom
                     key={`${src}-${i}`}
-                    className={m.imageLink}
-                    href={src}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <img className={m.imageThumb} src={src} alt={`환불 첨부 ${i + 1}`} loading="lazy" />
-                  </a>
+                    src={src}
+                    alt={`환불 첨부 ${i + 1}`}
+                    title={`환불 첨부 ${i + 1}`}
+                    className={m.imageThumb}
+                  />
                 ))}
               </div>
             </div>

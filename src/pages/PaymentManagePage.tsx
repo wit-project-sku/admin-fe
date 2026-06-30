@@ -141,7 +141,15 @@ export default function PaymentManagePage() {
                 payments.map((p) => {
                   const info = si(p.paymentStatus);
                   return (
-                    <tr key={p.paymentId} className={shared.tr}>
+                    <tr
+                      key={p.paymentId}
+                      className={shared.tr}
+                      onClick={() => {
+                        setSelected(p);
+                        setShowModal(true);
+                      }}
+                      style={{ cursor: 'pointer' }}
+                    >
                       <td className={`${shared.td} ${shared.tdMuted} ${shared.tdCenter}`}>{p.paymentId}</td>
                       <td className={`${shared.td} ${shared.tdMono} ${shared.tdCenter}`}>{p.transactionId ?? '-'}</td>
                       <td className={`${shared.td} ${shared.tdCenter}`}>{normalizePhone(p.phoneNumber)}</td>
@@ -161,7 +169,11 @@ export default function PaymentManagePage() {
                         <span className={`${shared.badge} ${shared[info.cls]}`}>{info.label}</span>
                       </td>
                       <td className={shared.td}>
-                        <div className={shared.actionGroup} style={{ justifyContent: 'center' }}>
+                        <div
+                          className={shared.actionGroup}
+                          style={{ justifyContent: 'center' }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <button
                             className={shared.btnOutline}
                             onClick={() => {

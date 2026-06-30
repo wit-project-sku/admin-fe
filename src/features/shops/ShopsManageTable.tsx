@@ -1,6 +1,7 @@
 import shared from '@commons/shared.module.css';
 import EditBtn from '@components/common/EditBtn';
 import DeleteBtn from '@components/common/DeleteBtn';
+import ImageZoom from '@components/common/ImageZoom';
 import type { ShopRow } from './shopsListMappers';
 import { SHOP_TABLE_MESSAGES } from './shopsListConfig';
 
@@ -10,11 +11,12 @@ type ShopsManageTableProps = {
   rows: ShopRow[];
   onEdit: (shop: ShopRow) => void;
   onDelete: (shop: ShopRow) => void;
+  onRowClick?: (shop: ShopRow) => void;
 };
 
 const COL_COUNT = 7;
 
-export function ShopsManageTable({ loading, error, rows, onEdit, onDelete }: ShopsManageTableProps) {
+export function ShopsManageTable({ loading, error, rows, onEdit, onDelete, onRowClick }: ShopsManageTableProps) {
   return (
     <div className={shared.tableResponsive}>
       <table className={shared.table}>
@@ -54,16 +56,21 @@ export function ShopsManageTable({ loading, error, rows, onEdit, onDelete }: Sho
             </tr>
           ) : (
             rows.map((s) => (
-              <tr key={String(s.id)} className={shared.tr}>
+              <tr
+                key={String(s.id)}
+                className={shared.tr}
+                onClick={() => onRowClick?.(s)}
+                style={{ cursor: onRowClick ? 'pointer' : undefined }}
+              >
                 <td className={`${shared.td} ${shared.tdCenter} ${shared.tdMono}`}>
                   #{String(s.id).padStart(3, '0')}
                 </td>
                 <td className={`${shared.td} ${shared.tdLeft}`}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     {s.imageUrl ? (
-                      <img
+                      <ImageZoom
                         src={s.imageUrl}
-                        alt=""
+                        title={s.name}
                         style={{ width: 36, height: 36, borderRadius: 6, objectFit: 'cover', flexShrink: 0 }}
                       />
                     ) : (
@@ -89,7 +96,11 @@ export function ShopsManageTable({ loading, error, rows, onEdit, onDelete }: Sho
                   </span>
                 </td>
                 <td className={shared.td}>
-                  <div className={shared.actionGroup} style={{ justifyContent: 'flex-end' }}>
+                  <div
+                    className={shared.actionGroup}
+                    style={{ justifyContent: 'flex-end' }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <EditBtn onClick={() => onEdit(s)} />
                     <DeleteBtn onClick={() => onDelete(s)} />
                   </div>
