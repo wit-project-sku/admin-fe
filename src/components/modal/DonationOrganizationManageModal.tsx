@@ -25,6 +25,7 @@ export default function DonationOrganizationManageModal({ open, mode, organizati
 
   const [type, setType] = useState<DonationTypeCode | ''>('');
   const [name, setName] = useState('');
+  const [active, setActive] = useState(true);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [saving, setSaving] = useState(false);
 
@@ -35,9 +36,11 @@ export default function DonationOrganizationManageModal({ open, mode, organizati
     if (isEdit && organization) {
       setType(organization.type);
       setName(organization.name);
+      setActive(organization.active);
     } else {
       setType('');
       setName('');
+      setActive(true);
     }
     setErrors({});
   }, [open, isEdit, organization]);
@@ -65,7 +68,7 @@ export default function DonationOrganizationManageModal({ open, mode, organizati
 
     setSaving(true);
     try {
-      const body = { type: type as DonationTypeCode, name: name.trim() };
+      const body = { type: type as DonationTypeCode, name: name.trim(), active };
       if (isEdit && organization) {
         await updateOrganizationAsync({ id: organization.id, body });
       } else {
@@ -109,6 +112,15 @@ export default function DonationOrganizationManageModal({ open, mode, organizati
               setErrors((prev) => ({ ...prev, name: undefined }));
               setName(e.target.value);
             }}
+          />
+          <DropDownField
+            label='상태'
+            options={[
+              { value: 'active', label: '활성' },
+              { value: 'inactive', label: '비활성' },
+            ]}
+            value={active ? 'active' : 'inactive'}
+            onChange={(e) => setActive(e.target.value === 'active')}
           />
         </div>
         <ModalFooter

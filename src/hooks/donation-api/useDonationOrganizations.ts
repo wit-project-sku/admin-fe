@@ -41,6 +41,8 @@ export type GetDonationOrganizationsParams = {
 export type DonationOrganizationWriteBody = {
   type: DonationTypeCode;
   name: string;
+  /** 활성 여부. 수정 시 토글로 변경 가능(생략 시 백엔드가 기존 값 유지). */
+  active?: boolean;
 };
 
 export const DONATION_ORGANIZATIONS_QUERY_KEY = 'donation-organizations';
