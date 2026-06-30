@@ -1,0 +1,431 @@
+.tabGroup {
+  display: flex;
+  gap: 2px;
+  background: var(--bg-card);
+  padding: 3px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  width: fit-content;
+  margin-bottom: 20px;
+}
+
+.tabBtn {
+  padding: 9px 16px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.tabBtn:hover {
+  background: var(--bg-muted);
+  color: var(--text-primary);
+}
+
+.tabBtnActive {
+  background: var(--text-primary) !important;
+  color: #fff !important;
+}
+
+.darkHead {}
+
+/* 지점별 월별/일별 상세 — Month · Date column (avoid wrapping) */
+.shootingTimeCol {
+  min-width: 11rem;
+  width: 1%;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.darkTh {
+  padding: 12px 20px;
+  background: #0f172a;
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 1px solid #1e293b;
+}
+
+.darkThAccent {
+  padding: 12px 20px;
+  background: #1e3a8a;
+  color: #f8fafc;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: right;
+  white-space: nowrap;
+  border-bottom: 1px solid #1e40af;
+}
+
+.filterCard {
+  padding: 18px 20px;
+  overflow: visible;
+}
+
+.emptyState {
+  padding: 56px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.tabGroupWide {
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+/* 의상 리포트 — 필터 */
+.outfitFilterRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px 24px;
+}
+
+.outfitFilterField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 160px;
+}
+
+.outfitFilterLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.outfitSelect {
+  height: 36px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  font-size: 13px;
+  color: var(--text-primary);
+  min-width: 200px;
+}
+
+.outfitDateRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* 패널 헤더 (랭킹 / 통계 테이블) */
+.outfitPanelHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.outfitPanelTitle {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.outfitPanelSubtitle {
+  margin: 6px 0 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #2563eb;
+}
+
+.outfitPanelActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.segment {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: var(--radius-md);
+  background: var(--bg-muted);
+  border: 1px solid var(--border);
+}
+
+.segmentBtn {
+  padding: 7px 14px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+}
+
+.segmentBtn:hover {
+  color: var(--text-primary);
+}
+
+.segmentBtnActive {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+/* 랭킹 카드 그리드 */
+.rankingGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  padding: 20px;
+}
+
+.rankingCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.rankingCardImageWrap {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  background: var(--bg-muted);
+}
+
+.rankingCardImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.rankingCardPlaceholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #e2e8f0 0%, #f1f5f9 100%);
+}
+
+.rankBadgeGold,
+.rankBadgeDark {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  z-index: 1;
+}
+
+.rankBadgeGold {
+  background: #fbbf24;
+  color: #0f172a;
+}
+
+.rankBadgeDark {
+  background: #0f172a;
+  color: #f8fafc;
+}
+
+.rankPillGold,
+.rankPillDark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.rankPillGold {
+  background: #fbbf24;
+  color: #0f172a;
+}
+
+.rankPillDark {
+  background: #0f172a;
+  color: #f8fafc;
+}
+
+.rankingCardMeta {
+  padding: 10px 12px 0;
+}
+
+.rankingCardCode {
+  font-size: 11px;
+  font-weight: 700;
+  color: #2563eb;
+}
+
+.rankingCardName {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-top: 2px;
+  line-height: 1.35;
+}
+
+.rankingCardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  margin-top: auto;
+  border-top: 1px solid var(--border);
+}
+
+.rankingCardFooterLabel {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.rankingCardFooterVal {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+/* 통계 테이블 썸네일 */
+.tableThumb {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 6px;
+  vertical-align: middle;
+}
+
+.nameCodeCell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nameCodeName {
+  font-weight: 700;
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.nameCodeId {
+  font-size: 11px;
+  font-weight: 700;
+  color: #2563eb;
+}
+
+.darkThRight {
+  text-align: right;
+}
+
+/* 의상 패널 — 오류 / 스켈레톤 */
+.panelStateWrap {
+  padding: 36px 24px 40px;
+  text-align: center;
+}
+
+.panelStateTitle {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.panelStateHint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.panelStateError {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--red-text);
+  line-height: 1.5;
+}
+
+.rankingSkeletonGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  padding: 20px;
+}
+
+.rankingSkeletonCard {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--bg-card);
+}
+
+.rankingSkeletonImg {
+  aspect-ratio: 4 / 3;
+  background: linear-gradient(90deg, #eef2f7 25%, #f6f8fb 40%, #eef2f7 55%);
+  background-size: 180% 100%;
+  animation: outfitShimmer 1.2s ease infinite;
+}
+
+.rankingSkeletonLines {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rankingSkeletonLine {
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #eef2f7 25%, #f6f8fb 40%, #eef2f7 55%);
+  background-size: 180% 100%;
+  animation: outfitShimmer 1.2s ease infinite;
+}
+
+.rankingSkeletonLineShort {
+  max-width: 45%;
+}
+
+.rankingSkeletonFooter {
+  height: 44px;
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+}
+
+@keyframes outfitShimmer {
+  0% {
+    background-position: 120% 0;
+  }
+  100% {
+    background-position: -20% 0;
+  }
+}

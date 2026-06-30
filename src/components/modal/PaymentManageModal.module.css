@@ -1,153 +1,60 @@
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.55);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-}
-
-.modal {
-  width: 800px;
-  max-width: calc(100vw - 48px);
-  max-height: calc(100vh - 48px);
-  background: #fbfbfb;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+.body {
+  padding: 24px;
   display: flex;
   flex-direction: column;
+  gap: 20px;
 }
 
-.header {
-  height: 90px;
+/* 정보 그룹화를 위한 섹션 */
+.section {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 25px;
-  border-bottom: 1px solid #a8a8a8;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.headerTitle {
-  font-size: 28px;
-  font-weight: 700;
-  color: #111111;
-}
-
-.closeBtn {
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: #a8a8a8;
-  background: transparent;
-  border: none;
-  font-size: 20px;
-}
-
-.closeBtn:hover {
-  background: #f3f4f6;
-}
-
-.body {
-  padding: 25px 50px;
+.fieldRow {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px 10px;
-  overflow: auto;
-  flex: 1;
-}
-
-.full {
-  grid-column: 1 / -1;
+  gap: 16px;
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
 }
 
 .label {
-  font-size: 18px;
+  font-size: 10px;
   font-weight: 700;
-  color: #111111;
+  color: var(--text-muted);
+  text-transform: uppercase;
 }
 
-.input,
-.textarea {
-  width: 100%;
-  height: 45px;
-  border-radius: 8px;
-  border: 1px solid #e5e7eb;
-  background: #f5f5f5;
-  padding: 0 15px;
-  font-size: 18px;
-  color: #1a1a1a;
-  box-sizing: border-box;
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
 }
 
-.input:disabled,
-.textarea:disabled {
-  color: #6b7280;
-}
-
-.textarea {
-  height: auto;
-  padding: 10px 12px;
-  resize: none;
-}
-
-.textareaTall {
-  min-height: 110px;
-}
-
-.footer {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  height: 100px;
-  gap: 10px;
-  position: sticky;
-  bottom: 0;
-  background: #fbfbfb;
-  padding: 20px;
-  border-top: 1px solid #a8a8a8;
-}
-
-.cancelBtn {
-  height: 60px;
+.productList {
+  background: var(--bg-page);
   border-radius: 10px;
-  border: 1px solid #e5e7eb;
-  background: #f3f4f6;
-  font-size: 24px;
-  font-weight: 600;
-  color: #6b7280;
-  cursor: pointer;
-  text-align: center;
+  border: 1px solid var(--border-md);
+  overflow: hidden;
 }
 
-.cancelBtn:hover {
-  background: #e5e7eb;
+.productItem {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
 }
 
-.submitBtn {
-  height: 60px;
-  border-radius: 10px;
-  background: #2563ff;
-  border: 1px solid #2563ff;
-  font-size: 24px;
-  font-weight: 600;
-  color: #ffffff;
-  cursor: pointer;
-  text-align: center;
-}
-
-.submitBtn:hover {
-  background: #1d4ed8;
-  border-color: #1d4ed8;
+.productItem:last-child {
+  border-bottom: none;
 }

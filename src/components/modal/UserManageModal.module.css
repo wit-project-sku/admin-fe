@@ -1,0 +1,66 @@
+.body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 20px;
+}
+
+.apiErrorOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 240;
+  background: var(--overlay-scrim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  backdrop-filter: blur(4px);
+}
+
+.apiErrorModal {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  width: 100%;
+  max-width: 440px;
+  max-height: min(90vh, 520px);
+  overflow-y: auto;
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.14);
+}
+
+.apiErrorBody {
+  padding: 8px 20px 4px;
+}
+
+.apiErrorText {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.55;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.apiErrorList {
+  margin: 0;
+  padding: 0 0 0 1.1em;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.55;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.apiErrorListItem {
+  margin-bottom: 8px;
+}
+
+.apiErrorListItem:last-child {
+  margin-bottom: 0;
+}
+
+@media (max-width: 520px) {
+  .body {
+    grid-template-columns: 1fr;
+  }
+}

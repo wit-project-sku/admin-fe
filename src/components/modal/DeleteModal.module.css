@@ -1,78 +1,119 @@
-/* /Users/heejun/Desktop/develop/fe-projects/payment-fe/src/components/modal/admin/deleteModal.module.css */
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: var(--overlay-scrim);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
-  padding: 16px;
+  z-index: 200;
+  padding: 20px;
 }
 
 .modal {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
   width: 100%;
-  max-width: 650px;
-  height: 350px;
-  background: #ffffff;
-  border-radius: 18px;
-  padding: 30px;
-  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.18);
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.14);
+  animation: modalIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.iconWrap {
-  width: 85px;
-  height: 85px;
-  margin: 0 auto 10px;
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: scale(0.98) translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.deleteBody {
+  padding: 36px 24px 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.warnIcon {
+  width: 56px;
+  height: 56px;
+  background-color: var(--amber-bg);
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-bottom: 18px;
 }
 
-.title {
-  text-align: center;
-  font-size: 28px;
+.deleteTitle {
+  font-size: 1.125rem;
   font-weight: 700;
-  color: #111827;
-  margin: 6px 0;
+  color: var(--text-primary);
+  margin: 0 0 12px 0;
+  letter-spacing: -0.01em;
 }
 
-.message {
-  text-align: center;
-  font-size: 18px;
-  line-height: 1.5;
-  color: #6b7280;
+.deleteDesc {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  line-height: 1.55;
   margin: 0;
 }
 
-.actions {
+.deleteTarget {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.modalSmall {
+  flex: 1;
+}
+
+.footer {
+  padding: 0 24px 28px;
   display: flex;
-  gap: 12px;
-  margin-top: 35px;
+  gap: 10px;
+  justify-content: center;
 }
 
-.cancelBtn {
+.btnSecondary {
   flex: 1;
-  width: 250px;
-  height: 70px;
-  border-radius: 10px;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  font-size: 28px;
+  padding: 12px 20px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 0.9375rem;
   font-weight: 600;
-  text-align: center;
   cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
 }
 
-.confirmBtn {
+.btnSecondary:hover {
+  background: var(--bg-muted);
+  border-color: var(--border-md);
+}
+
+.btnDanger {
   flex: 1;
-  width: 250px;
-  height: 70px;
-  border-radius: 10px;
-  background: #ff6b6b;
-  color: #ffffff;
-  font-size: 28px;
+  padding: 12px 20px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: #b91c1c;
+  color: #fff;
+  font-size: 0.9375rem;
   font-weight: 600;
-  text-align: center;
   cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btnDanger:hover {
+  background: #991b1b;
 }

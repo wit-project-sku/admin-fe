@@ -1,57 +1,98 @@
 .header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
   width: 100%;
-  height: 120px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: #ffffff;
-  border-bottom: 1.3px solid #e5e5e5;
-  box-sizing: border-box;
+  padding: 0 24px;
+  min-height: var(--header-h);
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
-/* 좌측 로고 영역 */
-.leftSection {
-  display: flex;
-  margin: 35px 21px;
-  align-items: center;
-}
-
-.logo {
-  width: 257px;
-  height: 54px;
-  object-fit: contain;
-}
-
-.logoText {
-  font-size: 37px;
-  font-weight: 700;
-  color: #0088ff;
-}
-
-/* 우측 로그인 영역 */
-.rightSection {
+.left {
   display: flex;
   align-items: center;
-  gap: 4px;
 }
 
-.loginText {
-  font-size: 26px;
-  font-weight: 700;
-  color: #222222;
+.toggleBtn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
 }
 
-.loginIcon {
-  width: 80px;
-  height: 80px;
-  margin: 20px;
+.toggleBtn:hover {
+  color: var(--text-primary);
+  border-color: var(--border-md);
+  background: var(--bg-page);
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.account {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 2px 4px 0;
+  border-radius: 0;
+  border: none;
+  background: transparent;
+  transition: opacity 0.15s;
+}
+
+.account:hover {
+  opacity: 0.85;
+}
+
+.accountRole {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.infoWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  align-items: flex-start;
+}
+
+.avatar {
+  width: 34px;
+  height: 34px;
+  background: #1e293b;
   border-radius: 50%;
-  background-color: #f3f3f3;
-  border: 1px solid #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
 }
 
-.userName {
-  font-size: 26px;
+.accountName {
+  color: var(--text-primary);
+  font-size: 13px;
   font-weight: 600;
-  color: #111111;
+}
+
+.noAccount {
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
 }

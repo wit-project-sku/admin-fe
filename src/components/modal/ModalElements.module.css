@@ -1,0 +1,367 @@
+/********************** 모달 컨테이너 *********************/
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay-scrim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 20px;
+  backdrop-filter: blur(4px);
+}
+
+.modal {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.14);
+  animation: modalIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: scale(0.98) translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/********************** 모달 헤더 *********************/
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-card);
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.closeBtn {
+  width: 32px;
+  height: 32px;
+  background: var(--bg-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.closeBtn:hover {
+  background: var(--border-subtle);
+  border-color: var(--border-md);
+}
+
+/********************** 텍스트 표시 영역 *********************/
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+}
+
+.label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.valueText {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  padding: 9px 12px;
+  background: var(--bg-muted);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+}
+
+/********************** 입력창 *********************/
+.input {
+  background: var(--bg-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 9px 12px;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+.input:focus {
+  border-color: var(--accent);
+  background: var(--bg-card);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.required {
+  color: var(--red-text);
+  margin-left: 2px;
+}
+
+.fieldError {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--red-text);
+  line-height: 1.35;
+  margin-top: 2px;
+}
+
+.inputError,
+.selectError,
+.textareaError {
+  border-color: var(--red-text) !important;
+}
+
+.inputError:focus,
+.selectError:focus,
+.textareaError:focus {
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+}
+
+.multiSelectErrorWrap {
+  border: 1px solid var(--red-text);
+  border-radius: var(--radius-md);
+  padding: 8px;
+  background: rgba(220, 38, 38, 0.04);
+}
+
+.imageSectionError .imageGrid {
+  outline: 2px solid var(--red-text);
+  outline-offset: 2px;
+  border-radius: var(--radius-md);
+}
+
+/********************** dropdown 버튼, textarea *********************/
+.fieldInput,
+.fieldSelect {
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 0.9375rem;
+  color: var(--text-primary);
+  background-color: var(--bg-muted);
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+.fieldInput:focus,
+.fieldSelect:focus,
+.fieldTextarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  background-color: var(--bg-card);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.fieldTextarea {
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 500;
+  min-height: 80px;
+  color: var(--text-primary);
+  background-color: var(--bg-muted);
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+.fieldFull {
+  grid-column: span 2;
+}
+
+/********************** 이미지 영역 *********************/
+.imageGrid {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.imageThumbnail,
+.uploadArea {
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius-md);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.uploadArea {
+  border: 2px dashed var(--border-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: var(--bg-muted);
+}
+
+.previewImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.deleteBtn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 18px;
+  height: 18px;
+  background: #b91c1c;
+  color: white;
+  border-radius: 50%;
+  font-size: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: none;
+  transition: background 0.15s;
+}
+
+.deleteBtn:hover {
+  background: #991b1b;
+}
+
+.fileInput {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/********************** 여러 버튼 선택(MultiSelectField) *********************/
+.itemGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.selectableItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  background: var(--bg-card);
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.selectableItem:hover:not(.disabled) {
+  background: var(--bg-muted);
+  border-color: var(--border-md);
+}
+
+.itemActive {
+  background: var(--blue-bg);
+  border-color: var(--accent);
+}
+
+.itemName {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.itemActive .itemName {
+  color: var(--blue-text);
+}
+
+.checkCircle {
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid var(--border-md);
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.checked {
+  background: var(--accent);
+  border-color: var(--accent);
+  position: relative;
+}
+
+.checked::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 4px;
+  height: 4px;
+  background: #fff;
+  border-radius: 50%;
+}
+
+.disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+/********************** 하단 버튼 *********************/
+.footer {
+  padding: 14px 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-muted);
+}
+
+.footer button {
+  padding: 0 18px;
+  min-height: 38px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.btnCancel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  min-width: 100px;
+}
+
+.btnCancel:hover {
+  background: var(--bg-muted);
+  border-color: var(--border-md);
+}
+
+.btnSubmit {
+  background: var(--text-primary);
+  color: #fff;
+  border: none;
+  min-width: 100px;
+}
+
+.btnSubmit:hover {
+  background: #1e293b;
+}

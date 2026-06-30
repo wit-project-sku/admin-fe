@@ -1,0 +1,90 @@
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px 22px;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-card);
+  gap: 12px;
+  position: relative;
+}
+
+.leftInfo {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 500;
+  white-space: nowrap;
+  position: absolute;
+  left: 22px;
+}
+
+.centerControls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.pageBtn {
+  min-width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  background-color: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+.pageBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pageBtn:not(:disabled):hover {
+  border-color: var(--border-md);
+  background: var(--bg-page);
+  color: var(--text-primary);
+}
+
+.ellipsis {
+  min-width: 20px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.pageMoveBtn {
+  font-size: 16px;
+  color: var(--text-primary);
+}
+
+.active {
+  background-color: var(--text-primary);
+  border-color: var(--text-primary);
+  color: #fff;
+}
+
+.active:hover {
+  background-color: #1e293b;
+  border-color: #1e293b;
+}
+
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .leftInfo {
+    text-align: center;
+    position: static;
+  }
+}
