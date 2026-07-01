@@ -2,10 +2,14 @@ import { useCallback, useEffect, useId, useMemo, useState, type FormEvent } from
 import type { AxiosError } from 'axios';
 import shared from '@commons/shared.module.css';
 import { KioskIconPicker } from '@/features/kiosk/kioskAppIcons';
-import { POSITIONS } from '@/features/kiosk/manage/constants';
+import { PLACEMENT_OPTIONS } from '@/features/kiosk/manage/constants';
 import { resolveKioskButtonIconKey } from '@/features/kiosk/manage/kioskButtonDisplay';
 import styles from '@/features/kiosk/manage/KioskAppManagePage.module.css';
 import { useUpdateKioskButton } from '@/hooks/kiosk-api/useUpdateKioskButton';
+import {
+  useUpdateKioskButtonPlacement,
+  type ButtonPlacement,
+} from '@/hooks/kiosk-api/useUpdateKioskButtonPlacement';
 import type { KioskButtonDto } from '@/hooks/kiosk-api/kioskButtonsTypes';
 
 const STATUSES = ['ACTIVE', 'INACTIVE'] as const;
@@ -20,15 +24,9 @@ type Props = {
 type FormErrors = {
   buttonType?: string;
   buttonName?: string;
-  position?: string;
   status?: string;
   iconKey?: string;
 };
-
-function normalizePosition(raw: unknown): number {
-  const n = typeof raw === 'number' ? raw : Number(raw);
-  return POSITIONS.includes(n as (typeof POSITIONS)[number]) ? n : POSITIONS[0];
-}
 
 function messageFromError(err: unknown): string {
   if (err instanceof Error && err.message.trim()) return err.message;
@@ -41,11 +39,12 @@ function messageFromError(err: unknown): string {
 export function KioskButtonEditModal({ open, onClose, button, onSuccess }: Props) {
   const uid = useId();
   const { updateKioskButtonAsync, isPending, reset: resetMutation } = useUpdateKioskButton();
+  const { updatePlacementAsync, isPending: placementPending } = useUpdateKioskButtonPlacement();
   const [buttonType, setButtonType] = useState('');
   const [buttonName, setButtonName] = useState('');
-  const [position, setPosition] = useState<number>(1);
   const [iconKey, setIconKey] = useState('map');
   const [status, setStatus] = useState<string>('ACTIVE');
+  const [placement, setPlacement] = useState<ButtonPlacement>('MAIN');
   const [fieldErrors, setFieldErrors] = useState<FormErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -56,12 +55,13 @@ export function KioskButtonEditModal({ open, onClose, button, onSuccess }: Props
     setFormError(null);
     setButtonType(button.buttonType);
     setButtonName(button.buttonName ?? '');
-    setPosition(normalizePosition(button.position));
     setIconKey(resolveKioskButtonIconKey(button.iconKey));
     setStatus(button.status === 'INACTIVE' ? 'INACTIVE' : 'ACTIVE');
+    setPlacement((button.placement as ButtonPlacement) ?? 'MAIN');
   }, [open, button, resetMutation]);
 
-  const canSubmit = useMemo(() => !isPending, [isPending]);
+  const busy = isPending || placementPending;
+  const canSubmit = useMemo(() => !busy, [busy]);
 
   const onSubmit = useCallback(
     async (e: FormEvent) => {
@@ -73,32 +73,47 @@ export function KioskButtonEditModal({ open, onClose, button, onSuccess }: Props
       const nameTrim = buttonName.trim();
       if (!nameTrim) nextErrors.buttonName = '버튼 이름을 입력해주세요.';
       if (!typeTrim) nextErrors.buttonType = '버튼 타입(별칭)을 입력해주세요.';
-      if (!POSITIONS.includes(position as (typeof POSITIONS)[number])) nextErrors.position = '위치는 1~22 중에서 선택해주세요.';
       if (!STATUSES.includes(status as (typeof STATUSES)[number])) nextErrors.status = '상태를 선택해주세요.';
       if (!iconKey.trim()) nextErrors.iconKey = '아이콘을 선택해주세요.';
       setFieldErrors(nextErrors);
       if (Object.keys(nextErrors).length > 0) return;
 
-      const safePosition = normalizePosition(position);
       try {
+        // 위치(줄·칸)는 레이아웃 미리보기의 드래그로 변경한다. 여기서는 기존 슬롯을 그대로 유지.
         await updateKioskButtonAsync({
           buttonId: button.id,
           payload: {
             buttonType: typeTrim,
             buttonName: nameTrim,
-            position: safePosition,
+            line: button.line,
+            position: button.position,
             iconKey: resolveKioskButtonIconKey(iconKey),
             status,
           },
         });
-        if (safePosition !== position) setPosition(safePosition);
+        // 표시 여부(placement)가 바뀌면 별도 API 로 반영 (그리드 파킹/재진입 + 재배치).
+        const originalPlacement = (button.placement as ButtonPlacement) ?? 'MAIN';
+        if (placement !== originalPlacement) {
+          await updatePlacementAsync({ buttonId: button.id, placement });
+        }
         onSuccess?.('버튼이 저장되었습니다.');
         onClose();
       } catch (err) {
         setFormError(messageFromError(err));
       }
     },
-    [button, buttonType, buttonName, position, iconKey, status, updateKioskButtonAsync, onClose, onSuccess],
+    [
+      button,
+      buttonType,
+      buttonName,
+      iconKey,
+      status,
+      placement,
+      updateKioskButtonAsync,
+      updatePlacementAsync,
+      onClose,
+      onSuccess,
+    ],
   );
 
   if (!open || !button) return null;
@@ -114,7 +129,7 @@ export function KioskButtonEditModal({ open, onClose, button, onSuccess }: Props
       >
         <div className={styles.modalHead}>
           <span id={`${uid}-edit-title`} className={styles.modalTitle}>
-            버튼 수정
+            버튼 상세
           </span>
           <button type='button' className={shared.btnOutline} onClick={onClose} aria-label='닫기'>
             ×
@@ -166,27 +181,6 @@ export function KioskButtonEditModal({ open, onClose, button, onSuccess }: Props
             </div>
             <div className={styles.row2}>
               <div className={styles.field}>
-                <label className={styles.fieldLabel} htmlFor={`${uid}-pos`}>
-                  위치 (1–22)
-                </label>
-                <select
-                  id={`${uid}-pos`}
-                  className={`${styles.select} ${fieldErrors.position ? styles.inputError : ''}`}
-                  value={position}
-                  onChange={(e) => {
-                    setPosition(Number(e.target.value));
-                    setFieldErrors((prev) => ({ ...prev, position: undefined }));
-                  }}
-                >
-                  {POSITIONS.map((p) => (
-                    <option key={p} value={p}>
-                      {p}
-                    </option>
-                  ))}
-                </select>
-                {fieldErrors.position ? <p className={styles.fieldError}>{fieldErrors.position}</p> : null}
-              </div>
-              <div className={styles.field}>
                 <label className={styles.fieldLabel} htmlFor={`${uid}-status`}>
                   상태
                 </label>
@@ -207,7 +201,31 @@ export function KioskButtonEditModal({ open, onClose, button, onSuccess }: Props
                 </select>
                 {fieldErrors.status ? <p className={styles.fieldError}>{fieldErrors.status}</p> : null}
               </div>
+              <div className={styles.field}>
+                <label className={styles.fieldLabel} htmlFor={`${uid}-placement`}>
+                  표시 여부
+                </label>
+                <select
+                  id={`${uid}-placement`}
+                  className={styles.select}
+                  value={placement}
+                  onChange={(e) => setPlacement(e.target.value as ButtonPlacement)}
+                >
+                  {PLACEMENT_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
+            <p className={styles.formHint} style={{ marginTop: 0 }}>
+              {placement === 'MAIN'
+                ? `그리드 표시 · 현재 줄 ${button.line}·위치 ${button.position} (위치 변경은 미리보기에서 드래그)`
+                : placement === 'FIXED'
+                  ? '메인 화면에 표시되지만 위치는 고정(그리드 레이아웃 제외)'
+                  : '메인 화면에 표시하지 않음(그리드 레이아웃 제외)'}
+            </p>
             <div className={styles.field}>
               <span className={styles.fieldLabel} id={`${uid}-icon-hint`}>
                 아이콘
@@ -238,11 +256,11 @@ export function KioskButtonEditModal({ open, onClose, button, onSuccess }: Props
             ) : null}
           </div>
           <div className={styles.modalFooter}>
-            <button type='button' className={shared.btnOutline} onClick={onClose} disabled={isPending}>
+            <button type='button' className={shared.btnOutline} onClick={onClose} disabled={busy}>
               취소
             </button>
             <button type='submit' className={shared.btnPrimary} disabled={!canSubmit}>
-              {isPending ? '저장 중…' : '저장'}
+              {busy ? '저장 중…' : '저장'}
             </button>
           </div>
         </form>

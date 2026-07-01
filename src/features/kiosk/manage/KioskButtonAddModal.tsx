@@ -4,7 +4,7 @@ import shared from '@commons/shared.module.css';
 import SearchableSelect from '@components/common/SearchableSelect';
 import { useCreateKioskButton } from '@/hooks/kiosk-api/useCreateKioskButton';
 import { KioskIconPicker } from '@/features/kiosk/kioskAppIcons';
-import { POSITIONS } from '@/features/kiosk/manage/constants';
+import { LINE_OPTIONS, POSITION_IN_LINE_OPTIONS } from '@/features/kiosk/manage/constants';
 import { resolveKioskButtonIconKey } from '@/features/kiosk/manage/kioskButtonDisplay';
 import styles from '@/features/kiosk/manage/KioskAppManagePage.module.css';
 
@@ -24,6 +24,7 @@ type FormErrors = {
   kioskId?: string;
   buttonType?: string;
   buttonName?: string;
+  line?: string;
   position?: string;
   status?: string;
   iconKey?: string;
@@ -43,7 +44,8 @@ export function KioskButtonAddModal({ open, onClose, kioskOptions, defaultKioskI
   const [buttonType, setButtonType] = useState('');
   const [buttonName, setButtonName] = useState('');
   const [kioskId, setKioskId] = useState('');
-  const [position, setPosition] = useState<number>(3);
+  const [line, setLine] = useState<number>(0);
+  const [position, setPosition] = useState<number>(0);
   const [iconKey, setIconKey] = useState('map');
   const [status, setStatus] = useState<string>('ACTIVE');
   const [fieldErrors, setFieldErrors] = useState<FormErrors>({});
@@ -58,7 +60,8 @@ export function KioskButtonAddModal({ open, onClose, kioskOptions, defaultKioskI
     setFormError(null);
     setButtonType('');
     setButtonName('');
-    setPosition(3);
+    setLine(0);
+    setPosition(0);
     setIconKey('map');
     setStatus('ACTIVE');
     const initial =
@@ -88,8 +91,11 @@ export function KioskButtonAddModal({ open, onClose, kioskOptions, defaultKioskI
       if (!typeTrim) {
         nextErrors.buttonType = '버튼 타입(별칭)을 입력해주세요.';
       }
-      if (!POSITIONS.includes(position as (typeof POSITIONS)[number])) {
-        nextErrors.position = '위치는 1~22 중에서 선택해주세요.';
+      if (!LINE_OPTIONS.includes(line as (typeof LINE_OPTIONS)[number])) {
+        nextErrors.line = '줄을 선택해주세요.';
+      }
+      if (!POSITION_IN_LINE_OPTIONS.includes(position as (typeof POSITION_IN_LINE_OPTIONS)[number])) {
+        nextErrors.position = '칸을 선택해주세요.';
       }
       if (!STATUSES.includes(status as (typeof STATUSES)[number])) {
         nextErrors.status = '상태를 선택해주세요.';
@@ -106,6 +112,7 @@ export function KioskButtonAddModal({ open, onClose, kioskOptions, defaultKioskI
           kioskId: kid,
           buttonType: typeTrim,
           buttonName: nameTrim,
+          line,
           position,
           iconKey: resolveKioskButtonIconKey(iconKey),
           status,
@@ -115,7 +122,7 @@ export function KioskButtonAddModal({ open, onClose, kioskOptions, defaultKioskI
         setFormError(messageFromError(err));
       }
     },
-    [kioskId, buttonType, buttonName, position, iconKey, status, createKioskButtonAsync, onClose],
+    [kioskId, buttonType, buttonName, line, position, iconKey, status, createKioskButtonAsync, onClose],
   );
 
   if (!open) return null;
@@ -200,8 +207,29 @@ export function KioskButtonAddModal({ open, onClose, kioskOptions, defaultKioskI
                 </div>
                 <div className={styles.row2}>
                   <div className={styles.field}>
+                    <label className={styles.fieldLabel} htmlFor={`${uid}-line`}>
+                      줄 (0부터)
+                    </label>
+                    <select
+                      id={`${uid}-line`}
+                      className={`${styles.select} ${fieldErrors.line ? styles.inputError : ''}`}
+                      value={line}
+                      onChange={(e) => {
+                        setLine(Number(e.target.value));
+                        setFieldErrors((prev) => ({ ...prev, line: undefined }));
+                      }}
+                    >
+                      {LINE_OPTIONS.map((n) => (
+                        <option key={n} value={n}>
+                          {n}
+                        </option>
+                      ))}
+                    </select>
+                    {fieldErrors.line ? <p className={styles.fieldError}>{fieldErrors.line}</p> : null}
+                  </div>
+                  <div className={styles.field}>
                     <label className={styles.fieldLabel} htmlFor={`${uid}-pos`}>
-                      위치 (1–22)
+                      칸 (0–3)
                     </label>
                     <select
                       id={`${uid}-pos`}
@@ -212,7 +240,7 @@ export function KioskButtonAddModal({ open, onClose, kioskOptions, defaultKioskI
                         setFieldErrors((prev) => ({ ...prev, position: undefined }));
                       }}
                     >
-                      {POSITIONS.map((p) => (
+                      {POSITION_IN_LINE_OPTIONS.map((p) => (
                         <option key={p} value={p}>
                           {p}
                         </option>
@@ -220,28 +248,31 @@ export function KioskButtonAddModal({ open, onClose, kioskOptions, defaultKioskI
                     </select>
                     {fieldErrors.position ? <p className={styles.fieldError}>{fieldErrors.position}</p> : null}
                   </div>
-                  <div className={styles.field}>
-                    <label className={styles.fieldLabel} htmlFor={`${uid}-status`}>
-                      상태
-                    </label>
-                    <select
-                      id={`${uid}-status`}
-                      className={`${styles.select} ${fieldErrors.status ? styles.inputError : ''}`}
-                      value={status}
-                      onChange={(e) => {
-                        setStatus(e.target.value);
-                        setFieldErrors((prev) => ({ ...prev, status: undefined }));
-                      }}
-                    >
-                      {STATUSES.map((s) => (
-                        <option key={s} value={s}>
-                          {s}
-                        </option>
-                      ))}
-                    </select>
-                    {fieldErrors.status ? <p className={styles.fieldError}>{fieldErrors.status}</p> : null}
-                  </div>
                 </div>
+                <div className={styles.field}>
+                  <label className={styles.fieldLabel} htmlFor={`${uid}-status`}>
+                    상태
+                  </label>
+                  <select
+                    id={`${uid}-status`}
+                    className={`${styles.select} ${fieldErrors.status ? styles.inputError : ''}`}
+                    value={status}
+                    onChange={(e) => {
+                      setStatus(e.target.value);
+                      setFieldErrors((prev) => ({ ...prev, status: undefined }));
+                    }}
+                  >
+                    {STATUSES.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                  {fieldErrors.status ? <p className={styles.fieldError}>{fieldErrors.status}</p> : null}
+                </div>
+                <p className={styles.formHint} style={{ marginTop: 0 }}>
+                  이미 사용 중인 줄·칸을 선택하면 저장할 수 없습니다. 빈 슬롯을 선택하세요.
+                </p>
                 <div className={styles.field}>
                   <span className={styles.fieldLabel} id={`${uid}-icon-hint`}>
                     아이콘

@@ -1,8 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useKioskButtonsPaged } from '@/hooks/kiosk-api/useKioskButtons';
+import { useKioskButtons, useKioskButtonsPaged } from '@/hooks/kiosk-api/useKioskButtons';
 import type { KioskButtonDto } from '@/hooks/kiosk-api/kioskButtonsTypes';
 import { useGetKiosks } from '@/hooks/useGetKiosks';
-import { KIOSK_BUTTON_MANAGE_PAGE_SIZE, MAX_BUTTONS_PER_KIOSK } from './constants';
+import {
+  DEFAULT_BUTTONS_PER_LINE,
+  KIOSK_BUTTON_MANAGE_PAGE_SIZE,
+  MAX_BUTTONS_PER_KIOSK,
+  sortByLinePosition,
+} from './constants';
 
 export function useKioskButtonManagePage() {
   const [tab, setTab] = useState<'all' | 'byKiosk'>('all');
@@ -45,11 +50,31 @@ export function useKioskButtonManagePage() {
 
   const buttons = useMemo((): KioskButtonDto[] => {
     const list = paged.data?.content ?? [];
-    return [...list].sort((a, b) => a.position - b.position || a.id - b.id);
+    return sortByLinePosition(list);
   }, [paged.data]);
 
   const totalPages = paged.data?.totalPages ?? 1;
   const totalElements = paged.data?.totalElements ?? 0;
+
+  // WITH별 탭: 레이아웃 미리보기용 — 선택된 키오스크의 버튼 전체(페이징 없이 병합)를 (line, position) 순으로.
+  const byKioskAll = useKioskButtons({
+    kioskId: kioskIdNum,
+    enabled: tab === 'byKiosk' && typeof kioskIdNum === 'number',
+  });
+  const byKioskAllButtons = useMemo(
+    (): KioskButtonDto[] => sortByLinePosition(byKioskAll.data ?? []),
+    [byKioskAll.data],
+  );
+
+  const selectedKiosk = useMemo(
+    () => kiosks.find((k) => String(k.id) === byKioskId),
+    [kiosks, byKioskId],
+  );
+  const selectedButtonsPerLine = selectedKiosk?.buttonsPerLine ?? DEFAULT_BUTTONS_PER_LINE;
+  const selectedLineCapacities = useMemo(
+    () => (Array.isArray(selectedKiosk?.lineCapacities) ? selectedKiosk!.lineCapacities! : []),
+    [selectedKiosk],
+  );
 
   const kioskSelectOptions = useMemo(
     () =>
@@ -86,5 +111,11 @@ export function useKioskButtonManagePage() {
     selectedKioskName,
     showKioskColumn,
     maxButtonsPerKiosk: MAX_BUTTONS_PER_KIOSK,
+    // WITH별 레이아웃 미리보기용
+    byKioskAllButtons,
+    byKioskAllLoading: byKioskAll.isLoading,
+    selectedKioskIdNum: kioskIdNum,
+    selectedButtonsPerLine,
+    selectedLineCapacities,
   };
 }

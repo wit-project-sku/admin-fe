@@ -80,7 +80,13 @@ export function KioskButtonCatalogGrid({
                 <div className={styles.meta}>
                   <div className={styles.title}>{b.buttonType}</div>
                   <div className={styles.cat}>
-                    {kioskLine ? `${kioskLine} · ` : ''}위치 {b.position} · {formatKioskButtonStatusLabel(b.status)}
+                    {kioskLine ? `${kioskLine} · ` : ''}
+                    {(b.placement ?? 'MAIN') === 'MAIN'
+                      ? `위치 ${b.line}·${b.position}`
+                      : b.placement === 'FIXED'
+                        ? '고정'
+                        : '미표시'}{' '}
+                    · {formatKioskButtonStatusLabel(b.status)}
                   </div>
                 </div>
                 <span className={`${shared.badge} ${active ? shared.badgeGreen : shared.badgeGray}`}>
@@ -97,7 +103,7 @@ export function KioskButtonCatalogGrid({
               </div>
               <div className={styles.actions} onClick={(e) => e.stopPropagation()}>
                 <button type='button' className={shared.btnOutline} onClick={() => onCardAction('edit', b)} disabled={busy}>
-                  수정
+                  상세
                 </button>
                 <button type='button' className={shared.btnOutline} onClick={() => onCardAction('toggle', b)} disabled={busy}>
                   {toggling ? '처리 중…' : active ? '비활성화' : '활성화'}

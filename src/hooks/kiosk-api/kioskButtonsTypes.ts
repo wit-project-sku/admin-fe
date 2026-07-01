@@ -6,6 +6,11 @@ export type KioskButtonDto = {
   buttonName?: string;
   iconKey: string | null;
   status: string;
+  /** 배치 유형: MAIN(그리드) / FIXED(고정) / OFF_MAIN(미표시) */
+  placement?: 'MAIN' | 'FIXED' | 'OFF_MAIN';
+  /** 버튼이 놓인 줄 번호 (0-based) */
+  line: number;
+  /** 줄 안에서의 위치 (0-based) */
   position: number;
   totalClicks: number;
   /** 누적 사용 시간(초) */
@@ -44,6 +49,8 @@ export type CreateKioskButtonPayload = {
   kioskId: number;
   buttonType: string;
   buttonName: string;
+  /** 줄 번호 (0-based). 미지정 시 백엔드 0. */
+  line?: number;
   position: number;
   iconKey: string;
   status: string;
@@ -60,6 +67,8 @@ export type CreateKioskButtonApiResponse = {
 export type UpdateKioskButtonPayload = {
   buttonType: string;
   buttonName: string;
+  /** 줄 번호 (0-based). 미지정 시 기존 줄 유지. 드래그 SWAP 시 목표 줄로 지정. */
+  line?: number;
   position: number;
   iconKey: string;
   status: string;

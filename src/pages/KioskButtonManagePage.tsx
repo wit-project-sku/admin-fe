@@ -4,6 +4,7 @@ import { KioskButtonAddModal } from '@/features/kiosk/manage/KioskButtonAddModal
 import { KioskButtonByKioskPanel } from '@/features/kiosk/manage/KioskButtonByKioskPanel';
 import { KioskButtonCatalogGrid } from '@/features/kiosk/manage/KioskButtonCatalogGrid';
 import { KioskButtonEditModal } from '@/features/kiosk/manage/KioskButtonEditModal';
+import { KioskButtonSubtitleModal } from '@/features/kiosk/manage/KioskButtonSubtitleModal';
 import {
   formatKioskButtonStatusLabel,
   isKioskButtonStatusActive,
@@ -24,6 +25,7 @@ export default function KioskButtonManagePage() {
   const { updateKioskButtonAsync } = useUpdateKioskButton();
   const [modal, setModal] = useState<PlaceholderModal>(null);
   const [editButton, setEditButton] = useState<KioskButtonDto | null>(null);
+  const [subtitleButton, setSubtitleButton] = useState<KioskButtonDto | null>(null);
   const [viewButton, setViewButton] = useState<KioskButtonDto | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<KioskButtonDto | null>(null);
   const [deletingButtonId, setDeletingButtonId] = useState<number | null>(null);
@@ -33,14 +35,10 @@ export default function KioskButtonManagePage() {
   const messageFromError = (err: unknown, fallback: string) =>
     err instanceof Error && err.message.trim() ? err.message : fallback;
 
-  const safePosition = (raw: unknown) => {
-    const n = typeof raw === 'number' ? raw : Number(raw);
-    return Number.isInteger(n) && n >= 1 && n <= 9 ? n : 1;
-  };
-
   useEffect(() => {
     setModal(null);
     setEditButton(null);
+    setSubtitleButton(null);
     setDeleteTarget(null);
     setDeletingButtonId(null);
     setTogglingButtonId(null);
@@ -101,7 +99,9 @@ export default function KioskButtonManagePage() {
             buttonId: button.id,
             payload: {
               buttonType: button.buttonType,
-              position: safePosition(button.position),
+              buttonName: button.buttonName ?? '',
+              line: button.line,
+              position: button.position,
               iconKey: resolveKioskButtonIconKey(button.iconKey),
               status: nextStatus,
             },
@@ -160,7 +160,7 @@ export default function KioskButtonManagePage() {
           </div>
         </div>
         <p className={styles.tabBarHint}>
-          버튼 위치 1–{m.maxButtonsPerKiosk} · WITH당 최대 {m.maxButtonsPerKiosk}개 · 아이콘은 프리셋에서 선택
+          위치는 줄·칸(0부터) · WITH별 탭에서 한 줄당 버튼 수 조절 + 드래그로 위치 교체 · 아이콘은 프리셋에서 선택
         </p>
       </div>
 
@@ -177,16 +177,32 @@ export default function KioskButtonManagePage() {
         <KioskButtonEditModal open onClose={closeEditModal} button={editButton} onSuccess={setNotice} />
       ) : null}
 
+      <KioskButtonSubtitleModal
+        open={!!subtitleButton}
+        kioskId={m.selectedKioskIdNum}
+        button={subtitleButton}
+        onClose={() => setSubtitleButton(null)}
+        onNotice={setNotice}
+      />
+
       <DetailModal
         open={!!viewButton}
-        title={viewButton ? `버튼 상세 — ${viewButton.buttonType}` : '버튼 상세'}
+        title={viewButton ? `버튼 정보 — ${viewButton.buttonType}` : '버튼 정보'}
         onClose={() => setViewButton(null)}
         fields={
           viewButton
             ? [
                 { label: '버튼 종류', value: viewButton.buttonType },
                 { label: '버튼명', value: viewButton.buttonName },
-                { label: '위치', value: viewButton.position },
+                {
+                  label: '배치',
+                  value:
+                    (viewButton.placement ?? 'MAIN') === 'MAIN'
+                      ? `그리드 (줄·칸 ${viewButton.line}·${viewButton.position})`
+                      : viewButton.placement === 'FIXED'
+                        ? '고정 (위치 관리 안 함)'
+                        : '미표시 (메인 화면 미노출)',
+                },
                 { label: '상태', value: formatKioskButtonStatusLabel(viewButton.status) },
                 { label: 'WITH(키오스크)', value: viewButton.kioskName ?? viewButton.kioskId },
                 { label: '아이콘 키', value: resolveKioskButtonIconKey(viewButton.iconKey) },
@@ -268,17 +284,18 @@ export default function KioskButtonManagePage() {
 
       {m.tab === 'byKiosk' && (
         <KioskButtonByKioskPanel
-          buttons={m.buttons}
-          isLoading={m.isLoading || m.kiosksLoading}
+          buttons={m.byKioskAllButtons}
+          isLoading={m.byKioskAllLoading || m.kiosksLoading}
           kioskName={m.selectedKioskName}
+          kioskId={m.selectedKioskIdNum}
           byKioskId={m.byKioskId}
           onByKioskId={m.setByKioskId}
           kioskOptions={m.kioskSelectOptions}
-          page={m.page}
-          totalPages={m.totalPages}
-          totalElements={m.totalElements}
-          onPageChange={m.setPage}
+          buttonsPerLine={m.selectedButtonsPerLine}
+          lineCapacities={m.selectedLineCapacities}
           onEditButton={(b) => setEditButton(b)}
+          onEditSubtitle={(b) => setSubtitleButton(b)}
+          onNotice={setNotice}
         />
       )}
     </div>
