@@ -5,9 +5,8 @@ import SearchableSelect from '@components/common/SearchableSelect';
 import { KioskAppIconVisual } from '../kioskAppIcons';
 import type { KioskButtonDto } from '@/hooks/kiosk-api/kioskButtonsTypes';
 import { useUpdateKioskButton } from '@/hooks/kiosk-api/useUpdateKioskButton';
-import { useUpdateKioskLineCapacities } from '@/hooks/kiosk-api/useUpdateKioskLineCapacities';
-import { KioskButtonLayoutPreview, type DragSwapRequest } from './KioskButtonLayoutPreview';
-import { placementLabel, resolveLineCapacity } from './constants';
+import { KioskMirrorPreview, type DragSwapRequest } from './KioskMirrorPreview';
+import { placementLabel, positionLabel } from './constants';
 import { formatDurationSeconds } from '../kioskFormatters';
 import {
   formatKioskButtonStatusLabel,
@@ -24,10 +23,9 @@ type Props = {
   byKioskId: string;
   onByKioskId: (id: string) => void;
   kioskOptions: Array<{ value: string; label: string; sublabel?: string }>;
-  buttonsPerLine: number;
-  lineCapacities: number[];
   onEditButton?: (button: KioskButtonDto) => void;
-  onEditSubtitle?: (button: KioskButtonDto) => void;
+  /** 미리보기 타일/표 행 클릭 → 자막 시트의 해당 버튼 행으로 포커스 */
+  onFocusButton?: (button: KioskButtonDto) => void;
   onNotice?: (message: string) => void;
 };
 
@@ -40,41 +38,35 @@ export function KioskButtonByKioskPanel({
   buttons,
   isLoading,
   kioskName,
-  kioskId,
   byKioskId,
   onByKioskId,
   kioskOptions,
-  buttonsPerLine,
-  lineCapacities,
   onEditButton,
-  onEditSubtitle,
+  onFocusButton,
   onNotice,
 }: Props) {
   const { updateKioskButtonAsync } = useUpdateKioskButton();
-  const { updateLineCapacitiesAsync, isPending: capsPending } = useUpdateKioskLineCapacities();
   const [pendingSwap, setPendingSwap] = useState<DragSwapRequest | null>(null);
   const [swapping, setSwapping] = useState(false);
 
-  // 그리드(MAIN)와 예외(FIXED/OFF_MAIN) 버튼 분리
-  const mainButtons = buttons.filter((b) => (b.placement ?? 'MAIN') === 'MAIN');
-  const excludedButtons = buttons
-    .filter((b) => (b.placement ?? 'MAIN') !== 'MAIN')
-    .sort((a, b) => a.id - b.id);
+  // 화면에 보이는 버튼(그리드+고정, line>=1)과 미표시(OFF_MAIN 또는 파킹) 분리
+  const visibleButtons = buttons
+    .filter((b) => b.line >= 1)
+    .sort((a, b) => a.line - b.line || a.position - b.position);
+  const hiddenButtons = buttons.filter((b) => b.line < 1).sort((a, b) => a.id - b.id);
 
-  const onLineCapacityChange = async (line: number, capacity: number) => {
-    if (!kioskId) return;
-    const maxLine = mainButtons.reduce((m, b) => Math.max(m, b.line ?? 0), 0);
-    const lineCount = Math.max(maxLine + 1, lineCapacities.length, line + 1);
-    const caps = Array.from({ length: lineCount }, (_, l) =>
-      resolveLineCapacity(lineCapacities, l, buttonsPerLine),
-    );
-    caps[line] = capacity;
-    try {
-      await updateLineCapacitiesAsync({ kioskId, capacities: caps });
-      onNotice?.(`${line}번 줄 버튼 수를 ${capacity}개로 변경했습니다.`);
-    } catch (err) {
-      onNotice?.(err instanceof Error ? err.message : '줄별 버튼 수를 변경하지 못했습니다.');
+  const requestSwap = (req: DragSwapRequest) => {
+    const srcSpan = req.source.span === 2 ? 2 : 1;
+    const dstSpan = req.target ? (req.target.span === 2 ? 2 : 1) : null;
+    if (req.target && dstSpan !== srcSpan) {
+      onNotice?.('폭(칸 수)이 다른 버튼끼리는 교체할 수 없습니다. 빈 칸으로 이동해 주세요.');
+      return;
     }
+    if (srcSpan === 2 && req.targetPosition + 1 > 4) {
+      onNotice?.('2칸 버튼은 4번 칸에서 시작할 수 없습니다.');
+      return;
+    }
+    setPendingSwap(req);
   };
 
   const confirmSwap = async () => {
@@ -119,7 +111,24 @@ export function KioskButtonByKioskPanel({
         </div>
       </div>
 
-      <div className={shared.card}>
+      <div className={styles.previewSection}>
+        <div className={styles.previewLabel}>
+          {kioskName} — 실기기 메인 화면 미러 · 3~6열만 드래그 배치(한 줄 4칸) · 1·2·7열 고정 · 8열
+          배너(표시 전용) · 타일 클릭 시 아래 시트로 이동
+        </div>
+        {!isLoading ? (
+          <KioskMirrorPreview
+            buttons={buttons}
+            onDragSwap={requestSwap}
+            onSelectButton={onFocusButton}
+            disabled={swapping}
+          />
+        ) : (
+          <p className={styles.emptyState}>불러오는 중…</p>
+        )}
+      </div>
+
+      <div className={shared.card} style={{ marginTop: 16 }}>
         <div className={shared.cardHead}>
           <span className={shared.cardTitle}>{kioskName} · 버튼</span>
         </div>
@@ -127,9 +136,10 @@ export function KioskButtonByKioskPanel({
           <table className={shared.table}>
             <thead className={shared.thead}>
               <tr>
-                <th className={`${shared.th} ${shared.thCenter}`}>위치(줄·칸)</th>
+                <th className={`${shared.th} ${shared.thCenter}`}>위치</th>
                 <th className={`${shared.th} ${shared.thCenter}`}>아이콘</th>
                 <th className={shared.th}>버튼 타입</th>
+                <th className={shared.th}>배치</th>
                 <th className={shared.th}>상태</th>
                 <th className={`${shared.th} ${shared.thRight}`}>총 클릭</th>
                 <th className={`${shared.th} ${shared.thRight}`}>사용 시간</th>
@@ -139,35 +149,45 @@ export function KioskButtonByKioskPanel({
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={onEditButton ? 7 : 6} className={shared.tableStateCell}>
+                  <td colSpan={onEditButton ? 8 : 7} className={shared.tableStateCell}>
                     불러오는 중…
                   </td>
                 </tr>
-              ) : mainButtons.length === 0 ? (
+              ) : visibleButtons.length === 0 ? (
                 <tr>
-                  <td colSpan={onEditButton ? 7 : 6} className={shared.tableStateCell}>
-                    이 WITH에 그리드 버튼이 없습니다.
+                  <td colSpan={onEditButton ? 8 : 7} className={shared.tableStateCell}>
+                    이 WITH에 표시되는 버튼이 없습니다.
                   </td>
                 </tr>
               ) : (
-                mainButtons.map((b) => {
+                visibleButtons.map((b) => {
                   const resolvedIcon = resolveKioskButtonIconKey(b.iconKey);
                   const statusActive = isKioskButtonStatusActive(b.status);
                   return (
-                    <tr key={`${b.id}-${b.line}-${b.position}`} className={shared.tr}>
+                    <tr key={b.id} className={shared.tr}>
                       <td className={`${shared.td} ${shared.tdCenter}`}>
                         <span className={styles.posBadge}>
-                          {b.line}·{b.position}
+                          {positionLabel(b.line, b.position, b.span)}
                         </span>
+                        {b.span === 2 ? <span className={styles.sheetSpanBadge}>2칸</span> : null}
                       </td>
                       <td className={`${shared.td} ${shared.tdCenter}`}>
                         <span className={styles.kioskTableIconCell}>
-                          <KioskAppIconVisual iconKey={resolvedIcon} tileSize={40} />
+                          {b.imageUrl ? (
+                            <img
+                              src={b.imageUrl}
+                              alt=''
+                              style={{ width: 40, height: 40, borderRadius: 10, objectFit: 'cover' }}
+                            />
+                          ) : (
+                            <KioskAppIconVisual iconKey={resolvedIcon} tileSize={40} />
+                          )}
                         </span>
                       </td>
                       <td className={shared.td}>
                         <div className={shared.tdBold}>{b.buttonType}</div>
                       </td>
+                      <td className={shared.td}>{placementLabel(b.placement)}</td>
                       <td className={shared.td}>
                         <span
                           className={`${styles.statusPill} ${statusActive ? styles.statusPillActive : styles.statusPillInactive}`}
@@ -177,31 +197,23 @@ export function KioskButtonByKioskPanel({
                           {formatKioskButtonStatusLabel(b.status)}
                         </span>
                       </td>
-                      <td className={`${shared.td} ${shared.tdRight}`}>{b.totalClicks.toLocaleString()}</td>
-                      <td className={`${shared.td} ${shared.tdRight}`}>{formatTotalDurationSec(b.totalDuration)}</td>
+                      <td className={`${shared.td} ${shared.tdRight}`}>
+                        {b.totalClicks.toLocaleString()}
+                      </td>
+                      <td className={`${shared.td} ${shared.tdRight}`}>
+                        {formatTotalDurationSec(b.totalDuration)}
+                      </td>
                       {onEditButton ? (
                         <td className={`${shared.td} ${shared.tdCenter}`}>
-                          <div style={{ display: 'inline-flex', gap: 6 }}>
-                            <button
-                              type='button'
-                              className={styles.kioskTableEditBtn}
-                              onClick={() => onEditButton(b)}
-                              aria-label={`${b.buttonType} 상세`}
-                            >
-                              <Pencil size={14} strokeWidth={2} aria-hidden />
-                              <span>상세</span>
-                            </button>
-                            {onEditSubtitle ? (
-                              <button
-                                type='button'
-                                className={styles.kioskTableEditBtn}
-                                onClick={() => onEditSubtitle(b)}
-                                aria-label={`${b.buttonType} 자막/영상`}
-                              >
-                                <span>자막/영상</span>
-                              </button>
-                            ) : null}
-                          </div>
+                          <button
+                            type='button'
+                            className={styles.kioskTableEditBtn}
+                            onClick={() => onEditButton(b)}
+                            aria-label={`${b.buttonType} 상세`}
+                          >
+                            <Pencil size={14} strokeWidth={2} aria-hidden />
+                            <span>상세</span>
+                          </button>
                         </td>
                       ) : null}
                     </tr>
@@ -213,61 +225,27 @@ export function KioskButtonByKioskPanel({
         </div>
       </div>
 
-      {!isLoading && mainButtons.length > 0 ? (
+      {!isLoading && hiddenButtons.length > 0 ? (
         <div className={styles.previewSection} style={{ marginTop: 16 }}>
-          <div className={styles.previewLabel}>
-            레이아웃 미리보기 — 숫자는 줄·칸(0부터). 아이콘을 드래그해 위치를 교체하고, 줄마다 버튼 수(3/4)를 지정하세요.
-          </div>
-          <KioskButtonLayoutPreview
-            buttons={mainButtons}
-            buttonsPerLine={buttonsPerLine}
-            lineCapacities={lineCapacities}
-            onDragSwap={setPendingSwap}
-            onLineCapacityChange={onLineCapacityChange}
-            disabled={swapping || capsPending}
-          />
-        </div>
-      ) : null}
-
-      {!isLoading && excludedButtons.length > 0 ? (
-        <div className={styles.previewSection} style={{ marginTop: 16 }}>
-          <div className={styles.previewLabel}>예외 버튼 (위치 관리 안 함)</div>
+          <div className={styles.previewLabel}>미표시 버튼 (메인 화면에 노출되지 않음)</div>
           <div className={styles.subtitleList}>
-            {excludedButtons.map((b) => (
+            {hiddenButtons.map((b) => (
               <div key={b.id} className={styles.subtitleRow}>
-                <div className={styles.subtitleRowMain}>
-                  <div className={styles.subtitleVideoName}>
-                    {b.buttonType}{' '}
-                    <span className={`${shared.badge} ${shared.badgeGray}`}>{placementLabel(b.placement)}</span>
-                  </div>
-                  <div className={styles.subtitleText}>
-                    {b.placement === 'FIXED' ? '메인 화면에 표시되지만 위치 고정' : '메인 화면에 미표시'}
-                  </div>
-                </div>
-                <div style={{ display: 'inline-flex', gap: 6, flexShrink: 0 }}>
-                  {/* 고정(FIXED) 버튼은 메인에 표시되므로 자막/영상 적용 가능. 미표시(OFF_MAIN)는 제외. */}
-                  {onEditSubtitle && b.placement === 'FIXED' ? (
-                    <button
-                      type='button'
-                      className={styles.kioskTableEditBtn}
-                      onClick={() => onEditSubtitle(b)}
-                      aria-label={`${b.buttonType} 자막/영상`}
-                    >
-                      <span>자막/영상</span>
-                    </button>
-                  ) : null}
-                  {onEditButton ? (
-                    <button
-                      type='button'
-                      className={styles.kioskTableEditBtn}
-                      onClick={() => onEditButton(b)}
-                      aria-label={`${b.buttonType} 상세`}
-                    >
-                      <Pencil size={14} strokeWidth={2} aria-hidden />
-                      <span>상세</span>
-                    </button>
-                  ) : null}
-                </div>
+                <span className={shared.tdBold}>{b.buttonType}</span>
+                <span className={styles.formHint} style={{ margin: 0 }}>
+                  {placementLabel(b.placement)}
+                </span>
+                {onEditButton ? (
+                  <button
+                    type='button'
+                    className={styles.kioskTableEditBtn}
+                    onClick={() => onEditButton(b)}
+                    aria-label={`${b.buttonType} 상세`}
+                  >
+                    <Pencil size={14} strokeWidth={2} aria-hidden />
+                    <span>상세</span>
+                  </button>
+                ) : null}
               </div>
             ))}
           </div>
@@ -275,42 +253,38 @@ export function KioskButtonByKioskPanel({
       ) : null}
 
       {pendingSwap ? (
-        <div className={styles.overlay} role='presentation' onClick={() => !swapping && setPendingSwap(null)}>
+        <div
+          className={styles.overlay}
+          role='presentation'
+          onClick={() => !swapping && setPendingSwap(null)}
+        >
           <div
             className={styles.modal}
             role='dialog'
             aria-modal='true'
-            aria-labelledby='kiosk-button-swap-title'
+            aria-labelledby='swap-confirm-title'
             onClick={(e) => e.stopPropagation()}
           >
             <div className={styles.modalHead}>
-              <span id='kiosk-button-swap-title' className={styles.modalTitle}>
-                버튼 위치 변경
+              <span id='swap-confirm-title' className={styles.modalTitle}>
+                위치 변경
               </span>
-              <button
-                type='button'
-                className={shared.btnOutline}
-                onClick={() => setPendingSwap(null)}
-                aria-label='닫기'
-                disabled={swapping}
-              >
-                ×
-              </button>
             </div>
             <div className={styles.modalBody}>
-              {pendingSwap.target ? (
-                <p className={styles.formHint} style={{ marginTop: 0 }}>
-                  <strong>{pendingSwap.source.buttonType}</strong>(줄 {pendingSwap.source.line}·{pendingSwap.source.position})
-                  와 <strong>{pendingSwap.target.buttonType}</strong>(줄 {pendingSwap.targetLine}·{pendingSwap.targetPosition})
-                  의 위치를 서로 교체합니다.
-                </p>
-              ) : (
-                <p className={styles.formHint} style={{ marginTop: 0 }}>
-                  <strong>{pendingSwap.source.buttonType}</strong>(줄 {pendingSwap.source.line}·{pendingSwap.source.position})
-                  를 줄 {pendingSwap.targetLine}·{pendingSwap.targetPosition} 로 이동합니다.
-                </p>
-              )}
-              <p className={styles.formHint}>진행하시겠습니까?</p>
+              <p className={styles.formHint}>
+                <strong>{pendingSwap.source.buttonType}</strong>
+                {' → '}
+                {positionLabel(pendingSwap.targetLine, pendingSwap.targetPosition, pendingSwap.source.span)}
+                {pendingSwap.target ? (
+                  <>
+                    {' ('}
+                    <strong>{pendingSwap.target.buttonType}</strong>
+                    {' 과 자리 교체)'}
+                  </>
+                ) : (
+                  ' (빈 칸으로 이동)'
+                )}
+              </p>
             </div>
             <div className={styles.modalFooter}>
               <button
@@ -321,7 +295,7 @@ export function KioskButtonByKioskPanel({
               >
                 취소
               </button>
-              <button type='button' className={shared.btnPrimary} onClick={confirmSwap} disabled={swapping}>
+              <button type='button' className={shared.btnPrimary} onClick={() => void confirmSwap()} disabled={swapping}>
                 {swapping ? '변경 중…' : '변경'}
               </button>
             </div>

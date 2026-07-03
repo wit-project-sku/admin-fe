@@ -1,3 +1,6 @@
+/** 추가 언어 자막 텍스트 (extra_texts JSON 값) */
+export type SubtitleLangText = { main?: string | null; rt?: string | null };
+
 /** KioskSubtitleResponse (백엔드) 매핑 */
 export type KioskSubtitleDto = {
   id: number;
@@ -20,6 +23,8 @@ export type KioskSubtitleDto = {
   rtCn?: string | null;
   playCondition?: string | null;
   description?: string | null;
+  /** 추가 언어 자막 (언어코드 → {main, rt}). 기본 4개 언어는 mainKr… 고정 필드 사용 */
+  extraTexts?: Record<string, SubtitleLangText> | null;
   createdAt?: string | null;
 };
 
@@ -43,6 +48,8 @@ export type KioskSubtitlePayload = {
   rtCn?: string | null;
   playCondition?: string | null;
   description?: string | null;
+  /** 추가 언어 자막 (언어코드 → {main, rt}) */
+  extraTexts?: Record<string, SubtitleLangText> | null;
 };
 
 export type BaseEnvelope<T> = {

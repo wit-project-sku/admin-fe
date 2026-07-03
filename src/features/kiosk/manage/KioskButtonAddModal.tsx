@@ -4,7 +4,7 @@ import shared from '@commons/shared.module.css';
 import SearchableSelect from '@components/common/SearchableSelect';
 import { useCreateKioskButton } from '@/hooks/kiosk-api/useCreateKioskButton';
 import { KioskIconPicker } from '@/features/kiosk/kioskAppIcons';
-import { LINE_OPTIONS, POSITION_IN_LINE_OPTIONS } from '@/features/kiosk/manage/constants';
+import { GRID_LINE_OPTIONS, POSITION_OPTIONS, SPAN_OPTIONS } from '@/features/kiosk/manage/constants';
 import { resolveKioskButtonIconKey } from '@/features/kiosk/manage/kioskButtonDisplay';
 import styles from '@/features/kiosk/manage/KioskAppManagePage.module.css';
 
@@ -44,8 +44,9 @@ export function KioskButtonAddModal({ open, onClose, kioskOptions, defaultKioskI
   const [buttonType, setButtonType] = useState('');
   const [buttonName, setButtonName] = useState('');
   const [kioskId, setKioskId] = useState('');
-  const [line, setLine] = useState<number>(0);
-  const [position, setPosition] = useState<number>(0);
+  const [line, setLine] = useState<number>(3);
+  const [position, setPosition] = useState<number>(1);
+  const [span, setSpan] = useState<number>(1);
   const [iconKey, setIconKey] = useState('map');
   const [status, setStatus] = useState<string>('ACTIVE');
   const [fieldErrors, setFieldErrors] = useState<FormErrors>({});
@@ -91,11 +92,14 @@ export function KioskButtonAddModal({ open, onClose, kioskOptions, defaultKioskI
       if (!typeTrim) {
         nextErrors.buttonType = '버튼 타입(별칭)을 입력해주세요.';
       }
-      if (!LINE_OPTIONS.includes(line as (typeof LINE_OPTIONS)[number])) {
-        nextErrors.line = '줄을 선택해주세요.';
+      if (!GRID_LINE_OPTIONS.includes(line as (typeof GRID_LINE_OPTIONS)[number])) {
+        nextErrors.line = '열(3~6)을 선택해주세요.';
       }
-      if (!POSITION_IN_LINE_OPTIONS.includes(position as (typeof POSITION_IN_LINE_OPTIONS)[number])) {
-        nextErrors.position = '칸을 선택해주세요.';
+      if (!POSITION_OPTIONS.includes(position as (typeof POSITION_OPTIONS)[number])) {
+        nextErrors.position = '칸(1~4)을 선택해주세요.';
+      }
+      if (span === 2 && position === 4) {
+        nextErrors.position = '2칸 버튼은 4번 칸에서 시작할 수 없습니다.';
       }
       if (!STATUSES.includes(status as (typeof STATUSES)[number])) {
         nextErrors.status = '상태를 선택해주세요.';
@@ -114,6 +118,7 @@ export function KioskButtonAddModal({ open, onClose, kioskOptions, defaultKioskI
           buttonName: nameTrim,
           line,
           position,
+          span,
           iconKey: resolveKioskButtonIconKey(iconKey),
           status,
         });
@@ -122,7 +127,7 @@ export function KioskButtonAddModal({ open, onClose, kioskOptions, defaultKioskI
         setFormError(messageFromError(err));
       }
     },
-    [kioskId, buttonType, buttonName, line, position, iconKey, status, createKioskButtonAsync, onClose],
+    [kioskId, buttonType, buttonName, line, position, span, iconKey, status, createKioskButtonAsync, onClose],
   );
 
   if (!open) return null;
@@ -208,7 +213,7 @@ export function KioskButtonAddModal({ open, onClose, kioskOptions, defaultKioskI
                 <div className={styles.row2}>
                   <div className={styles.field}>
                     <label className={styles.fieldLabel} htmlFor={`${uid}-line`}>
-                      줄 (0부터)
+                      열 (3~6)
                     </label>
                     <select
                       id={`${uid}-line`}
@@ -219,7 +224,7 @@ export function KioskButtonAddModal({ open, onClose, kioskOptions, defaultKioskI
                         setFieldErrors((prev) => ({ ...prev, line: undefined }));
                       }}
                     >
-                      {LINE_OPTIONS.map((n) => (
+                      {GRID_LINE_OPTIONS.map((n) => (
                         <option key={n} value={n}>
                           {n}
                         </option>
@@ -229,7 +234,7 @@ export function KioskButtonAddModal({ open, onClose, kioskOptions, defaultKioskI
                   </div>
                   <div className={styles.field}>
                     <label className={styles.fieldLabel} htmlFor={`${uid}-pos`}>
-                      칸 (0–3)
+                      시작 칸 (1~4)
                     </label>
                     <select
                       id={`${uid}-pos`}
@@ -240,13 +245,30 @@ export function KioskButtonAddModal({ open, onClose, kioskOptions, defaultKioskI
                         setFieldErrors((prev) => ({ ...prev, position: undefined }));
                       }}
                     >
-                      {POSITION_IN_LINE_OPTIONS.map((p) => (
+                      {POSITION_OPTIONS.map((p) => (
                         <option key={p} value={p}>
                           {p}
                         </option>
                       ))}
                     </select>
                     {fieldErrors.position ? <p className={styles.fieldError}>{fieldErrors.position}</p> : null}
+                  </div>
+                  <div className={styles.field}>
+                    <label className={styles.fieldLabel} htmlFor={`${uid}-span`}>
+                      폭
+                    </label>
+                    <select
+                      id={`${uid}-span`}
+                      className={styles.select}
+                      value={span}
+                      onChange={(e) => setSpan(Number(e.target.value))}
+                    >
+                      {SPAN_OPTIONS.map((o) => (
+                        <option key={o.value} value={o.value}>
+                          {o.label}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
                 <div className={styles.field}>

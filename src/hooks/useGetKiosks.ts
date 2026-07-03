@@ -8,9 +8,6 @@ export type AdminKioskDto = {
   district: string;
   address: string;
   /** 줄별 용량이 없는 줄의 기본 버튼 수 (기본 4, 최대 4) */
-  buttonsPerLine?: number;
-  /** 줄별 최대 버튼 수(각 1~4). 비어있으면 모든 줄이 buttonsPerLine 사용 */
-  lineCapacities?: number[];
 };
 
 type AdminKioskPageResponse = {

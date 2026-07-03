@@ -4,7 +4,7 @@ import { KioskButtonAddModal } from '@/features/kiosk/manage/KioskButtonAddModal
 import { KioskButtonByKioskPanel } from '@/features/kiosk/manage/KioskButtonByKioskPanel';
 import { KioskButtonCatalogGrid } from '@/features/kiosk/manage/KioskButtonCatalogGrid';
 import { KioskButtonEditModal } from '@/features/kiosk/manage/KioskButtonEditModal';
-import { KioskButtonSubtitleModal } from '@/features/kiosk/manage/KioskButtonSubtitleModal';
+import { KioskSubtitleSheet } from '@/features/kiosk/manage/KioskSubtitleSheet';
 import {
   formatKioskButtonStatusLabel,
   isKioskButtonStatusActive,
@@ -25,7 +25,7 @@ export default function KioskButtonManagePage() {
   const { updateKioskButtonAsync } = useUpdateKioskButton();
   const [modal, setModal] = useState<PlaceholderModal>(null);
   const [editButton, setEditButton] = useState<KioskButtonDto | null>(null);
-  const [subtitleButton, setSubtitleButton] = useState<KioskButtonDto | null>(null);
+  const [focusButtonId, setFocusButtonId] = useState<number | null>(null);
   const [viewButton, setViewButton] = useState<KioskButtonDto | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<KioskButtonDto | null>(null);
   const [deletingButtonId, setDeletingButtonId] = useState<number | null>(null);
@@ -38,7 +38,7 @@ export default function KioskButtonManagePage() {
   useEffect(() => {
     setModal(null);
     setEditButton(null);
-    setSubtitleButton(null);
+    setFocusButtonId(null);
     setDeleteTarget(null);
     setDeletingButtonId(null);
     setTogglingButtonId(null);
@@ -82,13 +82,20 @@ export default function KioskButtonManagePage() {
   }, [deleteTarget, deleteKioskButtonAsync]);
 
   const onCatalogCardAction = useCallback(
-    async (action: 'edit' | 'toggle' | 'delete' | 'view', button: KioskButtonDto) => {
+    async (action: 'edit' | 'toggle' | 'delete' | 'view' | 'subtitle', button: KioskButtonDto) => {
       if (action === 'view') {
         setViewButton(button);
         return;
       }
       if (action === 'edit') {
         setEditButton(button);
+        return;
+      }
+      // 자막/영상·이미지 편집은 WITH별 탭의 시트에서 수행 — 해당 버튼의 WITH로 전환 + 행 포커스.
+      if (action === 'subtitle') {
+        if (button.kioskId != null) m.setByKioskId(String(button.kioskId));
+        m.setTab('byKiosk');
+        setFocusButtonId(button.id);
         return;
       }
       if (action === 'toggle') {
@@ -119,7 +126,7 @@ export default function KioskButtonManagePage() {
         return;
       }
     },
-    [updateKioskButtonAsync],
+    [updateKioskButtonAsync, m],
   );
 
   return (
@@ -160,7 +167,7 @@ export default function KioskButtonManagePage() {
           </div>
         </div>
         <p className={styles.tabBarHint}>
-          위치는 줄·칸(0부터) · WITH별 탭에서 한 줄당 버튼 수 조절 + 드래그로 위치 교체 · 아이콘은 프리셋에서 선택
+          위치는 열(1~8)·칸(1~4) · 3~6열만 드래그 배치 · 자막/영상·이미지는 WITH별 탭의 시트에서 바로 편집
         </p>
       </div>
 
@@ -176,14 +183,6 @@ export default function KioskButtonManagePage() {
       {editButton ? (
         <KioskButtonEditModal open onClose={closeEditModal} button={editButton} onSuccess={setNotice} />
       ) : null}
-
-      <KioskButtonSubtitleModal
-        open={!!subtitleButton}
-        kioskId={m.selectedKioskIdNum}
-        button={subtitleButton}
-        onClose={() => setSubtitleButton(null)}
-        onNotice={setNotice}
-      />
 
       <DetailModal
         open={!!viewButton}
@@ -283,20 +282,26 @@ export default function KioskButtonManagePage() {
       )}
 
       {m.tab === 'byKiosk' && (
-        <KioskButtonByKioskPanel
-          buttons={m.byKioskAllButtons}
-          isLoading={m.byKioskAllLoading || m.kiosksLoading}
-          kioskName={m.selectedKioskName}
-          kioskId={m.selectedKioskIdNum}
-          byKioskId={m.byKioskId}
-          onByKioskId={m.setByKioskId}
-          kioskOptions={m.kioskSelectOptions}
-          buttonsPerLine={m.selectedButtonsPerLine}
-          lineCapacities={m.selectedLineCapacities}
-          onEditButton={(b) => setEditButton(b)}
-          onEditSubtitle={(b) => setSubtitleButton(b)}
-          onNotice={setNotice}
-        />
+        <>
+          <KioskButtonByKioskPanel
+            buttons={m.byKioskAllButtons}
+            isLoading={m.byKioskAllLoading || m.kiosksLoading}
+            kioskName={m.selectedKioskName}
+            kioskId={m.selectedKioskIdNum}
+            byKioskId={m.byKioskId}
+            onByKioskId={m.setByKioskId}
+            kioskOptions={m.kioskSelectOptions}
+            onEditButton={(b) => setEditButton(b)}
+            onFocusButton={(b) => setFocusButtonId(b.id)}
+            onNotice={setNotice}
+          />
+          <KioskSubtitleSheet
+            kioskId={m.selectedKioskIdNum}
+            buttons={m.byKioskAllButtons}
+            onNotice={setNotice}
+            focusButtonId={focusButtonId}
+          />
+        </>
       )}
     </div>
   );

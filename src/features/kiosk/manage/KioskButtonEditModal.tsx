@@ -2,7 +2,7 @@ import { useCallback, useEffect, useId, useMemo, useState, type FormEvent } from
 import type { AxiosError } from 'axios';
 import shared from '@commons/shared.module.css';
 import { KioskIconPicker } from '@/features/kiosk/kioskAppIcons';
-import { PLACEMENT_OPTIONS } from '@/features/kiosk/manage/constants';
+import { PLACEMENT_OPTIONS, SPAN_OPTIONS, positionLabel } from '@/features/kiosk/manage/constants';
 import { resolveKioskButtonIconKey } from '@/features/kiosk/manage/kioskButtonDisplay';
 import styles from '@/features/kiosk/manage/KioskAppManagePage.module.css';
 import { useUpdateKioskButton } from '@/hooks/kiosk-api/useUpdateKioskButton';
@@ -45,6 +45,7 @@ export function KioskButtonEditModal({ open, onClose, button, onSuccess }: Props
   const [iconKey, setIconKey] = useState('map');
   const [status, setStatus] = useState<string>('ACTIVE');
   const [placement, setPlacement] = useState<ButtonPlacement>('MAIN');
+  const [span, setSpan] = useState<number>(1);
   const [fieldErrors, setFieldErrors] = useState<FormErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -58,6 +59,7 @@ export function KioskButtonEditModal({ open, onClose, button, onSuccess }: Props
     setIconKey(resolveKioskButtonIconKey(button.iconKey));
     setStatus(button.status === 'INACTIVE' ? 'INACTIVE' : 'ACTIVE');
     setPlacement((button.placement as ButtonPlacement) ?? 'MAIN');
+    setSpan(button.span === 2 ? 2 : 1);
   }, [open, button, resetMutation]);
 
   const busy = isPending || placementPending;
@@ -87,6 +89,7 @@ export function KioskButtonEditModal({ open, onClose, button, onSuccess }: Props
             buttonName: nameTrim,
             line: button.line,
             position: button.position,
+            span,
             iconKey: resolveKioskButtonIconKey(iconKey),
             status,
           },
@@ -109,6 +112,7 @@ export function KioskButtonEditModal({ open, onClose, button, onSuccess }: Props
       iconKey,
       status,
       placement,
+      span,
       updateKioskButtonAsync,
       updatePlacementAsync,
       onClose,
@@ -218,13 +222,30 @@ export function KioskButtonEditModal({ open, onClose, button, onSuccess }: Props
                   ))}
                 </select>
               </div>
+              <div className={styles.field}>
+                <label className={styles.fieldLabel} htmlFor={`${uid}-span`}>
+                  폭 (칸 수)
+                </label>
+                <select
+                  id={`${uid}-span`}
+                  className={styles.select}
+                  value={span}
+                  onChange={(e) => setSpan(Number(e.target.value))}
+                >
+                  {SPAN_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
             <p className={styles.formHint} style={{ marginTop: 0 }}>
               {placement === 'MAIN'
-                ? `그리드 표시 · 현재 줄 ${button.line}·위치 ${button.position} (위치 변경은 미리보기에서 드래그)`
+                ? `그리드 표시 · 현재 ${positionLabel(button.line, button.position, button.span)} (위치 변경은 미리보기에서 드래그 · 폭 변경 시 자동 재배치)`
                 : placement === 'FIXED'
-                  ? '메인 화면에 표시되지만 위치는 고정(그리드 레이아웃 제외)'
-                  : '메인 화면에 표시하지 않음(그리드 레이아웃 제외)'}
+                  ? '메인 화면에 표시되지만 위치는 고정(1·2·7열)'
+                  : '메인 화면에 표시하지 않음'}
             </p>
             <div className={styles.field}>
               <span className={styles.fieldLabel} id={`${uid}-icon-hint`}>

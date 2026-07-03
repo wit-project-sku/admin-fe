@@ -20,7 +20,10 @@ type Props = {
   totalPages: number;
   totalElements: number;
   onPageChange: (page: number) => void;
-  onCardAction: (action: 'edit' | 'toggle' | 'delete' | 'view', button: KioskButtonDto) => void;
+  onCardAction: (
+    action: 'edit' | 'toggle' | 'delete' | 'view' | 'subtitle',
+    button: KioskButtonDto,
+  ) => void;
 };
 
 function formatTotalDurationSec(sec: number): string {
@@ -104,6 +107,15 @@ export function KioskButtonCatalogGrid({
               <div className={styles.actions} onClick={(e) => e.stopPropagation()}>
                 <button type='button' className={shared.btnOutline} onClick={() => onCardAction('edit', b)} disabled={busy}>
                   상세
+                </button>
+                <button
+                  type='button'
+                  className={shared.btnOutline}
+                  onClick={() => onCardAction('subtitle', b)}
+                  disabled={busy}
+                  title='자막/영상·이미지 편집 (WITH별 시트로 이동)'
+                >
+                  자막/영상
                 </button>
                 <button type='button' className={shared.btnOutline} onClick={() => onCardAction('toggle', b)} disabled={busy}>
                   {toggling ? '처리 중…' : active ? '비활성화' : '활성화'}

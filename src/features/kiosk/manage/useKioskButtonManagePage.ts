@@ -3,7 +3,6 @@ import { useKioskButtons, useKioskButtonsPaged } from '@/hooks/kiosk-api/useKios
 import type { KioskButtonDto } from '@/hooks/kiosk-api/kioskButtonsTypes';
 import { useGetKiosks } from '@/hooks/useGetKiosks';
 import {
-  DEFAULT_BUTTONS_PER_LINE,
   KIOSK_BUTTON_MANAGE_PAGE_SIZE,
   MAX_BUTTONS_PER_KIOSK,
   sortByLinePosition,
@@ -66,16 +65,6 @@ export function useKioskButtonManagePage() {
     [byKioskAll.data],
   );
 
-  const selectedKiosk = useMemo(
-    () => kiosks.find((k) => String(k.id) === byKioskId),
-    [kiosks, byKioskId],
-  );
-  const selectedButtonsPerLine = selectedKiosk?.buttonsPerLine ?? DEFAULT_BUTTONS_PER_LINE;
-  const selectedLineCapacities = useMemo(
-    () => (Array.isArray(selectedKiosk?.lineCapacities) ? selectedKiosk!.lineCapacities! : []),
-    [selectedKiosk],
-  );
-
   const kioskSelectOptions = useMemo(
     () =>
       kiosks.map((k) => ({
@@ -115,7 +104,5 @@ export function useKioskButtonManagePage() {
     byKioskAllButtons,
     byKioskAllLoading: byKioskAll.isLoading,
     selectedKioskIdNum: kioskIdNum,
-    selectedButtonsPerLine,
-    selectedLineCapacities,
   };
 }

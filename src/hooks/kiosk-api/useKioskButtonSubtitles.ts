@@ -43,11 +43,32 @@ export function useKioskButtonSubtitles(params: {
   });
 }
 
-/** 자막 생성/수정/삭제 뮤테이션. 성공 시 해당 버튼의 목록을 무효화. */
+/** 한 키오스크의 자막 전체 (시트 편집용, buttonId 필터 없음). */
+export function useKioskSubtitlesByKiosk(kioskId?: number, enabled = true) {
+  return useQuery({
+    queryKey: [SUBTITLES_KEY, 'by-kiosk', kioskId ?? ''],
+    enabled: enabled && typeof kioskId === 'number',
+    queryFn: async (): Promise<KioskSubtitleDto[]> => {
+      const body = await APIService.private.get<BaseEnvelope<SubtitlePage>>(
+        '/admin/kiosks/subtitles',
+        { params: { kioskId, pageNum: 1, pageSize: 500 } },
+      );
+      const list = body?.data?.content ?? [];
+      return [...list].sort(
+        (a, b) => (a.buttonId ?? 0) - (b.buttonId ?? 0) || a.sortOrder - b.sortOrder || a.id - b.id,
+      );
+    },
+    staleTime: 15 * 1000,
+  });
+}
+
+/** 자막 생성/수정/삭제 뮤테이션. 성공 시 자막 목록(버튼별·키오스크별)을 무효화. */
 export function useKioskSubtitleMutations(kioskId?: number, buttonId?: number) {
   const qc = useQueryClient();
-  const invalidate = () =>
-    qc.invalidateQueries({ queryKey: [SUBTITLES_KEY, kioskId ?? '', buttonId ?? ''] });
+  const invalidate = () => {
+    void qc.invalidateQueries({ queryKey: [SUBTITLES_KEY, kioskId ?? '', buttonId ?? ''] });
+    void qc.invalidateQueries({ queryKey: [SUBTITLES_KEY, 'by-kiosk', kioskId ?? ''] });
+  };
 
   const create = useMutation({
     mutationFn: async (payload: KioskSubtitlePayload) => {
