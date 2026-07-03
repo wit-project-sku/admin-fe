@@ -11,6 +11,7 @@ import {
 import { useKioskButtonImage } from '@/hooks/kiosk-api/useKioskButtonImage';
 import { KioskMirrorPreview, type MoveRequest } from './KioskMirrorPreview';
 import { KioskMirrorHwaseong } from './KioskMirrorHwaseong';
+import { KioskMirrorGridApp, INSADONG_SKIN, OSAN_SKIN } from './KioskMirrorGridApp';
 import { PLACEMENT_OPTIONS, SPAN_OPTIONS, positionLabel } from './constants';
 import { resolveKioskButtonIconKey } from './kioskButtonDisplay';
 import styles from './KioskAppManagePage.module.css';
@@ -203,25 +204,49 @@ export function KioskButtonByKioskPanel({
           </div>
           {isLoading ? (
             <p className={styles.emptyState}>불러오는 중…</p>
-          ) : kioskId === 5 || (kioskName ?? '').includes('화성') || (kioskName ?? '').includes('휴게소') ? (
-            // 화성휴게소 — kiosk-electron HwaseongHome 레이아웃을 그대로 이식한 실사 미러.
-            <KioskMirrorHwaseong
-              buttons={buttons}
-              onMove={requestMove}
-              onSelect={onSelectButton}
-              selectedId={selectedId}
-              disabled={moving}
-            />
           ) : (
-            <KioskMirrorPreview
-              buttons={buttons}
-              kioskId={kioskId}
-              kioskName={kioskName}
-              onMove={requestMove}
-              onSelect={onSelectButton}
-              selectedId={selectedId}
-              disabled={moving}
-            />
+            (() => {
+              // 키오스크별 실사 미러 — kiosk-electron 레이아웃(HwaseongHome/InsadongHome/OsanHome)을
+              // 그대로 이식. 매칭 안 되는 키오스크는 기존 제네릭 미러로 폴백.
+              const name = kioskName ?? '';
+              const isHwaseong = kioskId === 5 || name.includes('화성') || name.includes('휴게소');
+              const isOsan = kioskId === 4 || name.includes('오색') || name.includes('오산');
+              const isInsadong = kioskId === 1 || kioskId === 2 || kioskId === 3 || name.includes('인사동');
+              if (isHwaseong) {
+                return (
+                  <KioskMirrorHwaseong
+                    buttons={buttons}
+                    onMove={requestMove}
+                    onSelect={onSelectButton}
+                    selectedId={selectedId}
+                    disabled={moving}
+                  />
+                );
+              }
+              if (isOsan || isInsadong) {
+                return (
+                  <KioskMirrorGridApp
+                    buttons={buttons}
+                    skin={isOsan ? OSAN_SKIN : INSADONG_SKIN}
+                    onMove={requestMove}
+                    onSelect={onSelectButton}
+                    selectedId={selectedId}
+                    disabled={moving}
+                  />
+                );
+              }
+              return (
+                <KioskMirrorPreview
+                  buttons={buttons}
+                  kioskId={kioskId}
+                  kioskName={kioskName}
+                  onMove={requestMove}
+                  onSelect={onSelectButton}
+                  selectedId={selectedId}
+                  disabled={moving}
+                />
+              );
+            })()
           )}
         </div>
 
