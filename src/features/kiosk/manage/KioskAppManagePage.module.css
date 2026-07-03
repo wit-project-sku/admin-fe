@@ -1043,3 +1043,23 @@
 /* 언어 헤더 전체를 클릭해 접기/펼치기 (작은 버튼 대신 넓은 클릭 영역) */
 .sheetLangHeadClickable { cursor: pointer; user-select: none; }
 .sheetLangHeadClickable:hover { background: #e2ecf8 !important; }
+
+/* ===== 모든 컬럼 개별 접기/펼치기 + 넓힌 입력 ===== */
+/* 클릭 가능한 컬럼 헤더(고정열·서브헤더) */
+.sheetColHeadClickable { cursor: pointer; user-select: none; }
+.sheetColHeadClickable:hover { background: #eef2f7 !important; }
+/* 접힌 컬럼 헤더 — 얇은 세로 라벨 */
+.sheetCollapsedHead {
+  cursor: pointer; user-select: none; width: 26px; min-width: 26px; max-width: 26px;
+  padding: 4px 0 !important; background: #eef2f7 !important; text-align: center;
+}
+.sheetCollapsedHead:hover { background: #dbe4ee !important; }
+.sheetCollapsedLabel {
+  writing-mode: vertical-rl; font-size: 11px; color: #475569; font-weight: 600; white-space: nowrap;
+  display: inline-block; line-height: 1;
+}
+/* 접힌 컬럼 본문 셀 폭 고정 */
+.sheetExcel td.sheetCollapsedCell { width: 26px; min-width: 26px; max-width: 26px; }
+/* 입력 칸을 넓게(약 1.5~2배) — 접을 수 있으므로 */
+.sheetExcel td .sheetInput { width: 240px; min-width: 240px; }
+.sheetExcel td .sheetMono { width: 150px; min-width: 150px; }

@@ -256,16 +256,43 @@ export function KioskSubtitleSheet({ kioskId, button, onNotice }: Props) {
     }
   };
 
-  const toggleCollapse = (code: string) =>
+  // 컬럼 단위 접기/펼치기 — 재생키/영상파일명/재생조건 + 언어별 하단중앙/우측상단 각각 개별.
+  const FIXED_COLS: Array<{ key: string; label: string }> = [
+    { key: 'playKey', label: '재생키' },
+    { key: 'videoFileName', label: '영상 파일명' },
+    { key: 'playCondition', label: '재생조건' },
+  ];
+  const langSubKeys = (code: string) => (showRt ? [`main:${code}`, `rt:${code}`] : [`main:${code}`]);
+  const allColKeys = [
+    ...FIXED_COLS.map((c) => c.key),
+    ...langList.flatMap((l) => langSubKeys(l.code)),
+  ];
+  const isCol = (k: string) => collapsed.has(k);
+  const toggleCol = (k: string) =>
     setCollapsed((prev) => {
       const next = new Set(prev);
-      if (next.has(code)) next.delete(code);
-      else next.add(code);
+      if (next.has(k)) next.delete(k);
+      else next.add(k);
       return next;
     });
-  const allCollapsed = langList.length > 0 && langList.every((l) => collapsed.has(l.code));
-  const toggleAll = () =>
-    setCollapsed(allCollapsed ? new Set() : new Set(langList.map((l) => l.code)));
+  // 언어 그룹 헤더 클릭 → 해당 언어의 하단중앙/우측상단을 함께 접거나 편다.
+  const toggleLangGroup = (code: string) => {
+    const keys = langSubKeys(code);
+    const anyOpen = keys.some((k) => !collapsed.has(k));
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      keys.forEach((k) => (anyOpen ? next.add(k) : next.delete(k)));
+      return next;
+    });
+  };
+  const allCollapsed = allColKeys.length > 0 && allColKeys.every((k) => collapsed.has(k));
+  const toggleAll = () => setCollapsed(allCollapsed ? new Set() : new Set(allColKeys));
+  const colLabel = (k: string) =>
+    k.startsWith('main:')
+      ? '하단중앙'
+      : k.startsWith('rt:')
+        ? '우측상단'
+        : (FIXED_COLS.find((c) => c.key === k)?.label ?? k);
 
   const textCell = (
     key: string,
@@ -301,37 +328,32 @@ export function KioskSubtitleSheet({ kioskId, button, onNotice }: Props) {
   ];
   if (entries.length === 0) entries.push({ key: `n${button.id}-auto`, s: null });
 
-  const langColsCount = langList.reduce(
-    (acc, l) => acc + (collapsed.has(l.code) ? 1 : showRt ? 2 : 1),
-    0,
-  );
+  // 접힌 열도 얇은 열로 유지하므로 열 수는 고정(언어수 × (하단중앙[+우측상단])).
+  const langColsCount = langList.length * (showRt ? 2 : 1);
   const totalCols = 3 + langColsCount + 1;
 
+  // 접힌 컬럼의 본문 셀 — 클릭하면 펼침. 값이 있으면 ● 아니면 ·.
+  const collapsedTd = (k: string, key: string, s: KioskSubtitleDto | null): ReactElement => (
+    <td
+      key={k}
+      className={styles.sheetCollapsedCell}
+      title={`${colLabel(k)} 펼치기`}
+      onClick={() => toggleCol(k)}
+    >
+      {valueOf(key, k, s) ? '●' : '·'}
+    </td>
+  );
+
   const langBodyCells = (key: string, s: KioskSubtitleDto | null): ReactElement[] =>
-    langList.flatMap((l) => {
-      if (collapsed.has(l.code)) {
-        const has = !!valueOf(key, `main:${l.code}`, s) || !!valueOf(key, `rt:${l.code}`, s);
-        return [
-          <td
-            key={`${l.code}c`}
-            className={styles.sheetCollapsedCell}
-            title={`${l.code} 펼치기`}
-            onClick={() => toggleCollapse(l.code)}
-          >
-            {has ? '●' : '·'}
-          </td>,
-        ];
-      }
-      const cells = [
-        <td key={`${l.code}m`}>{textCell(key, `main:${l.code}`, s, { placeholder: '하단중앙', limit: true })}</td>,
-      ];
-      if (showRt) {
-        cells.push(
-          <td key={`${l.code}r`}>{textCell(key, `rt:${l.code}`, s, { placeholder: '우측상단' })}</td>,
-        );
-      }
-      return cells;
-    });
+    langList.flatMap((l) =>
+      langSubKeys(l.code).map((k) =>
+        isCol(k) ? (
+          collapsedTd(k, key, s)
+        ) : (
+          <td key={k}>{textCell(key, k, s, { placeholder: colLabel(k), limit: k.startsWith('main:') })}</td>
+        ),
+      ),
+    );
 
   return (
     <div className={`${shared.card} ${styles.sheetWrap}`}>
@@ -339,7 +361,7 @@ export function KioskSubtitleSheet({ kioskId, button, onNotice }: Props) {
         <span className={shared.cardTitle}>자막 · 영상 — {button.buttonType}</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <button type='button' className={shared.btnOutline} onClick={toggleAll}>
-            {allCollapsed ? '언어 모두 펼치기' : '언어 모두 접기'}
+            {allCollapsed ? '모든 열 펼치기' : '모든 열 접기'}
           </button>
           <label className={styles.fieldLabel} style={{ margin: 0, display: 'inline-flex', gap: 4, alignItems: 'center' }}>
             <input type='checkbox' checked={showRt} onChange={(e) => setShowRt(e.target.checked)} />
@@ -379,58 +401,89 @@ export function KioskSubtitleSheet({ kioskId, button, onNotice }: Props) {
         </div>
       </div>
       <p className={styles.formHint} style={{ margin: '4px 0 8px' }}>
-        선택한 버튼의 자막/영상만 편집 · 셀 클릭으로 바로 수정 · 노란 셀 = 저장 전 변경 · 언어 헤더 영역(예: KR · 한국어)을
-        클릭하면 해당 열이 접히거나 펼쳐집니다 · 하단 자막은 최대 2줄(줄당 전각 30자).
+        선택한 버튼의 자막/영상만 편집 · 셀 클릭으로 바로 수정 · 노란 셀 = 저장 전 변경 · 모든 컬럼 헤더(재생키·영상
+        파일명·재생조건·하단중앙·우측상단, 또는 언어명)를 클릭하면 그 열이 접히거나 펼쳐집니다 · 하단 자막은 최대 2줄.
       </p>
       <div className={styles.sheetScroll}>
         <table className={`${styles.sheetTable} ${styles.sheetExcel}`}>
           <thead>
             <tr>
-              <th rowSpan={2}>재생키</th>
-              <th rowSpan={2}>영상 파일명</th>
-              <th rowSpan={2}>재생조건</th>
-              {langList.map((l) => {
-                const isCol = collapsed.has(l.code);
-                return (
+              {FIXED_COLS.map((c) =>
+                isCol(c.key) ? (
                   <th
-                    key={l.code}
-                    colSpan={isCol ? 1 : showRt ? 2 : 1}
-                    className={`${styles.sheetLangHead} ${styles.sheetLangHeadClickable}`}
-                    title={isCol ? `${l.code} 펼치기` : `${l.code} 접기`}
-                    onClick={() => toggleCollapse(l.code)}
+                    key={c.key}
+                    rowSpan={2}
+                    className={styles.sheetCollapsedHead}
+                    title={`${c.label} 펼치기`}
+                    onClick={() => toggleCol(c.key)}
                   >
-                    <span className={styles.sheetLangHeadInner}>
-                      <span className={styles.sheetCollapseBtn} aria-hidden>
-                        {isCol ? '▸' : '▾'}
-                      </span>
-                      {l.code}
-                      {!isCol ? <span className={styles.sheetLangName}> · {l.name}</span> : null}
-                      {!l.base ? (
-                        <button
-                          type='button'
-                          className={styles.sheetLangDel}
-                          title={`${l.code} 언어 열 삭제`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            void removeLanguage(l.code);
-                          }}
-                        >
-                          ×
-                        </button>
-                      ) : null}
-                    </span>
+                    <span className={styles.sheetCollapsedLabel}>{c.label}</span>
                   </th>
-                );
-              })}
+                ) : (
+                  <th
+                    key={c.key}
+                    rowSpan={2}
+                    className={styles.sheetColHeadClickable}
+                    title={`${c.label} 접기`}
+                    onClick={() => toggleCol(c.key)}
+                  >
+                    {c.label}
+                  </th>
+                ),
+              )}
+              {langList.map((l) => (
+                <th
+                  key={l.code}
+                  colSpan={showRt ? 2 : 1}
+                  className={`${styles.sheetLangHead} ${styles.sheetLangHeadClickable}`}
+                  title={`${l.code} 전체 접기/펼치기`}
+                  onClick={() => toggleLangGroup(l.code)}
+                >
+                  <span className={styles.sheetLangHeadInner}>
+                    {l.code}
+                    <span className={styles.sheetLangName}> · {l.name}</span>
+                    {!l.base ? (
+                      <button
+                        type='button'
+                        className={styles.sheetLangDel}
+                        title={`${l.code} 언어 열 삭제`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          void removeLanguage(l.code);
+                        }}
+                      >
+                        ×
+                      </button>
+                    ) : null}
+                  </span>
+                </th>
+              ))}
               <th rowSpan={2} aria-label='행 삭제' />
             </tr>
             <tr>
-              {langList.flatMap((l) => {
-                if (collapsed.has(l.code)) return [<th key={`${l.code}c`} className={styles.sheetSubHead} />];
-                const heads = [<th key={`${l.code}m`} className={styles.sheetSubHead}>하단중앙</th>];
-                if (showRt) heads.push(<th key={`${l.code}r`} className={styles.sheetSubHead}>우측상단</th>);
-                return heads;
-              })}
+              {langList.flatMap((l) =>
+                langSubKeys(l.code).map((k) =>
+                  isCol(k) ? (
+                    <th
+                      key={k}
+                      className={styles.sheetCollapsedHead}
+                      title={`${colLabel(k)} 펼치기`}
+                      onClick={() => toggleCol(k)}
+                    >
+                      <span className={styles.sheetCollapsedLabel}>{colLabel(k)}</span>
+                    </th>
+                  ) : (
+                    <th
+                      key={k}
+                      className={`${styles.sheetSubHead} ${styles.sheetColHeadClickable}`}
+                      title={`${colLabel(k)} 접기`}
+                      onClick={() => toggleCol(k)}
+                    >
+                      {colLabel(k)}
+                    </th>
+                  ),
+                ),
+              )}
             </tr>
           </thead>
           <tbody>
@@ -444,9 +497,15 @@ export function KioskSubtitleSheet({ kioskId, button, onNotice }: Props) {
               <>
                 {entries.map(({ key, s }) => (
                   <tr key={key} className={styles.sheetBtnRow}>
-                    <td>{textCell(key, 'playKey', s, { mono: true, placeholder: '자동' })}</td>
-                    <td>{textCell(key, 'videoFileName', s, { mono: true, placeholder: '영상 파일명' })}</td>
-                    <td>{textCell(key, 'playCondition', s, { mono: true, placeholder: '재생조건' })}</td>
+                    {FIXED_COLS.map((c) =>
+                      isCol(c.key) ? (
+                        collapsedTd(c.key, key, s)
+                      ) : (
+                        <td key={c.key}>
+                          {textCell(key, c.key, s, { mono: true, placeholder: c.label })}
+                        </td>
+                      ),
+                    )}
                     {langBodyCells(key, s)}
                     <td>
                       {s ? (
