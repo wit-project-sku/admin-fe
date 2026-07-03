@@ -49,6 +49,35 @@ export function placementLabel(p?: string): string {
   return '그리드';
 }
 
+/** 키오스크별 테마(실기기 디자인 근사) — 인사동=코랄, 오색=네이비, 화성=그린. */
+export type KioskTheme = {
+  accent: string;
+  bg: string;
+  tileBg: string;
+  location: string;
+};
+
+export function kioskTheme(kioskId?: number, kioskName?: string): KioskTheme {
+  const name = kioskName ?? '';
+  if (kioskId === 4 || name.includes('오색') || name.includes('오산')) {
+    return { accent: '#1C5FA8', bg: '#EAF3FB', tileBg: '#F4F9FE', location: '오색시장' };
+  }
+  if (kioskId === 5 || name.includes('화성') || name.includes('휴게소')) {
+    // 화성휴게소 실기기 테마 = 파란색(Figma). 오색(네이비)과 구분되는 밝은 블루.
+    return { accent: '#2680EB', bg: '#E9F3FC', tileBg: '#F2F8FE', location: '화성휴게소' };
+  }
+  return { accent: '#E8663C', bg: '#FBF3E6', tileBg: '#FBEFE0', location: '인사동' };
+}
+
+/** 파스텔 타일 배경 팔레트 — position 인덱스로 순환(이미지 없는 버튼용). */
+const TILE_PALETTE = [
+  '#FDE6DA', '#E9DCC3', '#CFE3F7', '#F5D9C9', '#F3E3B8', '#CBE7DC',
+  '#F7D6E0', '#E7DFF7', '#DDEBC6', '#FBE1B8', '#D7ECF5', '#F5DCE6',
+];
+export function tileBgFor(seed: number): string {
+  return TILE_PALETTE[Math.abs(seed) % TILE_PALETTE.length];
+}
+
 /** 버튼을 (line → position) 오름차순으로 정렬. */
 export function sortByLinePosition(list: KioskButtonDto[]): KioskButtonDto[] {
   return [...list].sort(

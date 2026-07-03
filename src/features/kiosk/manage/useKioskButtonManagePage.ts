@@ -9,7 +9,8 @@ import {
 } from './constants';
 
 export function useKioskButtonManagePage() {
-  const [tab, setTab] = useState<'all' | 'byKiosk'>('all');
+  // 탭 구분 제거 — 항상 '키오스크 별' 단일 뷰. (setTab는 하위 호환용으로 유지)
+  const [tab, setTab] = useState<'all' | 'byKiosk'>('byKiosk');
   const [byKioskId, setByKioskId] = useState('');
   const [page, setPage] = useState(1);
 

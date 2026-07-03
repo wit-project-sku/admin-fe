@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import shared from '@commons/shared.module.css';
 import type { KioskButtonDto } from '@/hooks/kiosk-api/kioskButtonsTypes';
 import type {
@@ -10,20 +10,17 @@ import {
   useKioskSubtitleMutations,
   useKioskSubtitlesByKiosk,
 } from '@/hooks/kiosk-api/useKioskButtonSubtitles';
-import { useKioskButtonImage } from '@/hooks/kiosk-api/useKioskButtonImage';
 import {
   useSubtitleLanguageMutations,
   useSubtitleLanguages,
 } from '@/hooks/kiosk-api/useSubtitleLanguages';
-import { positionLabel, sortByLinePosition } from './constants';
 import styles from './KioskAppManagePage.module.css';
 
 type Props = {
   kioskId?: number;
-  buttons: KioskButtonDto[];
+  /** 미리보기에서 선택된 버튼 — 이 버튼의 자막/영상만 편집. null이면 시트 미표시. */
+  button: KioskButtonDto | null;
   onNotice?: (msg: string) => void;
-  /** 미리보기 타일 클릭 → 해당 버튼 행으로 스크롤 */
-  focusButtonId?: number | null;
 };
 
 /**
@@ -66,35 +63,33 @@ function fieldOf(s: KioskSubtitleDto | null, field: string): string {
   return (kind === 'main' ? t?.main : t?.rt) ?? '';
 }
 
-/** 자막·영상 시트 — 모달 없이 셀 직접 편집, 언어 선택/추가, 하단 자막 2줄 제한. */
-export function KioskSubtitleSheet({ kioskId, buttons, onNotice, focusButtonId }: Props) {
+/** 자막·영상 시트 — 선택 버튼 1개 스코프 · 전 언어 열 · 언어 그룹 접기/펼치기. */
+export function KioskSubtitleSheet({ kioskId, button, onNotice }: Props) {
   const { data: subtitles, isLoading } = useKioskSubtitlesByKiosk(kioskId);
   const { createSubtitle, updateSubtitle, deleteSubtitle } = useKioskSubtitleMutations(kioskId);
-  const { uploadImageAsync, deleteImageAsync } = useKioskButtonImage();
   const { data: languages } = useSubtitleLanguages();
   const { addLanguageAsync, deleteLanguageAsync } = useSubtitleLanguageMutations();
 
-  const [lang, setLang] = useState('KR');
   const [addingLang, setAddingLang] = useState(false);
   const [newLangCode, setNewLangCode] = useState('');
   const [newLangName, setNewLangName] = useState('');
+  const [showRt, setShowRt] = useState(true);
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [drafts, setDrafts] = useState<Drafts>({});
   const [newRows, setNewRows] = useState<Array<{ key: string; buttonId: number }>>([]);
   const [saving, setSaving] = useState(false);
-  const [uploadingId, setUploadingId] = useState<number | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const pendingUploadButton = useRef<number | null>(null);
-  const rowRefs = useRef<Map<number, HTMLTableRowElement>>(new Map());
+  const prevButtonId = useRef<number | null>(null);
 
-  useEffect(() => {
-    setDrafts({});
-    setNewRows([]);
-  }, [kioskId]);
+  const buttonId = button?.id ?? null;
 
+  // 선택 버튼이 바뀌면 편집 드래프트 초기화
   useEffect(() => {
-    if (focusButtonId == null) return;
-    rowRefs.current.get(focusButtonId)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, [focusButtonId]);
+    if (prevButtonId.current !== buttonId) {
+      prevButtonId.current = buttonId;
+      setDrafts({});
+      setNewRows([]);
+    }
+  }, [buttonId]);
 
   const langList = languages ?? [
     { code: 'KR', name: '한국어', sortOrder: 1, base: true },
@@ -102,24 +97,11 @@ export function KioskSubtitleSheet({ kioskId, buttons, onNotice, focusButtonId }
     { code: 'JP', name: '日本語', sortOrder: 3, base: true },
     { code: 'CN', name: '中文', sortOrder: 4, base: true },
   ];
-  const currentLang = langList.find((l) => l.code === lang) ?? langList[0];
 
-  // 모든 버튼을 자막 편집 대상으로 노출 — 화면 표시(line>=1) 먼저, 미표시(OFF_MAIN, line<1) 는 뒤로.
-  const visibleButtons = useMemo(() => {
-    const shown = sortByLinePosition(buttons.filter((b) => b.line >= 1));
-    const hidden = buttons.filter((b) => b.line < 1).sort((a, b) => a.id - b.id);
-    return [...shown, ...hidden];
-  }, [buttons]);
-  const byButton = useMemo(() => {
-    const m = new Map<number, KioskSubtitleDto[]>();
-    (subtitles ?? []).forEach((s) => {
-      if (s.buttonId == null) return;
-      const list = m.get(s.buttonId) ?? [];
-      list.push(s);
-      m.set(s.buttonId, list);
-    });
-    return m;
-  }, [subtitles]);
+  const buttonSubs = useMemo(
+    () => (subtitles ?? []).filter((s) => s.buttonId === buttonId),
+    [subtitles, buttonId],
+  );
 
   const setDraft = (key: string, field: string, value: string) =>
     setDrafts((prev) => ({ ...prev, [key]: { ...prev[key], [field]: value } }));
@@ -132,7 +114,6 @@ export function KioskSubtitleSheet({ kioskId, buttons, onNotice, focusButtonId }
     return d !== undefined && d !== fieldOf(s, field);
   };
 
-  // 행 하나의 드래프트가 실제 변경/입력을 담고 있나
   const rowHasChange = (key: string, s: KioskSubtitleDto | null) => {
     const d = drafts[key];
     if (!d) return false;
@@ -155,7 +136,6 @@ export function KioskSubtitleSheet({ kioskId, buttons, onNotice, focusButtonId }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [drafts, subtitles]);
 
-  // 2줄 초과 셀 존재 여부 (모든 언어의 main 드래프트 검사)
   const overLimitExists = useMemo(
     () =>
       Object.values(drafts).some((d) =>
@@ -171,14 +151,12 @@ export function KioskSubtitleSheet({ kioskId, buttons, onNotice, focusButtonId }
     setNewRows([]);
   };
 
-  // 저장 payload: 원본 전체 필드 보존 + 모든 언어의 드래프트 병합
-  const buildPayload = (key: string, s: KioskSubtitleDto | null, buttonId: number): KioskSubtitlePayload => {
+  const buildPayload = (key: string, s: KioskSubtitleDto | null, bId: number): KioskSubtitlePayload => {
     const d = drafts[key] ?? {};
     const baseText = (kind: 'main' | 'rt', code: string) => {
       const f = `${kind}:${code}`;
       return d[f] !== undefined ? d[f] || null : fieldOf(s, f) || null;
     };
-    // extraTexts: 원본 + 드래프트(비기본 언어) 병합
     const extra: Record<string, SubtitleLangText> = { ...(s?.extraTexts ?? {}) };
     Object.entries(d).forEach(([f, v]) => {
       const [kind, code] = f.split(':');
@@ -188,7 +166,7 @@ export function KioskSubtitleSheet({ kioskId, buttons, onNotice, focusButtonId }
     });
     return {
       kioskId: kioskId!,
-      buttonId,
+      buttonId: bId,
       playKey: d.playKey !== undefined ? d.playKey || null : (s?.playKey ?? null),
       videoFileName:
         d.videoFileName !== undefined ? d.videoFileName || null : (s?.videoKey ?? null),
@@ -209,7 +187,7 @@ export function KioskSubtitleSheet({ kioskId, buttons, onNotice, focusButtonId }
   };
 
   const saveAll = async () => {
-    if (!kioskId || dirtyCount.total === 0) return;
+    if (!kioskId || !buttonId || dirtyCount.total === 0) return;
     if (overLimitExists) {
       onNotice?.('하단 중앙 자막이 2줄을 넘는 셀이 있습니다. 빨간 셀을 줄여주세요.');
       return;
@@ -227,8 +205,6 @@ export function KioskSubtitleSheet({ kioskId, buttons, onNotice, focusButtonId }
           ok += 1;
         } else {
           if (!Object.values(drafts[key]).some((v) => (v ?? '').trim() !== '')) continue;
-          const buttonId = Number(key.slice(1).split('-')[0]);
-          if (!Number.isInteger(buttonId) || buttonId <= 0) continue;
           await createSubtitle(buildPayload(key, null, buttonId));
           ok += 1;
         }
@@ -262,55 +238,32 @@ export function KioskSubtitleSheet({ kioskId, buttons, onNotice, focusButtonId }
       setAddingLang(false);
       setNewLangCode('');
       setNewLangName('');
-      setLang(code);
-      onNotice?.(`${code} 언어가 추가되었습니다. 기존 자막의 ${code} 텍스트는 빈 값으로 시작합니다.`);
+      onNotice?.(`${code} 언어 열이 추가되었습니다. 기존 자막의 ${code} 텍스트는 빈 값으로 시작합니다.`);
     } catch (err) {
       onNotice?.(err instanceof Error ? err.message : '언어를 추가하지 못했습니다.');
     }
   };
 
-  const removeLanguage = async () => {
-    if (!currentLang || currentLang.base) return;
-    if (!window.confirm(`${currentLang.code}(${currentLang.name}) 언어를 삭제할까요? 입력된 텍스트 데이터는 보존됩니다.`))
-      return;
+  const removeLanguage = async (code: string) => {
+    if (!window.confirm(`${code} 언어 열을 삭제할까요? 입력된 텍스트 데이터는 보존됩니다.`)) return;
     try {
-      await deleteLanguageAsync(currentLang.code);
-      setLang('KR');
+      await deleteLanguageAsync(code);
       onNotice?.('언어가 삭제되었습니다.');
     } catch (err) {
       onNotice?.(err instanceof Error ? err.message : '언어를 삭제하지 못했습니다.');
     }
   };
 
-  const pickImage = (buttonId: number) => {
-    pendingUploadButton.current = buttonId;
-    fileInputRef.current?.click();
-  };
-
-  const onFilePicked = async (file: File | null) => {
-    const buttonId = pendingUploadButton.current;
-    pendingUploadButton.current = null;
-    if (!file || buttonId == null) return;
-    try {
-      setUploadingId(buttonId);
-      await uploadImageAsync({ buttonId, file });
-      onNotice?.('버튼 이미지가 업로드되었습니다.');
-    } catch (err) {
-      onNotice?.(err instanceof Error ? err.message : '이미지를 업로드하지 못했습니다.');
-    } finally {
-      setUploadingId(null);
-    }
-  };
-
-  const removeImage = async (b: KioskButtonDto) => {
-    if (!window.confirm(`${b.buttonType} 버튼 이미지를 제거할까요? (프리셋 아이콘으로 복귀)`)) return;
-    try {
-      await deleteImageAsync(b.id);
-      onNotice?.('버튼 이미지가 제거되었습니다.');
-    } catch (err) {
-      onNotice?.(err instanceof Error ? err.message : '이미지를 제거하지 못했습니다.');
-    }
-  };
+  const toggleCollapse = (code: string) =>
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(code)) next.delete(code);
+      else next.add(code);
+      return next;
+    });
+  const allCollapsed = langList.length > 0 && langList.every((l) => collapsed.has(l.code));
+  const toggleAll = () =>
+    setCollapsed(allCollapsed ? new Set() : new Set(langList.map((l) => l.code)));
 
   const textCell = (
     key: string,
@@ -321,7 +274,7 @@ export function KioskSubtitleSheet({ kioskId, buttons, onNotice, focusButtonId }
     const value = valueOf(key, field, s);
     const over = opts?.limit && subtitleLineCount(value) > MAIN_MAX_LINES;
     return (
-      <div>
+      <>
         <input
           type='text'
           className={`${styles.sheetInput} ${opts?.mono ? styles.sheetMono : ''} ${
@@ -333,37 +286,66 @@ export function KioskSubtitleSheet({ kioskId, buttons, onNotice, focusButtonId }
           disabled={saving}
           title={opts?.limit ? `키오스크 화면 기준 최대 ${MAIN_MAX_LINES}줄 (줄당 전각 ${MAIN_CHARS_PER_LINE}자)` : undefined}
         />
-        {over ? <span className={styles.sheetLimitHint}>2줄 초과 — 줄여주세요</span> : null}
-      </div>
+        {over ? <span className={styles.sheetLimitHint}>2줄 초과</span> : null}
+      </>
     );
   };
 
-  if (!kioskId) return null;
+  if (!kioskId || !button) return null;
+
+  const entries: Array<{ key: string; s: KioskSubtitleDto | null }> = [
+    ...buttonSubs.map((s) => ({ key: `s${s.id}`, s: s as KioskSubtitleDto | null })),
+    ...newRows.map((r) => ({ key: r.key, s: null })),
+  ];
+  if (entries.length === 0) entries.push({ key: `n${button.id}-auto`, s: null });
+
+  const langColsCount = langList.reduce(
+    (acc, l) => acc + (collapsed.has(l.code) ? 1 : showRt ? 2 : 1),
+    0,
+  );
+  const totalCols = 2 + langColsCount + 1;
+
+  const langBodyCells = (key: string, s: KioskSubtitleDto | null): ReactElement[] =>
+    langList.flatMap((l) => {
+      if (collapsed.has(l.code)) {
+        const has = !!valueOf(key, `main:${l.code}`, s) || !!valueOf(key, `rt:${l.code}`, s);
+        return [
+          <td
+            key={`${l.code}c`}
+            className={styles.sheetCollapsedCell}
+            title={`${l.code} 펼치기`}
+            onClick={() => toggleCollapse(l.code)}
+          >
+            {has ? '●' : '·'}
+          </td>,
+        ];
+      }
+      const cells = [
+        <td key={`${l.code}m`}>{textCell(key, `main:${l.code}`, s, { placeholder: '하단중앙', limit: true })}</td>,
+      ];
+      if (showRt) {
+        cells.push(
+          <td key={`${l.code}r`}>{textCell(key, `rt:${l.code}`, s, { placeholder: '우측상단' })}</td>,
+        );
+      }
+      return cells;
+    });
 
   return (
     <div className={`${shared.card} ${styles.sheetWrap}`}>
       <div className={shared.cardHead}>
-        <span className={shared.cardTitle}>자막 · 영상 시트</span>
+        <span className={shared.cardTitle}>자막 · 영상 — {button.buttonType}</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-          <label className={styles.fieldLabel} htmlFor='sheet-lang' style={{ margin: 0 }}>
-            언어
+          <button type='button' className={shared.btnOutline} onClick={toggleAll}>
+            {allCollapsed ? '언어 모두 펼치기' : '언어 모두 접기'}
+          </button>
+          <label className={styles.fieldLabel} style={{ margin: 0, display: 'inline-flex', gap: 4, alignItems: 'center' }}>
+            <input type='checkbox' checked={showRt} onChange={(e) => setShowRt(e.target.checked)} />
+            우측상단 자막 열
           </label>
-          <select
-            id='sheet-lang'
-            className={styles.select}
-            style={{ width: 'auto', minWidth: 130 }}
-            value={currentLang?.code ?? 'KR'}
-            onChange={(e) => setLang(e.target.value)}
-          >
-            {langList.map((l) => (
-              <option key={l.code} value={l.code}>
-                {l.code} · {l.name}
-              </option>
-            ))}
-          </select>
           {!addingLang ? (
             <button type='button' className={shared.btnOutline} onClick={() => setAddingLang(true)}>
-              + 언어 추가
+              + 언어 열 추가
             </button>
           ) : (
             <span style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
@@ -392,147 +374,107 @@ export function KioskSubtitleSheet({ kioskId, buttons, onNotice, focusButtonId }
               </button>
             </span>
           )}
-          {currentLang && !currentLang.base ? (
-            <button type='button' className={shared.btnOutline} onClick={() => void removeLanguage()}>
-              언어 삭제
-            </button>
-          ) : null}
         </div>
       </div>
       <p className={styles.formHint} style={{ margin: '4px 0 8px' }}>
-        셀 클릭으로 바로 수정 · 노란 셀 = 저장 전 변경 · 하단 자막은 키오스크 화면 기준 최대 2줄(줄당 전각 30자) ·
-        현재 편집 언어: <strong>{currentLang?.code}</strong>
-        {currentLang && !currentLang.base ? ' (추가 언어 — 실기기 표시는 앱 업데이트 필요)' : ''}
+        선택한 버튼의 자막/영상만 편집 · 셀 클릭으로 바로 수정 · 노란 셀 = 저장 전 변경 · 언어 헤더(▾)를 눌러 열을 접거나
+        펼칠 수 있습니다 · 하단 자막은 최대 2줄(줄당 전각 30자).
       </p>
-      <input
-        ref={fileInputRef}
-        type='file'
-        accept='image/*'
-        style={{ display: 'none' }}
-        onChange={(e) => {
-          void onFilePicked(e.target.files?.[0] ?? null);
-          e.target.value = '';
-        }}
-      />
-      <div className={shared.tableResponsive}>
-        <table className={styles.sheetTable}>
-          <colgroup>
-            <col style={{ width: 86 }} />
-            <col style={{ width: 52 }} />
-            <col style={{ width: 130 }} />
-            <col style={{ width: 110 }} />
-            <col />
-            <col />
-            <col />
-            <col style={{ width: 36 }} />
-          </colgroup>
+      <div className={styles.sheetScroll}>
+        <table className={`${styles.sheetTable} ${styles.sheetExcel}`}>
           <thead>
             <tr>
-              <th>위치</th>
-              <th>이미지</th>
-              <th>버튼</th>
-              <th>재생키</th>
-              <th>영상 파일명</th>
-              <th>{`자막 · 하단 중앙 (${currentLang?.code})`}</th>
-              <th>{`자막 · 우측상단 (${currentLang?.code})`}</th>
-              <th aria-label='행 삭제' />
+              <th rowSpan={2}>재생키</th>
+              <th rowSpan={2}>영상 파일명</th>
+              {langList.map((l) => {
+                const isCol = collapsed.has(l.code);
+                return (
+                  <th
+                    key={l.code}
+                    colSpan={isCol ? 1 : showRt ? 2 : 1}
+                    className={styles.sheetLangHead}
+                  >
+                    <span className={styles.sheetLangHeadInner}>
+                      <button
+                        type='button'
+                        className={styles.sheetCollapseBtn}
+                        title={isCol ? `${l.code} 펼치기` : `${l.code} 접기`}
+                        onClick={() => toggleCollapse(l.code)}
+                      >
+                        {isCol ? '▸' : '▾'}
+                      </button>
+                      {l.code}
+                      {!isCol ? <span className={styles.sheetLangName}> · {l.name}</span> : null}
+                      {!l.base ? (
+                        <button
+                          type='button'
+                          className={styles.sheetLangDel}
+                          title={`${l.code} 언어 열 삭제`}
+                          onClick={() => void removeLanguage(l.code)}
+                        >
+                          ×
+                        </button>
+                      ) : null}
+                    </span>
+                  </th>
+                );
+              })}
+              <th rowSpan={2} aria-label='행 삭제' />
+            </tr>
+            <tr>
+              {langList.flatMap((l) => {
+                if (collapsed.has(l.code)) return [<th key={`${l.code}c`} className={styles.sheetSubHead} />];
+                const heads = [<th key={`${l.code}m`} className={styles.sheetSubHead}>하단중앙</th>];
+                if (showRt) heads.push(<th key={`${l.code}r`} className={styles.sheetSubHead}>우측상단</th>);
+                return heads;
+              })}
             </tr>
           </thead>
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan={8} className={shared.tableStateCell}>
+                <td colSpan={totalCols} className={shared.tableStateCell}>
                   불러오는 중…
                 </td>
               </tr>
             ) : (
-              visibleButtons.map((b) => {
-                const subs = byButton.get(b.id) ?? [];
-                const btnNewRows = newRows.filter((r) => r.buttonId === b.id);
-                const entries: Array<{ key: string; s: KioskSubtitleDto | null }> = [
-                  ...subs.map((s) => ({ key: `s${s.id}`, s: s as KioskSubtitleDto | null })),
-                  ...btnNewRows.map((r) => ({ key: r.key, s: null })),
-                ];
-                if (entries.length === 0) entries.push({ key: `n${b.id}-auto`, s: null });
-                const rowSpan = entries.length + 1;
-                const focused = focusButtonId === b.id;
-                const code = currentLang?.code ?? 'KR';
-
-                const rows: JSX.Element[] = entries.map(({ key, s }, idx) => (
-                  <tr
-                    key={key}
-                    ref={(el) => {
-                      if (idx === 0 && el) rowRefs.current.set(b.id, el);
-                    }}
-                    className={idx === 0 ? styles.sheetBtnRow : styles.sheetSubRow}
-                  >
-                    {idx === 0 ? (
-                      <>
-                        <td rowSpan={rowSpan} style={focused ? { background: '#eff6ff' } : undefined}>
-                          <span className={styles.sheetPosBadge}>
-                            {positionLabel(b.line, b.position, b.span)}
-                          </span>
-                          {b.span === 2 ? <span className={styles.sheetSpanBadge}>2칸</span> : null}
-                          {b.placement === 'FIXED' ? (
-                            <span className={styles.sheetSpanBadge}>고정</span>
-                          ) : null}
-                        </td>
-                        <td rowSpan={rowSpan}>
-                          <button
-                            type='button'
-                            className={styles.sheetThumbBtn}
-                            title={b.imageUrl ? '이미지 교체 (더블클릭: 제거)' : '이미지 업로드'}
-                            onClick={() => pickImage(b.id)}
-                            onDoubleClick={() => b.imageUrl && void removeImage(b)}
-                            disabled={uploadingId === b.id}
-                          >
-                            {uploadingId === b.id ? '…' : b.imageUrl ? <img src={b.imageUrl} alt='' /> : '+'}
-                          </button>
-                        </td>
-                        <td rowSpan={rowSpan}>
-                          <div className={shared.tdBold}>{b.buttonType}</div>
-                        </td>
-                      </>
-                    ) : null}
-                    <td>{textCell(key, 'playKey', s, { mono: true, placeholder: '자동 생성' })}</td>
+              <>
+                {entries.map(({ key, s }) => (
+                  <tr key={key} className={styles.sheetBtnRow}>
+                    <td>{textCell(key, 'playKey', s, { mono: true, placeholder: '자동' })}</td>
                     <td>{textCell(key, 'videoFileName', s, { mono: true, placeholder: '영상 파일명' })}</td>
-                    <td>{textCell(key, `main:${code}`, s, { placeholder: '하단 중앙 자막', limit: true })}</td>
-                    <td>{textCell(key, `rt:${code}`, s, { placeholder: '우측 상단(선택)' })}</td>
+                    {langBodyCells(key, s)}
                     <td>
                       {s ? (
                         <button
                           type='button'
                           className={styles.sheetDelBtn}
                           onClick={() => void removeSubtitle(s)}
-                          aria-label={`${b.buttonType} 자막 삭제`}
+                          aria-label='자막 삭제'
                         >
                           ×
                         </button>
                       ) : null}
                     </td>
                   </tr>
-                ));
-
-                rows.push(
-                  <tr key={`ghost-${b.id}`} className={styles.sheetSubRow}>
-                    <td colSpan={5}>
-                      <span
-                        className={styles.sheetGhostRow}
-                        onClick={() =>
-                          setNewRows((prev) => [
-                            ...prev,
-                            { key: `n${b.id}-${prev.length + 1}x`, buttonId: b.id },
-                          ])
-                        }
-                        role='button'
-                      >
-                        + 자막 행 추가
-                      </span>
-                    </td>
-                  </tr>,
-                );
-                return rows;
-              })
+                ))}
+                <tr className={styles.sheetSubRow}>
+                  <td colSpan={totalCols}>
+                    <span
+                      className={styles.sheetGhostRow}
+                      role='button'
+                      onClick={() =>
+                        setNewRows((prev) => [
+                          ...prev,
+                          { key: `n${button.id}-${prev.length + 1}x`, buttonId: button.id },
+                        ])
+                      }
+                    >
+                      + 자막 행 추가
+                    </span>
+                  </td>
+                </tr>
+              </>
             )}
           </tbody>
         </table>

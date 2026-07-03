@@ -859,3 +859,129 @@
 /* 자막 2줄 제한 초과 표시 */
 .sheetOverLimit { border-color: #dc2626 !important; background: #fef2f2 !important; }
 .sheetLimitHint { display: block; font-size: 11px; color: #b91c1c; margin-top: 2px; }
+
+/* ===== 키오스크 미러 v2 (Figma 근사, 1.5배) ===== */
+.mFrame {
+  width: 510px; border: 4px solid #E8663C; border-radius: 32px; padding: 18px 18px 15px;
+  display: flex; flex-direction: column; gap: 10px; box-sizing: border-box;
+}
+.mHeader { display: flex; align-items: center; justify-content: space-between; padding: 0 3px; }
+.mLoc { font-size: 19px; font-weight: 700; }
+.mDate { font-size: 17px; font-weight: 700; color: #6b6255; }
+.mNoticeRow { display: flex; gap: 9px; }
+.mNotice {
+  flex: 1; min-width: 0; background: rgba(255,255,255,0.55); border-radius: 16px; padding: 12px 14px;
+  display: flex; align-items: center; gap: 10px; min-height: 58px;
+}
+.mNoticeTag { background: #fff; border-radius: 8px; font-size: 15px; padding: 3px 10px; color: #8a7350; flex-shrink: 0; }
+.mNoticeText { font-size: 15px; color: #6b5b3e; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mWeather {
+  background: rgba(255,255,255,0.7); border-radius: 16px; padding: 9px 16px; display: flex;
+  align-items: center; gap: 9px; cursor: pointer; flex-shrink: 0;
+}
+.mTemp { font-size: 22px; font-weight: 700; color: #4a4335; }
+.mSearchRow { display: flex; align-items: center; gap: 9px; }
+.mCircle {
+  width: 54px; height: 54px; border-radius: 50%; color: #fff; font-size: 18px; font-weight: 600;
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+  overflow: hidden; flex-shrink: 0;
+}
+.mCircleImg { width: 100%; height: 100%; object-fit: cover; }
+.mSearch {
+  flex: 1; min-width: 0; background: #fff; border-radius: 27px; padding: 13px 20px; font-size: 18px; color: #a99a80;
+  border: 1px solid rgba(0,0,0,0.05); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.mGridRow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; }
+.mTile {
+  background: #fff; border-radius: 20px; padding: 12px 6px 9px; text-align: center; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 6px; min-height: 98px; min-width: 0;
+  border: 3px solid transparent; transition: transform 0.08s; overflow: hidden;
+}
+.mTile:hover { transform: translateY(-1px); }
+.mTileWide { flex-direction: row; justify-content: center; gap: 12px; }
+.mTileSel { box-shadow: 0 0 0 1px currentColor inset; }
+.mDragging { opacity: 0.4; }
+.mOver { outline: 3px dashed #2563eb; outline-offset: -3px; }
+.mTileIcon {
+  border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.mTileImg { border-radius: 16px; object-fit: cover; flex-shrink: 0; }
+.mTileLabel {
+  font-size: 15px; color: #5c4b33; line-height: 1.15; max-width: 100%; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.mEmpty { border: 2px dashed rgba(0,0,0,0.12); border-radius: 20px; min-height: 98px; }
+.mBottomBar { display: flex; align-items: center; justify-content: center; gap: 40px; padding: 6px 0 3px; }
+.mFixedChip {
+  display: inline-flex; flex-direction: column; align-items: center; gap: 5px; font-size: 15px;
+  color: #5c4b33; cursor: pointer; border-radius: 15px; padding: 3px; max-width: 126px; min-width: 0;
+}
+.mFixedLabel { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.mCamBig {
+  width: 78px; height: 78px; border-radius: 50%; display: inline-flex; align-items: center;
+  justify-content: center; color: #fff; cursor: pointer; overflow: hidden; flex-shrink: 0;
+}
+.mGhost { width: 45px; height: 45px; border-radius: 14px; border: 2px dashed rgba(0,0,0,0.15); display: inline-block; }
+.mBanner {
+  border: 2px dashed rgba(0,0,0,0.15); border-radius: 15px; padding: 14px; text-align: center;
+  font-size: 15px; color: #9a8a66; margin-top: 3px;
+}
+
+/* ===== 미러 + 상세 2단 레이아웃 ===== */
+.mirrorLayout { display: flex; gap: 18px; flex-wrap: wrap; align-items: flex-start; }
+.detailCol { flex: 1; min-width: 260px; max-width: 360px; }
+.detailEmpty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; min-height: 200px; color: #94a3b8;
+}
+.detailHead { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.detailIcon { flex-shrink: 0; }
+.detailTable { width: 100%; border-collapse: collapse; font-size: 13px; }
+.detailTable td { padding: 6px 4px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+.detailTable td:first-child { color: #64748b; width: 90px; }
+.detailActions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+.detailActions button { font-size: 12px; padding: 6px 10px; }
+
+/* ===== 자막 엑셀 시트 (가로 스크롤 + sticky 좌열) ===== */
+.sheetScroll { overflow-x: auto; border: 1px solid #e5e7eb; border-radius: 10px; }
+.sheetExcel { table-layout: auto; width: max-content; min-width: 100%; border-collapse: separate; border-spacing: 0; }
+.sheetExcel th, .sheetExcel td {
+  border-right: 1px solid #eef0f3; border-bottom: 1px solid #eef0f3; padding: 3px 4px;
+  background: #fff; vertical-align: middle;
+}
+.sheetExcel thead th {
+  position: sticky; top: 0; z-index: 3; background: #f8fafc; font-size: 12px; color: #475569;
+  white-space: nowrap; text-align: center;
+}
+.sheetLangHead { background: #eef4fb !important; font-weight: 700; }
+.sheetSubHead { font-size: 11px; color: #64748b; font-weight: 500; }
+.sheetLangDel {
+  border: none; background: transparent; color: #b91c1c; cursor: pointer; font-size: 13px;
+  margin-left: 4px; line-height: 1; padding: 0 2px;
+}
+.sheetSticky { position: sticky; left: 0; z-index: 2; box-shadow: 1px 0 0 #e5e7eb; min-width: 78px; }
+.sheetSticky2 { position: sticky; left: 78px; z-index: 2; box-shadow: 1px 0 0 #e5e7eb; min-width: 92px; }
+.sheetExcel thead th.sheetSticky, .sheetExcel thead th.sheetSticky2 { z-index: 4; }
+.sheetExcel td .sheetInput { width: 140px; min-width: 140px; }
+.sheetExcel td .sheetMono { width: 96px; min-width: 96px; }
+.sheetSticky, .sheetSticky2 { background: #fff; }
+
+/* ===== 자막 시트 언어 그룹 접기/펼치기 ===== */
+.sheetLangHeadInner { display: inline-flex; align-items: center; gap: 2px; white-space: nowrap; }
+.sheetLangName { font-weight: 400; color: #64748b; }
+.sheetCollapseBtn {
+  border: none; background: transparent; cursor: pointer; color: #475569; font-size: 11px;
+  padding: 0 2px; line-height: 1;
+}
+.sheetCollapsedCell {
+  text-align: center; color: #94a3b8; cursor: pointer; min-width: 26px; width: 26px;
+  font-size: 12px; user-select: none;
+}
+.sheetCollapsedCell:hover { background: #f1f5f9; }
+
+/* ===== 아이콘 인라인 편집 폼 ===== */
+.editForm { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+.editField { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #475569; }
+.editField > span { font-weight: 600; }
+.editRow { display: flex; gap: 8px; }
+.editRow .editField { flex: 1; min-width: 0; }
