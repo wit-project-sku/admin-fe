@@ -1,4 +1,4 @@
-import { useState, type DragEvent } from 'react';
+import { useRef, useState, type DragEvent } from 'react';
 import { KioskAppIconGlyph } from '../kioskAppIcons';
 import type { KioskButtonDto } from '@/hooks/kiosk-api/kioskButtonsTypes';
 import { GRID_FIRST_LINE, GRID_LAST_LINE, SLOTS_PER_LINE, kioskTheme, tileBgFor } from './constants';
@@ -36,6 +36,9 @@ export function KioskMirrorPreview({
   disabled,
 }: Props) {
   const t = kioskTheme(kioskId, kioskName);
+  // 드래그 소스는 ref 로 보관 — onDragOver/onDrop 핸들러가 항상 최신 값을 읽어
+  // preventDefault 누락(=드롭 거부)이나 stale 클로저 레이스를 없앤다. state 는 시각 표시용.
+  const dragIdRef = useRef<number | null>(null);
   const [dragId, setDragId] = useState<number | null>(null);
   const [overKey, setOverKey] = useState<string | null>(null);
 
@@ -67,30 +70,30 @@ export function KioskMirrorPreview({
     );
   };
 
-  // 그리드 타일 아이콘 — 타일을 꽉 채운다(흰 여백 없음). span=2 는 가로로 꽉 채움.
-  // draggable=false + CSS pointer-events:none 으로 이미지가 타일 드래그를 가로채지 않게 한다.
+  // 그리드 타일 아이콘 — 라운드 색 카드 위에 아이콘. span=2 는 가로 2칸.
+  //   · object-fit:contain 으로 어떤 비율(정사각/세로형)이든 크롭 없이 담는다.
+  //   · 파스텔 카드 배경: 투명 캐릭터(오색)는 카드색이 보이고, 색 카드가 박힌 이미지(화성/인사동)는 카드가 덮는다.
+  //   · draggable=false + CSS pointer-events:none 으로 이미지가 타일 드래그를 가로채지 않게 한다.
   const gridVisual = (b: KioskButtonDto) => {
     const ratio = b.span === 2 ? '2.05 / 1' : '1 / 1';
+    const bg = tileBgFor(b.id);
     if (b.imageUrl) {
       return (
-        <img
-          src={b.imageUrl}
-          alt=''
-          draggable={false}
-          className={styles.mFillImg}
-          style={{ aspectRatio: ratio }}
-        />
+        <span className={styles.mFillCard} style={{ aspectRatio: ratio, background: bg }}>
+          <img src={b.imageUrl} alt='' draggable={false} className={styles.mFillImg} />
+        </span>
       );
     }
     return (
-      <span className={styles.mFillGlyph} style={{ aspectRatio: ratio, background: tileBgFor(b.id) }}>
+      <span className={styles.mFillGlyph} style={{ aspectRatio: ratio, background: bg }}>
         <KioskAppIconGlyph iconKey={resolveKioskButtonIconKey(b.iconKey)} size={30} />
       </span>
     );
   };
 
   const finishDrop = (targetLine: number, targetPos: number) => {
-    const id = dragId;
+    const id = dragIdRef.current;
+    dragIdRef.current = null;
     setDragId(null);
     setOverKey(null);
     if (id == null) return;
@@ -105,9 +108,9 @@ export function KioskMirrorPreview({
       ? {}
       : {
           onDragOver: (e: DragEvent) => {
-            if (dragId == null) return;
+            if (dragIdRef.current == null) return;
             e.preventDefault();
-            setOverKey(key);
+            if (overKey !== key) setOverKey(key);
           },
           onDragLeave: () => setOverKey((k) => (k === key ? null : k)),
           onDrop: (e: DragEvent) => {
@@ -162,11 +165,13 @@ export function KioskMirrorPreview({
               title={`${b.buttonType} · ${line}열 ${p}${span === 2 ? `~${p + 1}` : ''}`}
               onClick={() => onSelect?.(b)}
               onDragStart={(e) => {
+                dragIdRef.current = b.id;
                 setDragId(b.id);
                 e.dataTransfer.effectAllowed = 'move';
                 e.dataTransfer.setData('text/plain', String(b.id));
               }}
               onDragEnd={() => {
+                dragIdRef.current = null;
                 setDragId(null);
                 setOverKey(null);
               }}

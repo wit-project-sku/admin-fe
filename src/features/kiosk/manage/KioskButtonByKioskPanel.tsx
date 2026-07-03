@@ -215,7 +215,36 @@ export function KioskButtonByKioskPanel({
           )}
         </div>
 
-        {/* 선택된 아이콘의 모든 정보 — 클릭 시에만 표시, 인라인으로 전부 수정 가능 */}
+        {/* 미표시(OFF_MAIN) 아이콘 — 미러 바로 아래에 표시·선택 */}
+        {offMainButtons.length > 0 ? (
+          <div className={styles.offMainSection}>
+            <div className={styles.previewLabel}>
+              미표시 아이콘 ({offMainButtons.length}) — 클릭 후 배치를 ‘그리드’로 바꾸면 다시 표시됩니다
+            </div>
+            <div className={styles.offMainList}>
+              {offMainButtons.map((b) => (
+                <button
+                  key={b.id}
+                  type='button'
+                  className={`${styles.offMainChip} ${selectedId === b.id ? styles.offMainChipSel : ''}`}
+                  onClick={() => onSelectButton(b)}
+                  title={b.buttonName ?? b.buttonType}
+                >
+                  <span className={styles.offMainIcon}>
+                    {b.imageUrl ? (
+                      <img src={b.imageUrl} alt='' />
+                    ) : (
+                      <KioskAppIconVisual iconKey={resolveKioskButtonIconKey(b.iconKey)} tileSize={34} />
+                    )}
+                  </span>
+                  <span className={styles.offMainName}>{b.buttonType}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
+        {/* 선택된 아이콘의 모든 정보 — 미표시 아래에 표시, 인라인으로 전부 수정 가능 */}
         <div className={styles.detailCol}>
           {!selected ? (
             <div className={`${shared.card} ${styles.detailEmpty}`}>
@@ -363,35 +392,6 @@ export function KioskButtonByKioskPanel({
           )}
         </div>
       </div>
-
-      {/* 미표시(OFF_MAIN) 아이콘 — 미러에 안 나오므로 여기서 표시·선택 */}
-      {offMainButtons.length > 0 ? (
-        <div className={styles.offMainSection}>
-          <div className={styles.previewLabel}>
-            미표시 아이콘 ({offMainButtons.length}) — 클릭 후 배치를 ‘그리드’로 바꾸면 다시 표시됩니다
-          </div>
-          <div className={styles.offMainList}>
-            {offMainButtons.map((b) => (
-              <button
-                key={b.id}
-                type='button'
-                className={`${styles.offMainChip} ${selectedId === b.id ? styles.offMainChipSel : ''}`}
-                onClick={() => onSelectButton(b)}
-                title={b.buttonName ?? b.buttonType}
-              >
-                <span className={styles.offMainIcon}>
-                  {b.imageUrl ? (
-                    <img src={b.imageUrl} alt='' />
-                  ) : (
-                    <KioskAppIconVisual iconKey={resolveKioskButtonIconKey(b.iconKey)} tileSize={34} />
-                  )}
-                </span>
-                <span className={styles.offMainName}>{b.buttonType}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      ) : null}
 
       {/* 드래그 SWAP 확인 모달 */}
       {pendingMove && moveSource ? (

@@ -900,11 +900,11 @@
   flex: 1; min-width: 0; background: #fff; border-radius: 27px; padding: 13px 20px; font-size: 18px; color: #a99a80;
   border: 1px solid rgba(0,0,0,0.05); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-/* 실기기(kiosk-electron) 참고: 아이콘 사이 간격을 넉넉히 (행 간격 > 열 간격) */
-.mGrid { display: flex; flex-direction: column; gap: 20px; }
-.mGridRow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px; }
-/* 타일의 자식(이미지·라벨)은 이벤트를 받지 않아, 드래그/클릭이 항상 타일에 잡힌다 */
-.mTile > * { pointer-events: none; }
+/* 실기기(kiosk-electron/Figma) 비율 참고: 아이콘·줄 사이 간격을 넉넉히 */
+.mGrid { display: flex; flex-direction: column; gap: 30px; }
+.mGridRow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 38px; }
+/* 타일의 모든 하위(카드·이미지·라벨)는 이벤트를 받지 않아, 드래그/클릭이 항상 타일에 잡힌다 */
+.mTile * { pointer-events: none; }
 /* 그리드 타일 — 아이콘이 꽉 차게(흰 여백/배경 없음), 라벨은 아래 */
 .mTile {
   background: transparent; border: none; padding: 0; cursor: pointer; text-align: center;
@@ -915,8 +915,12 @@
 .mTileSel { border-radius: 18px; }
 .mDragging { opacity: 0.4; }
 .mOver { outline: 3px dashed #2563eb; outline-offset: 2px; border-radius: 18px; }
-/* 이미지/글리프가 타일 폭을 꽉 채움 (aspect-ratio 로 정사각 또는 와이드) */
-.mFillImg { width: 100%; border-radius: 18px; object-fit: cover; display: block; }
+/* 라운드 색 카드 + 아이콘(contain) — 정사각/세로형 어떤 비율이든 크롭 없이 담는다 */
+.mFillCard {
+  width: 100%; border-radius: 18px; overflow: hidden; display: flex;
+  align-items: center; justify-content: center;
+}
+.mFillImg { width: 100%; height: 100%; object-fit: contain; display: block; }
 .mFillGlyph {
   width: 100%; border-radius: 18px; display: flex; align-items: center; justify-content: center;
 }
@@ -951,8 +955,9 @@
 }
 
 /* ===== 미러 + 상세 2단 레이아웃 ===== */
-.mirrorLayout { display: flex; gap: 18px; flex-wrap: wrap; align-items: flex-start; }
-.detailCol { flex: 1; min-width: 260px; max-width: 360px; }
+/* 세로 스택: 미러 → 미표시 아이콘 → 아이콘 정보 */
+.mirrorLayout { display: flex; flex-direction: column; gap: 16px; align-items: stretch; }
+.detailCol { width: 100%; max-width: 560px; }
 .detailEmpty {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   text-align: center; min-height: 200px; color: #94a3b8;
