@@ -10,6 +10,7 @@ import {
 } from '@/hooks/kiosk-api/useUpdateKioskButtonPlacement';
 import { useKioskButtonImage } from '@/hooks/kiosk-api/useKioskButtonImage';
 import { KioskMirrorPreview, type MoveRequest } from './KioskMirrorPreview';
+import { KioskMirrorHwaseong } from './KioskMirrorHwaseong';
 import { PLACEMENT_OPTIONS, SPAN_OPTIONS, positionLabel } from './constants';
 import { resolveKioskButtonIconKey } from './kioskButtonDisplay';
 import styles from './KioskAppManagePage.module.css';
@@ -202,6 +203,15 @@ export function KioskButtonByKioskPanel({
           </div>
           {isLoading ? (
             <p className={styles.emptyState}>불러오는 중…</p>
+          ) : kioskId === 5 || (kioskName ?? '').includes('화성') || (kioskName ?? '').includes('휴게소') ? (
+            // 화성휴게소 — kiosk-electron HwaseongHome 레이아웃을 그대로 이식한 실사 미러.
+            <KioskMirrorHwaseong
+              buttons={buttons}
+              onMove={requestMove}
+              onSelect={onSelectButton}
+              selectedId={selectedId}
+              disabled={moving}
+            />
           ) : (
             <KioskMirrorPreview
               buttons={buttons}
