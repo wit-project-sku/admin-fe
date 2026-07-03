@@ -56,6 +56,7 @@ function fieldOf(s: KioskSubtitleDto | null, field: string): string {
   if (!s) return '';
   if (field === 'videoFileName') return s.videoKey ?? '';
   if (field === 'playKey') return s.playKey ?? '';
+  if (field === 'playCondition') return s.playCondition ?? '';
   const [kind, lang] = field.split(':');
   const base = BASE_FIELD[lang];
   if (base) return (s[kind === 'main' ? base.main : base.rt] as string | null | undefined) ?? '';
@@ -180,7 +181,8 @@ export function KioskSubtitleSheet({ kioskId, button, onNotice }: Props) {
       rtEn: baseText('rt', 'EN'),
       rtJp: baseText('rt', 'JP'),
       rtCn: baseText('rt', 'CN'),
-      playCondition: s?.playCondition ?? null,
+      playCondition:
+        d.playCondition !== undefined ? d.playCondition || null : (s?.playCondition ?? null),
       description: s?.description ?? null,
       extraTexts: Object.keys(extra).length > 0 ? extra : null,
     };
@@ -303,7 +305,7 @@ export function KioskSubtitleSheet({ kioskId, button, onNotice }: Props) {
     (acc, l) => acc + (collapsed.has(l.code) ? 1 : showRt ? 2 : 1),
     0,
   );
-  const totalCols = 2 + langColsCount + 1;
+  const totalCols = 3 + langColsCount + 1;
 
   const langBodyCells = (key: string, s: KioskSubtitleDto | null): ReactElement[] =>
     langList.flatMap((l) => {
@@ -377,8 +379,8 @@ export function KioskSubtitleSheet({ kioskId, button, onNotice }: Props) {
         </div>
       </div>
       <p className={styles.formHint} style={{ margin: '4px 0 8px' }}>
-        선택한 버튼의 자막/영상만 편집 · 셀 클릭으로 바로 수정 · 노란 셀 = 저장 전 변경 · 언어 헤더(▾)를 눌러 열을 접거나
-        펼칠 수 있습니다 · 하단 자막은 최대 2줄(줄당 전각 30자).
+        선택한 버튼의 자막/영상만 편집 · 셀 클릭으로 바로 수정 · 노란 셀 = 저장 전 변경 · 언어 헤더 영역(예: KR · 한국어)을
+        클릭하면 해당 열이 접히거나 펼쳐집니다 · 하단 자막은 최대 2줄(줄당 전각 30자).
       </p>
       <div className={styles.sheetScroll}>
         <table className={`${styles.sheetTable} ${styles.sheetExcel}`}>
@@ -386,23 +388,21 @@ export function KioskSubtitleSheet({ kioskId, button, onNotice }: Props) {
             <tr>
               <th rowSpan={2}>재생키</th>
               <th rowSpan={2}>영상 파일명</th>
+              <th rowSpan={2}>재생조건</th>
               {langList.map((l) => {
                 const isCol = collapsed.has(l.code);
                 return (
                   <th
                     key={l.code}
                     colSpan={isCol ? 1 : showRt ? 2 : 1}
-                    className={styles.sheetLangHead}
+                    className={`${styles.sheetLangHead} ${styles.sheetLangHeadClickable}`}
+                    title={isCol ? `${l.code} 펼치기` : `${l.code} 접기`}
+                    onClick={() => toggleCollapse(l.code)}
                   >
                     <span className={styles.sheetLangHeadInner}>
-                      <button
-                        type='button'
-                        className={styles.sheetCollapseBtn}
-                        title={isCol ? `${l.code} 펼치기` : `${l.code} 접기`}
-                        onClick={() => toggleCollapse(l.code)}
-                      >
+                      <span className={styles.sheetCollapseBtn} aria-hidden>
                         {isCol ? '▸' : '▾'}
-                      </button>
+                      </span>
                       {l.code}
                       {!isCol ? <span className={styles.sheetLangName}> · {l.name}</span> : null}
                       {!l.base ? (
@@ -410,7 +410,10 @@ export function KioskSubtitleSheet({ kioskId, button, onNotice }: Props) {
                           type='button'
                           className={styles.sheetLangDel}
                           title={`${l.code} 언어 열 삭제`}
-                          onClick={() => void removeLanguage(l.code)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            void removeLanguage(l.code);
+                          }}
                         >
                           ×
                         </button>
@@ -443,6 +446,7 @@ export function KioskSubtitleSheet({ kioskId, button, onNotice }: Props) {
                   <tr key={key} className={styles.sheetBtnRow}>
                     <td>{textCell(key, 'playKey', s, { mono: true, placeholder: '자동' })}</td>
                     <td>{textCell(key, 'videoFileName', s, { mono: true, placeholder: '영상 파일명' })}</td>
+                    <td>{textCell(key, 'playCondition', s, { mono: true, placeholder: '재생조건' })}</td>
                     {langBodyCells(key, s)}
                     <td>
                       {s ? (
