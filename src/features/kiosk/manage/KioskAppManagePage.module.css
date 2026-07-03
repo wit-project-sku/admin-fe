@@ -868,18 +868,27 @@
 .mHeader { display: flex; align-items: center; justify-content: space-between; padding: 0 3px; }
 .mLoc { font-size: 19px; font-weight: 700; }
 .mDate { font-size: 17px; font-weight: 700; color: #6b6255; }
-.mNoticeRow { display: flex; gap: 9px; }
+.mNoticeRow { display: flex; gap: 12px; }
 .mNotice {
-  flex: 1; min-width: 0; background: rgba(255,255,255,0.55); border-radius: 16px; padding: 12px 14px;
-  display: flex; align-items: center; gap: 10px; min-height: 58px;
+  flex: 1; min-width: 0; background: #fff; border-radius: 22px; padding: 14px 18px;
+  display: flex; align-items: center; gap: 12px; min-height: 64px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
-.mNoticeTag { background: #fff; border-radius: 8px; font-size: 15px; padding: 3px 10px; color: #8a7350; flex-shrink: 0; }
-.mNoticeText { font-size: 15px; color: #6b5b3e; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mNoticeTag { font-size: 16px; font-weight: 800; letter-spacing: 4px; writing-mode: vertical-rl; flex-shrink: 0; }
+.mNoticeDivider { width: 3px; align-self: stretch; border-radius: 2px; opacity: 0.55; flex-shrink: 0; margin: 3px 0; }
+.mNoticeText {
+  font-size: 15px; color: #5b5344; line-height: 1.35; display: -webkit-box;
+  -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
 .mWeather {
-  background: rgba(255,255,255,0.7); border-radius: 16px; padding: 9px 16px; display: flex;
-  align-items: center; gap: 9px; cursor: pointer; flex-shrink: 0;
+  background: #fff; border-radius: 22px; padding: 10px 18px; display: flex; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  align-items: center; gap: 10px; cursor: pointer; flex-shrink: 0; min-height: 64px;
 }
-.mTemp { font-size: 22px; font-weight: 700; color: #4a4335; }
+.mWeatherIcon {
+  width: 40px; height: 40px; border-radius: 50%; display: inline-flex; align-items: center;
+  justify-content: center; font-size: 26px; overflow: hidden; flex-shrink: 0;
+}
+.mTemp { font-size: 24px; font-weight: 700; color: #4a4335; }
 .mSearchRow { display: flex; align-items: center; gap: 9px; }
 .mCircle {
   width: 54px; height: 54px; border-radius: 50%; color: #fff; font-size: 18px; font-weight: 600;
@@ -891,32 +900,46 @@
   flex: 1; min-width: 0; background: #fff; border-radius: 27px; padding: 13px 20px; font-size: 18px; color: #a99a80;
   border: 1px solid rgba(0,0,0,0.05); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.mGridRow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; }
+/* 실기기(kiosk-electron) 참고: 아이콘 사이 간격을 넉넉히 (행 간격 > 열 간격) */
+.mGrid { display: flex; flex-direction: column; gap: 20px; }
+.mGridRow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px; }
+/* 타일의 자식(이미지·라벨)은 이벤트를 받지 않아, 드래그/클릭이 항상 타일에 잡힌다 */
+.mTile > * { pointer-events: none; }
+/* 그리드 타일 — 아이콘이 꽉 차게(흰 여백/배경 없음), 라벨은 아래 */
 .mTile {
-  background: #fff; border-radius: 20px; padding: 12px 6px 9px; text-align: center; cursor: pointer;
-  display: flex; flex-direction: column; align-items: center; gap: 6px; min-height: 98px; min-width: 0;
-  border: 3px solid transparent; transition: transform 0.08s; overflow: hidden;
+  background: transparent; border: none; padding: 0; cursor: pointer; text-align: center;
+  display: flex; flex-direction: column; align-items: stretch; gap: 5px; min-width: 0;
+  border-radius: 18px; transition: transform 0.08s;
 }
 .mTile:hover { transform: translateY(-1px); }
-.mTileWide { flex-direction: row; justify-content: center; gap: 12px; }
-.mTileSel { box-shadow: 0 0 0 1px currentColor inset; }
+.mTileSel { border-radius: 18px; }
 .mDragging { opacity: 0.4; }
-.mOver { outline: 3px dashed #2563eb; outline-offset: -3px; }
+.mOver { outline: 3px dashed #2563eb; outline-offset: 2px; border-radius: 18px; }
+/* 이미지/글리프가 타일 폭을 꽉 채움 (aspect-ratio 로 정사각 또는 와이드) */
+.mFillImg { width: 100%; border-radius: 18px; object-fit: cover; display: block; }
+.mFillGlyph {
+  width: 100%; border-radius: 18px; display: flex; align-items: center; justify-content: center;
+}
 .mTileIcon {
   border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
 .mTileImg { border-radius: 16px; object-fit: cover; flex-shrink: 0; }
+/* 라벨은 아이콘 폭(=타일 폭)을 넘지 않고 최대 2줄로 줄바꿈(kiosk-electron 규칙) */
 .mTileLabel {
-  font-size: 15px; color: #5c4b33; line-height: 1.15; max-width: 100%; min-width: 0;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 13.5px; color: #5c4b33; line-height: 1.15; width: 100%; min-width: 0; text-align: center;
+  word-break: keep-all; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
-.mEmpty { border: 2px dashed rgba(0,0,0,0.12); border-radius: 20px; min-height: 98px; }
-.mBottomBar { display: flex; align-items: center; justify-content: center; gap: 40px; padding: 6px 0 3px; }
+.mEmpty { border: 2px dashed rgba(0,0,0,0.12); border-radius: 18px; aspect-ratio: 1 / 1; min-height: 0; }
+.mBottomBar { display: flex; align-items: flex-start; justify-content: space-around; gap: 12px; padding: 8px 6px 3px; }
 .mFixedChip {
-  display: inline-flex; flex-direction: column; align-items: center; gap: 5px; font-size: 15px;
-  color: #5c4b33; cursor: pointer; border-radius: 15px; padding: 3px; max-width: 126px; min-width: 0;
+  display: inline-flex; flex-direction: column; align-items: center; gap: 6px; font-size: 14px;
+  color: #5c4b33; cursor: pointer; border-radius: 15px; padding: 3px; width: 76px; min-width: 0;
 }
-.mFixedLabel { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+/* 라벨 폭이 아이콘 폭을 넘지 않게: 칩 폭 안에서 2줄 wrap */
+.mFixedLabel {
+  width: 100%; text-align: center; line-height: 1.15; word-break: keep-all;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
 .mCamBig {
   width: 78px; height: 78px; border-radius: 50%; display: inline-flex; align-items: center;
   justify-content: center; color: #fff; cursor: pointer; overflow: hidden; flex-shrink: 0;
@@ -985,3 +1008,29 @@
 .editField > span { font-weight: 600; }
 .editRow { display: flex; gap: 8px; }
 .editRow .editField { flex: 1; min-width: 0; }
+
+/* ===== 상세 박스 padding (개선2) ===== */
+.detailBox { padding: 18px 20px 20px; }
+
+/* ===== 미표시(OFF_MAIN) 아이콘 섹션 ===== */
+.offMainSection { margin-top: 16px; }
+.offMainList {
+  display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px;
+  padding: 12px; border: 1px dashed #cbd5e1; border-radius: 12px; background: #f8fafc;
+}
+.offMainChip {
+  display: inline-flex; flex-direction: column; align-items: center; gap: 5px; width: 78px;
+  padding: 8px 6px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; cursor: pointer;
+  font-size: 12px; color: #475569;
+}
+.offMainChip:hover { border-color: #94a3b8; }
+.offMainChipSel { border-color: #2563eb; box-shadow: 0 0 0 1px #2563eb; }
+.offMainIcon {
+  width: 40px; height: 40px; border-radius: 10px; overflow: hidden; display: inline-flex;
+  align-items: center; justify-content: center;
+}
+.offMainIcon img { width: 100%; height: 100%; object-fit: cover; }
+.offMainName {
+  width: 100%; text-align: center; line-height: 1.15; word-break: keep-all;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}

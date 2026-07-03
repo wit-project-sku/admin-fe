@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import shared from '@commons/shared.module.css';
 import SearchableSelect from '@components/common/SearchableSelect';
-import { KioskAppIconVisual, KioskIconPicker } from '../kioskAppIcons';
+import { KioskAppIconVisual } from '../kioskAppIcons';
 import type { KioskButtonDto } from '@/hooks/kiosk-api/kioskButtonsTypes';
 import { useUpdateKioskButton } from '@/hooks/kiosk-api/useUpdateKioskButton';
 import {
@@ -41,7 +41,7 @@ export function KioskButtonByKioskPanel({
 }: Props) {
   const { updateKioskButtonAsync } = useUpdateKioskButton();
   const { updatePlacementAsync } = useUpdateKioskButtonPlacement();
-  const { uploadImageAsync, deleteImageAsync } = useKioskButtonImage();
+  const { uploadImageAsync } = useKioskButtonImage();
   const [moving, setMoving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -59,6 +59,23 @@ export function KioskButtonByKioskPanel({
   const [span, setSpan] = useState(1);
 
   const selected = buttons.find((b) => b.id === selectedId) ?? null;
+  // 미표시(OFF_MAIN) 아이콘 — 미러에 안 나오므로 별도 목록으로 표시
+  const offMainButtons = buttons.filter(
+    (b) => (b.placement ?? 'MAIN') === 'OFF_MAIN' || (b.line ?? 0) < 1,
+  );
+
+  const formatDuration = (sec?: number): string => {
+    const s = Math.max(0, Math.floor(sec ?? 0));
+    if (s === 0) return '0초';
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const r = s % 60;
+    const parts: string[] = [];
+    if (h) parts.push(`${h}시간`);
+    if (m) parts.push(`${m}분`);
+    if (r || parts.length === 0) parts.push(`${r}초`);
+    return parts.join(' ');
+  };
 
   // 선택 버튼이 바뀌면 폼 리셋
   useEffect(() => {
@@ -148,16 +165,6 @@ export function KioskButtonByKioskPanel({
     }
   };
 
-  const removeImage = async (b: KioskButtonDto) => {
-    if (!window.confirm(`${b.buttonType} 이미지를 제거할까요? (프리셋 아이콘으로 복귀)`)) return;
-    try {
-      await deleteImageAsync(b.id);
-      onNotice?.('버튼 이미지가 제거되었습니다.');
-    } catch (err) {
-      onNotice?.(err instanceof Error ? err.message : '이미지를 제거하지 못했습니다.');
-    }
-  };
-
   // 확인 모달 메시지용: 이동 대상/교환 상대
   const moveSource = pendingMove ? buttons.find((b) => b.id === pendingMove.sourceId) : null;
   const moveTarget =
@@ -220,7 +227,7 @@ export function KioskButtonByKioskPanel({
               </p>
             </div>
           ) : (
-            <div className={shared.card}>
+            <div className={`${shared.card} ${styles.detailBox}`}>
               <div className={styles.detailHead}>
                 <span className={styles.detailIcon}>
                   {selected.imageUrl ? (
@@ -236,11 +243,23 @@ export function KioskButtonByKioskPanel({
                 <div>
                   <div className={shared.tdBold} style={{ fontSize: 15 }}>{selected.buttonType}</div>
                   <div className={styles.formHint} style={{ margin: 0 }}>
-                    {positionLabel(selected.line, selected.position, selected.span)} · 총 클릭{' '}
-                    {selected.totalClicks?.toLocaleString() ?? 0}
+                    {positionLabel(selected.line, selected.position, selected.span)}
                   </div>
                 </div>
               </div>
+
+              <table className={styles.detailTable}>
+                <tbody>
+                  <tr>
+                    <td>총 클릭</td>
+                    <td>{(selected.totalClicks ?? 0).toLocaleString()}회</td>
+                  </tr>
+                  <tr>
+                    <td>사용 시간</td>
+                    <td>{formatDuration(selected.totalDuration)}</td>
+                  </tr>
+                </tbody>
+              </table>
 
               <div className={styles.editForm}>
                 <label className={styles.editField}>
@@ -305,12 +324,8 @@ export function KioskButtonByKioskPanel({
                     </select>
                   </label>
                 </div>
-                <label className={styles.editField}>
-                  <span>프리셋 아이콘 (이미지 없을 때 표시)</span>
-                  <KioskIconPicker value={iconKey} onChange={setIconKey} />
-                </label>
                 <div className={styles.editField}>
-                  <span>아이콘 이미지 {selected.imageUrl ? '(등록됨)' : '(프리셋 사용중)'}</span>
+                  <span>아이콘 이미지 {selected.imageUrl ? '(등록됨)' : '(미등록)'}</span>
                   <input
                     ref={fileRef}
                     type='file'
@@ -321,7 +336,7 @@ export function KioskButtonByKioskPanel({
                       e.target.value = '';
                     }}
                   />
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  <div>
                     <button
                       type='button'
                       className={shared.btnOutline}
@@ -330,15 +345,6 @@ export function KioskButtonByKioskPanel({
                     >
                       {uploading ? '업로드…' : selected.imageUrl ? '이미지 교체' : '이미지 등록'}
                     </button>
-                    {selected.imageUrl ? (
-                      <button
-                        type='button'
-                        className={shared.btnOutline}
-                        onClick={() => void removeImage(selected)}
-                      >
-                        이미지 제거
-                      </button>
-                    ) : null}
                   </div>
                 </div>
               </div>
@@ -357,6 +363,35 @@ export function KioskButtonByKioskPanel({
           )}
         </div>
       </div>
+
+      {/* 미표시(OFF_MAIN) 아이콘 — 미러에 안 나오므로 여기서 표시·선택 */}
+      {offMainButtons.length > 0 ? (
+        <div className={styles.offMainSection}>
+          <div className={styles.previewLabel}>
+            미표시 아이콘 ({offMainButtons.length}) — 클릭 후 배치를 ‘그리드’로 바꾸면 다시 표시됩니다
+          </div>
+          <div className={styles.offMainList}>
+            {offMainButtons.map((b) => (
+              <button
+                key={b.id}
+                type='button'
+                className={`${styles.offMainChip} ${selectedId === b.id ? styles.offMainChipSel : ''}`}
+                onClick={() => onSelectButton(b)}
+                title={b.buttonName ?? b.buttonType}
+              >
+                <span className={styles.offMainIcon}>
+                  {b.imageUrl ? (
+                    <img src={b.imageUrl} alt='' />
+                  ) : (
+                    <KioskAppIconVisual iconKey={resolveKioskButtonIconKey(b.iconKey)} tileSize={34} />
+                  )}
+                </span>
+                <span className={styles.offMainName}>{b.buttonType}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
 
       {/* 드래그 SWAP 확인 모달 */}
       {pendingMove && moveSource ? (

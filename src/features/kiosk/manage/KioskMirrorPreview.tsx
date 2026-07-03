@@ -67,6 +67,28 @@ export function KioskMirrorPreview({
     );
   };
 
+  // 그리드 타일 아이콘 — 타일을 꽉 채운다(흰 여백 없음). span=2 는 가로로 꽉 채움.
+  // draggable=false + CSS pointer-events:none 으로 이미지가 타일 드래그를 가로채지 않게 한다.
+  const gridVisual = (b: KioskButtonDto) => {
+    const ratio = b.span === 2 ? '2.05 / 1' : '1 / 1';
+    if (b.imageUrl) {
+      return (
+        <img
+          src={b.imageUrl}
+          alt=''
+          draggable={false}
+          className={styles.mFillImg}
+          style={{ aspectRatio: ratio }}
+        />
+      );
+    }
+    return (
+      <span className={styles.mFillGlyph} style={{ aspectRatio: ratio, background: tileBgFor(b.id) }}>
+        <KioskAppIconGlyph iconKey={resolveKioskButtonIconKey(b.iconKey)} size={30} />
+      </span>
+    );
+  };
+
   const finishDrop = (targetLine: number, targetPos: number) => {
     const id = dragId;
     setDragId(null);
@@ -129,10 +151,13 @@ export function KioskMirrorPreview({
           return (
             <div
               key={key}
-              className={`${styles.mTile} ${span === 2 ? styles.mTileWide : ''} ${
-                selected ? styles.mTileSel : ''
-              } ${dragId === b.id ? styles.mDragging : ''} ${over ? styles.mOver : ''}`}
-              style={{ gridColumn: `${p} / span ${span}`, ...(selected ? { borderColor: t.accent } : {}) }}
+              className={`${styles.mTile} ${selected ? styles.mTileSel : ''} ${
+                dragId === b.id ? styles.mDragging : ''
+              } ${over ? styles.mOver : ''}`}
+              style={{
+                gridColumn: `${p} / span ${span}`,
+                ...(selected ? { outline: `3px solid ${t.accent}`, outlineOffset: '2px' } : {}),
+              }}
               draggable={!disabled}
               title={`${b.buttonType} · ${line}열 ${p}${span === 2 ? `~${p + 1}` : ''}`}
               onClick={() => onSelect?.(b)}
@@ -147,7 +172,7 @@ export function KioskMirrorPreview({
               }}
               {...dropHandlers(key, line, p)}
             >
-              {visual(b, 50, b.id)}
+              {gridVisual(b)}
               <span className={styles.mTileLabel}>{b.buttonType}</span>
             </div>
           );
@@ -182,8 +207,9 @@ export function KioskMirrorPreview({
 
       <div className={styles.mNoticeRow}>
         <div className={styles.mNotice}>
-          <span className={styles.mNoticeTag}>공지</span>
-          <span className={styles.mNoticeText}>안내 문구 영역 (장식)</span>
+          <span className={styles.mNoticeTag} style={{ color: t.accent }}>공지</span>
+          <span className={styles.mNoticeDivider} style={{ background: t.accent }} />
+          <span className={styles.mNoticeText}>안내 문구가 이 영역에 표시됩니다. (표시 전용)</span>
         </div>
         <div
           className={styles.mWeather}
@@ -191,7 +217,13 @@ export function KioskMirrorPreview({
           title={weather ? `${weather.buttonType} (고정)` : '날씨'}
           style={weather && selectedId === weather.id ? { outline: `2px solid ${t.accent}` } : undefined}
         >
-          {weather ? visual(weather, 38, weather.id) : null}
+          <span className={styles.mWeatherIcon}>
+            {weather?.imageUrl ? (
+              <img src={weather.imageUrl} alt='' draggable={false} className={styles.mCircleImg} />
+            ) : (
+              '☁️'
+            )}
+          </span>
           <span className={styles.mTemp}>18°</span>
         </div>
       </div>
@@ -222,7 +254,7 @@ export function KioskMirrorPreview({
         </span>
       </div>
 
-      {gridLines.map(renderGridRow)}
+      <div className={styles.mGrid}>{gridLines.map(renderGridRow)}</div>
 
       <div className={styles.mBottomBar}>
         {fixedChip(cam1, '스마트관광')}
