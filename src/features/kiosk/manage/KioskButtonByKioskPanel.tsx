@@ -14,6 +14,7 @@ import { KioskMirrorHwaseong } from './KioskMirrorHwaseong';
 import { KioskMirrorGridApp, INSADONG_SKIN, OSAN_SKIN } from './KioskMirrorGridApp';
 import { PLACEMENT_OPTIONS, SPAN_OPTIONS, positionLabel } from './constants';
 import { resolveKioskButtonIconKey } from './kioskButtonDisplay';
+import { formatUsageDaysHours, formatUsageExact } from '../kioskFormatters';
 import styles from './KioskAppManagePage.module.css';
 
 type Props = {
@@ -65,19 +66,6 @@ export function KioskButtonByKioskPanel({
   const offMainButtons = buttons.filter(
     (b) => (b.placement ?? 'MAIN') === 'OFF_MAIN' || (b.line ?? 0) < 1,
   );
-
-  const formatDuration = (sec?: number): string => {
-    const s = Math.max(0, Math.floor(sec ?? 0));
-    if (s === 0) return '0초';
-    const h = Math.floor(s / 3600);
-    const m = Math.floor((s % 3600) / 60);
-    const r = s % 60;
-    const parts: string[] = [];
-    if (h) parts.push(`${h}시간`);
-    if (m) parts.push(`${m}분`);
-    if (r || parts.length === 0) parts.push(`${r}초`);
-    return parts.join(' ');
-  };
 
   // 선택 버튼이 바뀌면 폼 리셋
   useEffect(() => {
@@ -319,8 +307,10 @@ export function KioskButtonByKioskPanel({
                     <td>{(selected.totalClicks ?? 0).toLocaleString()}회</td>
                   </tr>
                   <tr>
-                    <td>사용 시간</td>
-                    <td>{formatDuration(selected.totalDuration)}</td>
+                    <td>누적 사용 시간</td>
+                    <td title={formatUsageExact(selected.totalDuration)}>
+                      {formatUsageDaysHours(selected.totalDuration)}
+                    </td>
                   </tr>
                 </tbody>
               </table>
