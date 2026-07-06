@@ -60,6 +60,29 @@ export function formatDurationSeconds(sec: number): string {
 }
 
 /**
+ * 누적 총 사용시간 → 일·시간 2단위 표기 (관리자 아이콘 사용시간 카드용).
+ *   · 초·분은 수백 세션 집계에선 노이즈라 버림(floor).
+ *   · 선행 0 단위 생략: `0일 6시간`→`6시간`, 일 경계면 `108일`(0시간 숨김).
+ *   · 1시간 미만은 `0시간` 대신 `1시간 미만`, 0/무효는 `—`.
+ */
+export function formatUsageDaysHours(totalSec?: number | null): string {
+  if (totalSec == null || !Number.isFinite(totalSec) || totalSec <= 0) return '—';
+  const s = Math.floor(totalSec);
+  const d = Math.floor(s / DAY);
+  const h = Math.floor((s % DAY) / HOUR);
+  if (d > 0) return h > 0 ? `${d}일 ${h}시간` : `${d}일`;
+  if (h > 0) return `${h}시간`;
+  return '1시간 미만';
+}
+
+/** 툴팁용 정확값 — 일·시간·분·초 전체 + 총 초. 0/무효는 '기록 없음'. */
+export function formatUsageExact(totalSec?: number | null): string {
+  if (totalSec == null || !Number.isFinite(totalSec) || totalSec <= 0) return '기록 없음';
+  const s = Math.floor(totalSec);
+  return `${formatDurationFromTotalSeconds(s)} (${s.toLocaleString('ko-KR')}초)`;
+}
+
+/**
  * Chart axis / compact: 초·분·시간·일까지 (년/개월 없음).
  */
 export function formatDurationSecondsShort(sec: number): string {
