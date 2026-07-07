@@ -467,3 +467,10 @@
   height: 100%;
   object-fit: cover;
 }
+
+/* 화장실 이미지가 있을 때만: 점선 플레이스홀더 테두리/배경 제거하고 원형으로 클립 */
+.bottomNavCircleImg {
+  overflow: hidden;
+  border: none;
+  background: transparent;
+}

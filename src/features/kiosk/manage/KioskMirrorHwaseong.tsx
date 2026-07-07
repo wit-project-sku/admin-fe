@@ -271,7 +271,11 @@ export function KioskMirrorHwaseong({ buttons, onMove, onSelect, selectedId, dis
             <span className={styles.bottomNavLabel}>{cam2?.buttonType ?? 'AR 한복체험'}</span>
           </div>
           <div className={styles.bottomNavItem} onClick={() => cam3 && onSelect?.(cam3)}>
-            <div className={styles.bottomNavCircle}>🚻</div>
+            <div
+              className={`${styles.bottomNavCircle} ${cam3?.imageUrl ? styles.bottomNavCircleImg : ''}`}
+            >
+              {cam3?.imageUrl ? <img src={cam3.imageUrl} alt='' /> : '🚻'}
+            </div>
             <span className={styles.bottomNavLabel}>{cam3?.buttonType ?? '화장실'}</span>
           </div>
         </div>

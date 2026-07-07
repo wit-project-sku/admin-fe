@@ -280,7 +280,13 @@ export function KioskMirrorGridApp({ buttons, skin, onMove, onSelect, selectedId
             </div>
           </div>
           <div className={styles.restroomItem} onClick={() => cam3 && onSelect?.(cam3)}>
-            <div className={styles.navPlaceholder}>🚻</div>
+            {cam3?.imageUrl ? (
+              <div className={styles.navCircle}>
+                <img src={cam3.imageUrl} alt='' />
+              </div>
+            ) : (
+              <div className={styles.navPlaceholder}>🚻</div>
+            )}
             <span className={styles.navLabel}>{cam3?.buttonType ?? '화장실'}</span>
           </div>
         </div>
