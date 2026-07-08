@@ -3,7 +3,7 @@ import m from './DonationCampaignDetailModal.module.css';
 import { InfoField, ModalContainer, ModalFooter, ModalHeader } from './ModalElements';
 import ImageZoom from '@components/common/ImageZoom';
 import type { DonationCampaign } from '../../hooks/donation-api/useGetDonationCampaigns';
-import { CAMPAIGN_STATUS_MAP, DONATION_TYPE_LABEL } from '../../features/donations/donationListConfig';
+import { CAMPAIGN_STATUS_MAP } from '../../features/donations/donationListConfig';
 import {
   formatAmountOptions,
   formatCampaignProgress,
@@ -35,16 +35,21 @@ export default function DonationCampaignDetailModal({ open, campaign, onClose }:
     cls: 'badgeGray',
   };
 
+  const effects = (campaign.effects ?? []).filter((e) => e && e.trim());
+
   return (
     <ModalContainer onClose={onClose} modalClassName={m.wideModal}>
       <ModalHeader title='캠페인 상세' onClose={onClose} />
 
       <div className={m.body}>
-        {campaign.imageUrl ? (
-          <div className={m.imageWrap}>
+        <div className={m.imageWrap}>
+          {campaign.imageUrl ? (
             <ImageZoom src={campaign.imageUrl} alt={campaign.name} title={campaign.name} className={m.campaignImage} />
-          </div>
-        ) : null}
+          ) : (
+            <div className={m.imagePlaceholder}>등록된 이미지가 없습니다.</div>
+          )}
+        </div>
+        <p className={m.imageHint}>이미지는 캠페인 수정에서 등록·변경할 수 있습니다.</p>
 
         <div className={m.section}>
           <div className={m.fieldRow}>
@@ -57,17 +62,7 @@ export default function DonationCampaignDetailModal({ open, campaign, onClose }:
             </div>
           </div>
           <InfoField label='캠페인명' value={campaign.name} />
-          <div className={m.fieldRow}>
-            <InfoField label='주최 단체' value={campaign.organization?.name ?? '미지정'} />
-            <InfoField
-              label='기부 종류'
-              value={
-                campaign.organization
-                  ? (DONATION_TYPE_LABEL[campaign.organization.type] ?? campaign.organization.type)
-                  : '-'
-              }
-            />
-          </div>
+          <InfoField label='주최 단체' value={campaign.organization?.name ?? '미지정'} />
           <InfoField label='설명' value={campaign.description || '-'} />
           <div className={m.fieldRow}>
             <InfoField label='목표 금액' value={formatKrw(campaign.targetAmount)} />
@@ -83,36 +78,17 @@ export default function DonationCampaignDetailModal({ open, campaign, onClose }:
           <InfoField label='기부 금액 옵션' value={formatAmountOptions(campaign.amountOptions)} />
         </div>
 
-        {campaign.programs?.length ? (
+        {effects.length ? (
           <div className={m.section}>
-            <h3 className={m.sectionTitle}>하단 카드</h3>
-            {campaign.programs.map((program, index) => (
-              <div key={`program-${index}`} className={m.contentCard}>
-                <p className={m.cardTitle}>{program.title}</p>
-                <p className={m.cardDesc}>{program.desc}</p>
-              </div>
-            ))}
-          </div>
-        ) : null}
-
-        {campaign.sections?.length ? (
-          <div className={m.section}>
-            <h3 className={m.sectionTitle}>콘텐츠 섹션</h3>
-            {campaign.sections.map((section, index) => (
-              <div key={`section-${index}`} className={m.contentCard}>
-                <p className={m.cardTitle}>
-                  {section.titleRuns?.length ? (
-                    <SectionTitle title={section.title} titleRuns={section.titleRuns} />
-                  ) : (
-                    section.title
-                  )}
-                </p>
-                <p className={m.cardDesc}>{section.desc}</p>
-                {section.img ? (
-                  <ImageZoom src={section.img} alt='' title={campaign.name} className={m.sectionImage} />
-                ) : null}
-              </div>
-            ))}
+            <h3 className={m.sectionTitle}>기대효과</h3>
+            <div className={m.effectChips}>
+              {effects.map((effect, index) => (
+                <div key={`effect-${index}`} className={m.effectChip}>
+                  <span className={m.effectNumber}>{index + 1}</span>
+                  <span className={m.effectText}>{effect}</span>
+                </div>
+              ))}
+            </div>
           </div>
         ) : null}
       </div>
@@ -120,44 +96,4 @@ export default function DonationCampaignDetailModal({ open, campaign, onClose }:
       <ModalFooter onCancel={onClose} cancelText='닫기' />
     </ModalContainer>
   );
-}
-
-type SectionTitleProps = {
-  title: string;
-  titleRuns: NonNullable<DonationCampaign['sections'][number]['titleRuns']>;
-};
-
-function SectionTitle({ title, titleRuns }: SectionTitleProps) {
-  if (!titleRuns.length) return <>{title}</>;
-
-  const parts: React.ReactNode[] = [];
-  let cursor = 0;
-
-  titleRuns.forEach((run, index) => {
-    const idx = title.indexOf(run.text, cursor);
-    if (idx === -1) return;
-
-    if (idx > cursor) {
-      parts.push(<span key={`plain-${index}`}>{title.slice(cursor, idx)}</span>);
-    }
-
-    parts.push(
-      <span
-        key={`run-${index}`}
-        style={{
-          fontWeight: run.bold ? 700 : undefined,
-          color: run.color || undefined,
-        }}
-      >
-        {run.text}
-      </span>,
-    );
-    cursor = idx + run.text.length;
-  });
-
-  if (cursor < title.length) {
-    parts.push(<span key='tail'>{title.slice(cursor)}</span>);
-  }
-
-  return <>{parts.length ? parts : title}</>;
 }

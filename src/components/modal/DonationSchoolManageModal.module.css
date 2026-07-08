@@ -1,0 +1,61 @@
+.wideModal {
+  width: min(94vw, 620px) !important;
+  max-width: min(94vw, 620px) !important;
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.formShell {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow-y: auto;
+}
+
+.basicGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 20px;
+}
+
+.spanFull {
+  grid-column: 1 / -1;
+}
+
+.imageBlock {
+  padding-top: 4px;
+}
+
+.imageHint {
+  margin: 10px 0 0;
+  font-size: 11px;
+  color: var(--text-muted, #64748b);
+  line-height: 1.4;
+}
+
+@media (max-width: 720px) {
+  .wideModal {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .body {
+    padding: 20px 16px;
+  }
+
+  .basicGrid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { APIService } from '../../utils/axios';
-import { buildDonationCampaignMultipart } from '../../utils/formDataBuilder';
+import { buildDataImageMultipart } from '../../utils/formDataBuilder';
 import type { CampaignWriteBody, DonationCampaignMultipartFiles } from './donationApiTypes';
 import { DONATION_CAMPAIGNS_QUERY_KEY } from './useGetDonationCampaigns';
 
@@ -12,9 +12,9 @@ export const useCreateDonationCampaign = () => {
   const queryClient = useQueryClient();
 
   const { mutate, mutateAsync, isPending, error } = useMutation({
-    mutationFn: async ({ campaignData, image, sectionImages }: CreateDonationCampaignPayload) => {
-      const formData = buildDonationCampaignMultipart(campaignData, { image, sectionImages });
-      return await APIService.private.post('/donations/campaigns', formData, {
+    mutationFn: async ({ campaignData, image }: CreateDonationCampaignPayload) => {
+      const formData = buildDataImageMultipart(campaignData, image);
+      return await APIService.private.post('/admin/donations/campaigns', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
     },

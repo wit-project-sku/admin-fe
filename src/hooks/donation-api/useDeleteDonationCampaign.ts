@@ -7,7 +7,7 @@ export const useDeleteDonationCampaign = () => {
 
   const { mutate, mutateAsync, isPending, error } = useMutation({
     mutationFn: async (campaignId: number | string) => {
-      return await APIService.private.delete(`/donations/campaigns/${campaignId}`);
+      return await APIService.private.delete(`/admin/donations/campaigns/${campaignId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [DONATION_CAMPAIGNS_QUERY_KEY] });

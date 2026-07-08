@@ -3,7 +3,8 @@ import { APIService } from '../../utils/axios';
 import type { DonationTypeCode } from './donationApiTypes';
 
 /**
- * 기부 단체(NGO/학교) — payment-be `/api/admin/donations/organizations`.
+ * 기부 단체(NGO) — 목록 조회는 공용(`/api/donations/organizations`),
+ * 등록/수정/삭제는 관리자 전용(`/api/admin/donations/organizations`).
  * 삭제는 소프트(active=false)이며, 행은 보존된다(캠페인 FK 보호).
  */
 export type DonationOrganization = {
@@ -33,7 +34,6 @@ export type GetDonationOrganizationsResponse = {
 export type GetDonationOrganizationsParams = {
   pageNum?: number;
   pageSize?: number;
-  type?: DonationTypeCode | '';
   /** 활성 여부 필터. 미전송 시 전체. */
   active?: boolean;
 };
@@ -47,22 +47,21 @@ export type DonationOrganizationWriteBody = {
 
 export const DONATION_ORGANIZATIONS_QUERY_KEY = 'donation-organizations';
 
-const ORGANIZATIONS_PATH = '/admin/donations/organizations';
+const ORGANIZATIONS_PUBLIC_PATH = '/donations/organizations';
+const ORGANIZATIONS_ADMIN_PATH = '/admin/donations/organizations';
 
 export const useGetDonationOrganizations = (params: GetDonationOrganizationsParams = {}) => {
   const pageNum = params.pageNum ?? 1;
   const pageSize = params.pageSize ?? 10;
-  const type = params.type || undefined;
   const active = params.active;
 
   return useQuery<GetDonationOrganizationsResponse>({
-    queryKey: [DONATION_ORGANIZATIONS_QUERY_KEY, pageNum, pageSize, type ?? '', active ?? ''],
+    queryKey: [DONATION_ORGANIZATIONS_QUERY_KEY, pageNum, pageSize, active ?? ''],
     queryFn: () =>
-      APIService.private.get<GetDonationOrganizationsResponse>(ORGANIZATIONS_PATH, {
+      APIService.private.get<GetDonationOrganizationsResponse>(ORGANIZATIONS_PUBLIC_PATH, {
         params: {
           pageNum,
           pageSize,
-          ...(type ? { type } : {}),
           ...(active != null ? { active } : {}),
         },
       }),
@@ -74,7 +73,7 @@ export const useCreateDonationOrganization = () => {
   const queryClient = useQueryClient();
   const { mutate, mutateAsync, isPending, error } = useMutation({
     mutationFn: (body: DonationOrganizationWriteBody) =>
-      APIService.private.post(ORGANIZATIONS_PATH, body),
+      APIService.private.post(ORGANIZATIONS_ADMIN_PATH, body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [DONATION_ORGANIZATIONS_QUERY_KEY] });
     },
@@ -86,7 +85,7 @@ export const useUpdateDonationOrganization = () => {
   const queryClient = useQueryClient();
   const { mutate, mutateAsync, isPending, error } = useMutation({
     mutationFn: ({ id, body }: { id: number; body: DonationOrganizationWriteBody }) =>
-      APIService.private.put(`${ORGANIZATIONS_PATH}/${id}`, body),
+      APIService.private.put(`${ORGANIZATIONS_ADMIN_PATH}/${id}`, body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [DONATION_ORGANIZATIONS_QUERY_KEY] });
     },
@@ -97,7 +96,7 @@ export const useUpdateDonationOrganization = () => {
 export const useDeleteDonationOrganization = () => {
   const queryClient = useQueryClient();
   const { mutate, mutateAsync, isPending, error } = useMutation({
-    mutationFn: (id: number) => APIService.private.delete(`${ORGANIZATIONS_PATH}/${id}`),
+    mutationFn: (id: number) => APIService.private.delete(`${ORGANIZATIONS_ADMIN_PATH}/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [DONATION_ORGANIZATIONS_QUERY_KEY] });
     },

@@ -19,13 +19,7 @@ export function formatKrw(amount: number | null | undefined): string {
 
 export function formatAmountOptions(options: CampaignAmountOption[] | null | undefined): string {
   if (!options?.length) return '-';
-  return options
-    .map((opt) => {
-      const label = opt.label?.trim();
-      const amount = formatKrw(opt.amount);
-      return label ? `${label} (${amount})` : amount;
-    })
-    .join(' · ');
+  return options.map((opt) => formatKrw(opt.amount)).join(' · ');
 }
 
 export function formatCampaignProgress(

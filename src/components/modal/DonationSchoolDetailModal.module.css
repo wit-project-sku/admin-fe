@@ -19,7 +19,7 @@
   background: var(--gray-bg, #f1f5f9);
 }
 
-.campaignImage {
+.schoolImage {
   max-width: 100%;
   max-height: 220px;
   object-fit: cover;
@@ -48,13 +48,6 @@
   gap: 12px;
 }
 
-.sectionTitle {
-  margin: 0;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
 .fieldRow {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -79,40 +72,4 @@
   font-weight: 600;
   color: var(--text-primary);
   line-height: 1.5;
-}
-
-.effectChips {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.effectChip {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border: 1px solid var(--border, #e2e8f0);
-  border-radius: 10px;
-  background: var(--gray-bg, #f8fafc);
-}
-
-.effectNumber {
-  flex-shrink: 0;
-  width: 22px;
-  height: 22px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: var(--blue-bg, #eff6ff);
-  color: var(--blue-text, #1d4ed8);
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.effectText {
-  font-size: 13px;
-  color: var(--text-primary);
-  line-height: 1.4;
 }
