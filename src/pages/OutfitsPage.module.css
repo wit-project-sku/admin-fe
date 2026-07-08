@@ -72,8 +72,8 @@
 }
 
 .previewWrapper {
-  width: 34px;
-  height: 40px;
+  width: 51px;
+  height: 60px;
   margin: 0 auto;
   border-radius: var(--radius-sm);
   overflow: hidden;
@@ -323,7 +323,7 @@
 .tableThumb {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain; /* cover→contain: 세로/가로 비율 다른 의상도 잘리지 않고 전체 표시 */
 }
 
 .tableThumbPlaceholder {
