@@ -36,6 +36,10 @@ export type OutfitRow = {
   name: string;
   displayName: string;
   categoryName: string;
+  /** 의상 유형(NORMAL | PREMIUM | SCHOOL_UNIFORM). */
+  type: string;
+  /** 교복일 때 학교명(그 외 빈 문자열). */
+  schoolName: string;
   imageUrl?: string;
   images?: { imageUrl?: string }[];
   kioskIds: (string | number)[];
@@ -53,6 +57,8 @@ export function mapOutfitListItemToRow(raw: unknown): OutfitRow {
       name: '',
       displayName: '-',
       categoryName: '-',
+      type: 'NORMAL',
+      schoolName: '',
       kioskIds: [],
       status: 'INACTIVE',
       operationStartYmd: '',
@@ -63,6 +69,8 @@ export function mapOutfitListItemToRow(raw: unknown): OutfitRow {
   const id = o.id ?? o.outfitId ?? '';
   const outfitCode = firstStr(o.outfitCode, o.code, o.outfit_code) || '-';
   const name = firstStr(o.name, o.title, o.outfitName, o.outfit_name);
+  const type = firstStr(o.type) || 'NORMAL';
+  const schoolName = firstStr(o.schoolName, o.school_name);
   const cat = o.category as Record<string, unknown> | undefined;
   const categoryName = firstStr(cat?.name, o.categoryName, o.category_name) || '-';
 
@@ -94,6 +102,8 @@ export function mapOutfitListItemToRow(raw: unknown): OutfitRow {
     name,
     displayName,
     categoryName,
+    type,
+    schoolName,
     imageUrl,
     images,
     kioskIds,

@@ -5,6 +5,7 @@ import { useGetOutfitById } from '../../hooks/inventory-api/useGetOutfitById';
 import { useAddOutfit } from '../../hooks/inventory-api/useAddOutfit';
 import { useUpdateOutfit } from '../../hooks/inventory-api/useUpdateOutfit';
 import { useGetAllOutfitCategories } from '../../hooks/inventory-api/useGetAllOutfitCategories';
+import { useGetDonationSchools } from '../../hooks/donation-api/useDonationSchools';
 import type { OutfitType, OutfitWriteBody } from '../../hooks/inventory-api/outfitApiTypes';
 import {
   extractKioskIdsFromDetail,
@@ -32,14 +33,18 @@ const OUTFIT_STATUS_OPTIONS = [
   { value: 'INACTIVE', label: '비활성화' },
 ];
 
-const OUTFIT_TYPE_OPTIONS = [
+const OUTFIT_TYPE_OPTIONS: { value: OutfitType; label: string }[] = [
   { value: 'NORMAL', label: '일반 (NORMAL)' },
   { value: 'PREMIUM', label: '프리미엄 (PREMIUM)' },
+  { value: 'SCHOOL_UNIFORM', label: '교복 (SCHOOL_UNIFORM)' },
 ];
+
+const UNIFORM: OutfitType = 'SCHOOL_UNIFORM';
 
 type OutfitFormState = {
   outfitCode: string;
   categoryId: string;
+  schoolId: string;
   status: 'ACTIVE' | 'INACTIVE';
   type: OutfitType;
   kioskIds: (string | number)[];
@@ -49,18 +54,25 @@ type OutfitFormState = {
 
 type OutfitFieldErrors = Partial<
   Record<
-    'outfitCode' | 'categoryId' | 'status' | 'kioskIds' | 'startDate' | 'endDate' | 'image',
+    'outfitCode' | 'categoryId' | 'schoolId' | 'status' | 'kioskIds' | 'startDate' | 'endDate' | 'image',
     string
   >
 >;
 
 function validateOutfitForm(form: OutfitFormState, previewCount: number): OutfitFieldErrors {
   const e: OutfitFieldErrors = {};
-  if (!form.outfitCode.trim()) e.outfitCode = '의상 코드를 입력해 주세요.';
+  const isUniform = form.type === UNIFORM;
 
-  const categoryId = Number(form.categoryId);
-  if (!Number.isFinite(categoryId) || categoryId <= 0) {
-    e.categoryId = '의상 카테고리를 선택해 주세요.';
+  // 코드: 일반/프리미엄은 필수, 교복은 선택
+  if (!isUniform && !form.outfitCode.trim()) e.outfitCode = '의상 코드를 입력해 주세요.';
+
+  // 분류: 교복이면 학교, 그 외는 카테고리
+  if (isUniform) {
+    const schoolId = Number(form.schoolId);
+    if (!Number.isFinite(schoolId) || schoolId <= 0) e.schoolId = '학교를 선택해 주세요.';
+  } else {
+    const categoryId = Number(form.categoryId);
+    if (!Number.isFinite(categoryId) || categoryId <= 0) e.categoryId = '의상 카테고리를 선택해 주세요.';
   }
 
   if (form.status !== 'ACTIVE' && form.status !== 'INACTIVE') {
@@ -84,15 +96,20 @@ function validateOutfitForm(form: OutfitFormState, previewCount: number): Outfit
 
 function buildOutfitWriteBody(form: OutfitFormState): OutfitWriteBody {
   const end = form.endDate.trim();
-  return {
-    outfitCode: form.outfitCode.trim(),
+  const code = form.outfitCode.trim();
+  const isUniform = form.type === UNIFORM;
+
+  const body: OutfitWriteBody = {
     status: form.status,
     type: form.type,
-    categoryId: Number(form.categoryId),
     kioskIds: form.kioskIds.map((k) => Number(k)).filter((n) => Number.isFinite(n) && n > 0),
     startDate: form.startDate.trim(),
     endDate: end ? end : null,
   };
+  if (code) body.outfitCode = code;
+  if (isUniform) body.schoolId = Number(form.schoolId);
+  else body.categoryId = Number(form.categoryId);
+  return body;
 }
 
 type OutfitManageModalProps = {
@@ -103,9 +120,26 @@ type OutfitManageModalProps = {
   onSuccess?: () => void;
 };
 
+const EMPTY_FORM: OutfitFormState = {
+  outfitCode: '',
+  categoryId: '',
+  schoolId: '',
+  status: 'ACTIVE',
+  type: 'NORMAL',
+  kioskIds: [],
+  startDate: '',
+  endDate: '',
+};
+
 export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuccess }: OutfitManageModalProps) {
   const { data: categoriesData, isLoading: categoriesLoading, error: categoriesError } = useGetAllOutfitCategories();
   const categories = useMemo(() => unwrapList(categoriesData) as SelectOption[], [categoriesData]);
+  // 교복 학교 선택용 — 현재 학교(비활성 포함)도 항상 해석되도록 전체 조회
+  const { data: schoolsData } = useGetDonationSchools({ pageSize: 500, includeInactive: true });
+  const schoolOptions = useMemo<SelectOption[]>(() => {
+    const list = schoolsData?.data?.content ?? [];
+    return list.map((s) => ({ value: s.id, label: s.active ? s.name : `${s.name} (비활성)` }));
+  }, [schoolsData]);
   const { data: kiosksData } = useGetKiosks();
   const kiosks = unwrapList(kiosksData) as MultiSelectItem[];
   const { data: detailData, isLoading: detailLoading } = useGetOutfitById(open && mode === 'edit' ? outfitId : null);
@@ -113,34 +147,19 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
   const { updateOutfitAsync } = useUpdateOutfit();
   const [saving, setSaving] = useState(false);
 
-  const [form, setForm] = useState<OutfitFormState>({
-    outfitCode: '',
-    categoryId: '',
-    status: 'ACTIVE',
-    type: 'NORMAL',
-    kioskIds: [],
-    startDate: '',
-    endDate: '',
-  });
+  const [form, setForm] = useState<OutfitFormState>(EMPTY_FORM);
 
   const [image, setImage] = useState<File[]>([]);
   const [previewUrl, setPreviewUrl] = useState<string[]>([]);
   const [fieldErrors, setFieldErrors] = useState<OutfitFieldErrors>({});
 
   const isEdit = mode === 'edit';
+  const isUniformType = form.type === UNIFORM;
 
   useEffect(() => {
     if (!open) return;
     if (!isEdit) {
-      setForm({
-        outfitCode: '',
-        categoryId: '',
-        status: 'ACTIVE',
-        type: 'NORMAL',
-        kioskIds: [],
-        startDate: '',
-        endDate: '',
-      });
+      setForm(EMPTY_FORM);
       setPreviewUrl([]);
       setImage([]);
     }
@@ -152,11 +171,17 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
     const d = unwrapDetailBody(detailData);
     if (d.id != null && String(d.id) !== String(outfitId)) return;
 
+    const rawType = d.type;
+    const type: OutfitType =
+      rawType === 'PREMIUM' || rawType === 'SCHOOL_UNIFORM' ? rawType : 'NORMAL';
+    const schoolId = d.schoolId ?? d.school_id;
+
     setForm({
       outfitCode: pickOutfitCodeForInput(d),
       categoryId: resolveOutfitCategoryId(d, categories),
+      schoolId: schoolId != null ? String(schoolId) : '',
       status: normalizeOutfitStatus(d.status),
-      type: d.type === 'PREMIUM' ? 'PREMIUM' : 'NORMAL',
+      type,
       kioskIds: extractKioskIdsFromDetail(d),
       startDate: pickOperationStartFromDetail(d),
       endDate: pickOperationEndFromDetail(d),
@@ -220,8 +245,6 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
     setSaving(true);
     try {
       if (mode === 'create') {
-        console.log(outfitData, 'data');
-
         await addOutfitAsync({ outfitData, images: image });
       } else if (outfitId != null) {
         await updateOutfitAsync({ outfitId, outfitData, images: image });
@@ -234,8 +257,29 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
     }
   };
 
+  // 유형 변경: 교복 ↔ 일반/프리미엄 경계는 수정에서 막는다(생성에서만 자유 선택).
+  // 수정 시 교복이면 교복만, 일반/프리미엄이면 그 둘만 노출한다.
+  const typeOptions = useMemo(() => {
+    if (!isEdit) return OUTFIT_TYPE_OPTIONS;
+    return isUniformType
+      ? OUTFIT_TYPE_OPTIONS.filter((o) => o.value === UNIFORM)
+      : OUTFIT_TYPE_OPTIONS.filter((o) => o.value !== UNIFORM);
+  }, [isEdit, isUniformType]);
+
   const formDisabled = categoriesLoading || (isEdit && detailLoading);
-  const submitDisabled = formDisabled || saving || categories.length === 0 || Boolean(categoriesError);
+  const typeSelectDisabled = formDisabled || (isEdit && isUniformType);
+  // 교복은 카테고리 로딩 실패와 무관하게 저장 가능
+  const needCategories = !isUniformType;
+  const submitDisabled =
+    formDisabled || saving || (needCategories && (categories.length === 0 || Boolean(categoriesError)));
+
+  const handleTypeChange = (e: ChangeEvent<HTMLSelectElement>) => {
+    const next = e.target.value as OutfitType;
+    clearFieldError('categoryId');
+    clearFieldError('schoolId');
+    clearFieldError('outfitCode');
+    setForm((prev) => ({ ...prev, type: next }));
+  };
 
   if (!open) return null;
 
@@ -248,37 +292,58 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
       ) : (
         <form onSubmit={handleSubmit}>
           <div className={m.body}>
-            {categoriesError ? (
+            {categoriesError && !isUniformType ? (
               <p className={m.inlineError} role='alert'>
                 의상 카테고리를 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.
               </p>
             ) : null}
             <div className={m.mainFields}>
-              <InputField
-                label='의상 코드'
+              {/* 1) 의상 유형을 먼저 선택 → 유형에 따라 아래 카테고리/학교가 바뀐다 */}
+              <DropDownField
+                label='의상 유형'
                 required
-                error={fieldErrors.outfitCode}
-                placeholder='예: OB-2024-001'
-                value={form.outfitCode}
-                disabled={formDisabled}
-                onChange={(e) => {
-                  clearFieldError('outfitCode');
-                  setForm({ ...form, outfitCode: e.target.value });
-                }}
+                options={typeOptions}
+                value={String(form.type)}
+                disabled={typeSelectDisabled}
+                onChange={handleTypeChange}
               />
+              {isEdit ? (
+                <p className={m.fieldHint}>
+                  {isUniformType
+                    ? '교복은 유형을 변경할 수 없습니다. 학교만 변경할 수 있어요.'
+                    : '일반 ↔ 프리미엄 간에만 변경할 수 있습니다. 교복으로는 전환할 수 없어요.'}
+                </p>
+              ) : null}
+
+              {/* 2) 유형별 분류: 교복이면 학교, 그 외는 카테고리 */}
               <div className={m.gridRow}>
-                <DropDownField
-                  label='의상 카테고리'
-                  required
-                  error={fieldErrors.categoryId}
-                  options={categories}
-                  value={form.categoryId === '' ? '' : String(form.categoryId)}
-                  disabled={formDisabled || categoriesLoading}
-                  onChange={(e) => {
-                    clearFieldError('categoryId');
-                    setForm({ ...form, categoryId: e.target.value });
-                  }}
-                />
+                {isUniformType ? (
+                  <DropDownField
+                    label='학교'
+                    required
+                    error={fieldErrors.schoolId}
+                    options={schoolOptions}
+                    value={form.schoolId === '' ? '' : String(form.schoolId)}
+                    disabled={formDisabled}
+                    onChange={(e) => {
+                      clearFieldError('schoolId');
+                      setForm({ ...form, schoolId: e.target.value });
+                    }}
+                  />
+                ) : (
+                  <DropDownField
+                    label='의상 카테고리'
+                    required
+                    error={fieldErrors.categoryId}
+                    options={categories}
+                    value={form.categoryId === '' ? '' : String(form.categoryId)}
+                    disabled={formDisabled || categoriesLoading}
+                    onChange={(e) => {
+                      clearFieldError('categoryId');
+                      setForm({ ...form, categoryId: e.target.value });
+                    }}
+                  />
+                )}
                 <DropDownField
                   label='상태'
                   required
@@ -295,19 +360,21 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
                   }}
                 />
               </div>
-              <DropDownField
-                label='의상 유형'
-                required
-                options={OUTFIT_TYPE_OPTIONS}
-                value={String(form.type)}
+
+              {/* 3) 의상 코드 — 교복은 선택값 */}
+              <InputField
+                label={isUniformType ? '의상 코드 (선택)' : '의상 코드'}
+                required={!isUniformType}
+                error={fieldErrors.outfitCode}
+                placeholder={isUniformType ? '교복은 비워둘 수 있습니다' : '예: OB-2024-001'}
+                value={form.outfitCode}
                 disabled={formDisabled}
                 onChange={(e) => {
-                  setForm({
-                    ...form,
-                    type: e.target.value === 'PREMIUM' ? 'PREMIUM' : 'NORMAL',
-                  });
+                  clearFieldError('outfitCode');
+                  setForm({ ...form, outfitCode: e.target.value });
                 }}
               />
+
               <div className={m.scheduleSection}>
                 <span className={m.sectionLabel}>운영 일정</span>
                 <div className={m.gridRow}>

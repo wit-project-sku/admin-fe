@@ -209,7 +209,17 @@ export function OutfitsTable({
                   </td>
                   <td className={`${shared.td} ${shared.tdLeft}`}>
                     <div className={s.outfitInfoStack}>
-                      <span className={s.outfitInfoName}>{o.name || '—'}</span>
+                      <span className={s.outfitInfoName}>
+                        {o.type === 'SCHOOL_UNIFORM' ? (
+                          <span
+                            className={shared.badge}
+                            style={{ marginRight: 6, background: '#e6f4f4', color: '#0a636a' }}
+                          >
+                            교복
+                          </span>
+                        ) : null}
+                        {o.name || '—'}
+                      </span>
                       <span className={s.outfitInfoCode}>{o.outfitCode}</span>
                     </div>
                   </td>
