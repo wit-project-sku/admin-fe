@@ -61,8 +61,12 @@ export default function DonationSchoolDetailModal({ open, school, onClose }: Pro
           <InfoField label='설명' value={school.description || '-'} />
           <div className={m.fieldRow}>
             <InfoField label='누적 기부액' value={formatKrw(school.accumulatedAmount)} />
-            <InfoField label='등록일' value={formatIsoDateTime(school.createdAt)} />
+            <InfoField
+              label='수혜자 수(재학생 수)'
+              value={school.studentCount != null ? `${school.studentCount.toLocaleString()}명` : '-'}
+            />
           </div>
+          <InfoField label='등록일' value={formatIsoDateTime(school.createdAt)} />
         </div>
       </div>
 

@@ -22,6 +22,12 @@ export type DonationSchool = {
   active: boolean;
   /** 누적 기부액. */
   accumulatedAmount: number | null;
+  /** 참여자 수(기부한 사람 수 = 성공 결제 건수). 목록 조회에서만 채워짐. */
+  participantCount: number | null;
+  /** 수혜자 수(재학생 수). 등록/수정 시 입력. */
+  studentCount: number | null;
+  /** 직전 순위 대비 변동(양수=상승▲ / 음수=하락▼ / 0=유지 / null=기준 없음). 기부액순·필터 없는 목록에서만. */
+  rankChange: number | null;
   createdAt: string;
 };
 
@@ -64,6 +70,8 @@ export type SchoolWriteBody = {
   address: string;
   /** 지역 코드(Region enum). */
   region: string;
+  /** 수혜자 수(재학생 수). 선택. */
+  studentCount?: number | null;
 };
 
 /** 지역(시·도) 옵션 — payment-be `GET /api/donations/schools/regions`. */

@@ -31,11 +31,18 @@ type SchoolFormState = {
   description: string;
   address: string;
   region: string;
+  studentCount: string;
 };
 
-type FieldErrors = Partial<Record<'name' | 'description' | 'address' | 'region', string>>;
+type FieldErrors = Partial<Record<'name' | 'description' | 'address' | 'region' | 'studentCount', string>>;
 
-const emptyForm = (): SchoolFormState => ({ name: '', description: '', address: '', region: '' });
+const emptyForm = (): SchoolFormState => ({
+  name: '',
+  description: '',
+  address: '',
+  region: '',
+  studentCount: '',
+});
 
 export default function DonationSchoolManageModal({ open, mode, school, onClose, onSuccess }: Props) {
   const isEdit = mode === 'edit';
@@ -61,6 +68,7 @@ export default function DonationSchoolManageModal({ open, mode, school, onClose,
         description: school.description ?? '',
         address: school.address ?? '',
         region: school.region ?? '',
+        studentCount: school.studentCount != null ? String(school.studentCount) : '',
       });
       setPreviewUrl(school.imageUrl ? [school.imageUrl] : []);
     } else {
@@ -114,6 +122,8 @@ export default function DonationSchoolManageModal({ open, mode, school, onClose,
     if (!form.description.trim()) next.description = '설명을 입력해 주세요.';
     if (!form.address.trim()) next.address = '주소를 입력해 주세요.';
     if (!form.region.trim()) next.region = '지역을 선택해 주세요.';
+    const sc = form.studentCount.trim();
+    if (sc && !/^\d+$/.test(sc)) next.studentCount = '수혜자 수는 0 이상의 숫자로 입력해 주세요.';
     return next;
   };
 
@@ -133,6 +143,7 @@ export default function DonationSchoolManageModal({ open, mode, school, onClose,
         description: form.description.trim(),
         address: form.address.trim(),
         region: form.region,
+        studentCount: form.studentCount.trim() ? Number(form.studentCount.trim()) : null,
       };
 
       if (isEdit && school) {
@@ -225,6 +236,21 @@ export default function DonationSchoolManageModal({ open, mode, school, onClose,
                 onChange={(e) => {
                   clearError('region');
                   setForm({ ...form, region: e.target.value });
+                }}
+              />
+            </div>
+
+            <div className={styles.spanFull}>
+              <InputField
+                label='수혜자 수(재학생 수)'
+                type='number'
+                min={0}
+                error={errors.studentCount}
+                placeholder='예: 540'
+                value={form.studentCount}
+                onChange={(e) => {
+                  clearError('studentCount');
+                  setForm({ ...form, studentCount: e.target.value });
                 }}
               />
             </div>
