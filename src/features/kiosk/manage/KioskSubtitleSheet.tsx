@@ -175,9 +175,9 @@ export function KioskSubtitleSheet({ kioskId, button, onNotice }: Props) {
 
   const saveAll = async () => {
     if (!kioskId || !buttonId || dirtyCount.total === 0) return;
+    // 2줄 초과는 빨간 셀로 경고만 하고 저장은 막지 않는다(번역 언어는 길이가 다양함).
     if (overLimitExists) {
-      onNotice?.('하단 중앙 자막이 2줄을 넘는 셀이 있습니다. 빨간 셀을 줄여주세요.');
-      return;
+      onNotice?.('참고: 하단 중앙 자막이 2줄을 넘는 셀이 있습니다(빨간 셀).');
     }
     setSaving(true);
     let ok = 0;
