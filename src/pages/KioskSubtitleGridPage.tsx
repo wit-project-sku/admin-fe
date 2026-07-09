@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import {
   DataSheetGrid,
   keyColumn,
@@ -97,6 +97,62 @@ function rowsEqual(a: Row, b: Row): boolean {
 type TabKey = 'subtitle';
 const TABS: { key: TabKey; label: string }[] = [{ key: 'subtitle', label: '영상 자막' }];
 
+/** 컬럼 헤더: ◂/▸ 캐럿 클릭으로 접기/펼치기, 우측 모서리 드래그로 너비 조절. 그리드가 mousedown 을 선점하므로 stopPropagation 필수. */
+function ColHeader({
+  label,
+  collapsed,
+  onToggle,
+  onResizeStart,
+}: {
+  label: string;
+  collapsed: boolean;
+  onToggle: () => void;
+  onResizeStart: (e: ReactPointerEvent) => void;
+}) {
+  const stop = (e: { stopPropagation: () => void }) => e.stopPropagation();
+  return (
+    <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', gap: 3 }}>
+      <button
+        type='button'
+        onMouseDown={stop}
+        onPointerDown={stop}
+        onDoubleClick={stop}
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggle();
+        }}
+        title={collapsed ? '펼치기' : '접기'}
+        style={{
+          border: 'none',
+          background: 'transparent',
+          cursor: 'pointer',
+          fontSize: 11,
+          color: '#94a3b8',
+          padding: 0,
+          flexShrink: 0,
+          lineHeight: 1,
+        }}
+      >
+        {collapsed ? '▸' : '◂'}
+      </button>
+      {collapsed ? null : (
+        <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 12 }}>
+          {label}
+        </span>
+      )}
+      {collapsed ? null : (
+        <div
+          onMouseDown={stop}
+          onDoubleClick={stop}
+          onPointerDown={onResizeStart}
+          title='드래그하여 열 너비 조절'
+          style={{ position: 'absolute', right: -8, top: 0, height: '100%', width: 14, cursor: 'col-resize' }}
+        />
+      )}
+    </div>
+  );
+}
+
 export default function KioskSubtitleGridPage() {
   const [tab, setTab] = useState<TabKey>('subtitle');
 
@@ -120,6 +176,7 @@ export default function KioskSubtitleGridPage() {
   const [rows, setRows] = useState<Row[]>([]);
   const [original, setOriginal] = useState<Row[]>([]);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const [colWidths, setColWidths] = useState<Record<string, number>>({});
   const [notice, setNotice] = useState<string | null>(null);
   // 실행취소/다시실행 스택 (rows 스냅샷)
   const [undoStack, setUndoStack] = useState<Row[][]>([]);
@@ -181,54 +238,72 @@ export default function KioskSubtitleGridPage() {
     return () => window.removeEventListener('keydown', onKey);
   }, [undo, redo]);
 
-  const toggleCol = (key: string) =>
+  const toggleCol = useCallback((key: string) => {
     setCollapsed((prev) => {
       const next = new Set(prev);
       if (next.has(key)) next.delete(key);
       else next.add(key);
       return next;
     });
+  }, []);
+
+  const setWidth = useCallback((key: string, w: number) => {
+    setColWidths((prev) => ({ ...prev, [key]: Math.max(48, Math.round(w)) }));
+  }, []);
+
+  // 헤더 우측 모서리 드래그 → 해당 열 너비 조절(rAF 스로틀).
+  const startResize = useCallback(
+    (key: string, startW: number) => (e: ReactPointerEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const startX = e.clientX;
+      let lastX = startX;
+      let raf = 0;
+      const onMove = (ev: globalThis.PointerEvent) => {
+        lastX = ev.clientX;
+        if (!raf) {
+          raf = requestAnimationFrame(() => {
+            raf = 0;
+            setWidth(key, startW + (lastX - startX));
+          });
+        }
+      };
+      const onUp = () => {
+        if (raf) cancelAnimationFrame(raf);
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+      };
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', onUp);
+    },
+    [setWidth],
+  );
 
   const columns = useMemo<Column<Row>[]>(() => {
-    const header = (key: string, label: string, isCol: boolean) => (
-      <div
-        onDoubleClick={() => toggleCol(key)}
-        title={`${label} — 더블클릭으로 ${isCol ? '펼치기' : '접기'}`}
-        style={{
-          cursor: 'pointer',
-          width: '100%',
-          height: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          overflow: 'hidden',
-          whiteSpace: 'nowrap',
-          textOverflow: 'ellipsis',
-          userSelect: 'none',
-          fontSize: 12,
-          padding: '0 4px',
-        }}
-      >
-        {isCol ? '▸' : label}
-      </div>
-    );
     const mk = (
       key: string,
       label: string,
-      width: number,
+      defW: number,
       kind: 'text' | 'int' = 'text',
       extra?: Partial<Column<Row>>,
     ): Column<Row> => {
       const base = kind === 'int' ? intColumn : textColumn;
       const isCol = collapsed.has(key);
-      const w = isCol ? COLLAPSED_W : width;
+      const w = isCol ? COLLAPSED_W : (colWidths[key] ?? defW);
       return {
         ...keyColumn(key as keyof Row, base),
-        title: header(key, label, isCol),
+        title: (
+          <ColHeader
+            label={label}
+            collapsed={isCol}
+            onToggle={() => toggleCol(key)}
+            onResizeStart={startResize(key, w)}
+          />
+        ),
         basis: w,
         grow: 0,
         shrink: 0,
-        minWidth: w,
+        minWidth: 48,
         maxWidth: w,
         ...extra,
       } as unknown as Column<Row>;
@@ -247,7 +322,7 @@ export default function KioskSubtitleGridPage() {
     cols.push(mk('playCondition', '재생조건', 200));
     cols.push(mk('description', '설명', 180));
     return cols;
-  }, [collapsed]);
+  }, [collapsed, colWidths, toggleCol, startResize]);
 
   const dirty = useMemo(() => {
     if (rows.length !== original.length) return true;
@@ -370,7 +445,9 @@ export default function KioskSubtitleGridPage() {
                   접힌 열 모두 펼치기 ({collapsed.size})
                 </button>
               ) : null}
-              <span style={{ fontSize: 12, color: '#94a3b8' }}>열 머리글 더블클릭 = 접기/펼치기</span>
+              <span style={{ fontSize: 12, color: '#94a3b8' }}>
+                헤더 ◂/▸ = 접기/펼치기 · 헤더 우측 모서리 드래그 = 너비 조절
+              </span>
 
               <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
                 {notice ? <span style={{ fontSize: 12, color: '#475569' }}>{notice}</span> : null}
