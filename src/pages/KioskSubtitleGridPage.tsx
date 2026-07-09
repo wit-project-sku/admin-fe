@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   DataSheetGrid,
   keyColumn,
@@ -30,6 +30,8 @@ type Row = {
   playCondition: string;
   description: string;
 } & Record<string, string | number | null>;
+
+const COLLAPSED_W = 48;
 
 function dtoToRow(s: KioskSubtitleDto, buttonName: string): Row {
   const row: Row = {
@@ -119,6 +121,9 @@ export default function KioskSubtitleGridPage() {
   const [original, setOriginal] = useState<Row[]>([]);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [notice, setNotice] = useState<string | null>(null);
+  // 실행취소/다시실행 스택 (rows 스냅샷)
+  const [undoStack, setUndoStack] = useState<Row[][]>([]);
+  const [redoStack, setRedoStack] = useState<Row[][]>([]);
 
   useEffect(() => {
     if (!subtitles) return;
@@ -127,7 +132,54 @@ export default function KioskSubtitleGridPage() {
     );
     setRows(mapped);
     setOriginal(mapped.map((r) => ({ ...r })));
+    setUndoStack([]);
+    setRedoStack([]);
   }, [subtitles, buttonNameById]);
+
+  // 그리드 편집 → 이전 상태를 undo 스택에 push
+  const handleChange = (next: Row[]) => {
+    setUndoStack((u) => (u[u.length - 1] === rows ? u : [...u.slice(-199), rows]));
+    setRedoStack([]);
+    setRows(next);
+  };
+
+  const undo = useCallback(() => {
+    setUndoStack((u) => {
+      if (!u.length) return u;
+      const prev = u[u.length - 1];
+      setRedoStack((r) => [...r, rows]);
+      setRows(prev);
+      return u.slice(0, -1);
+    });
+  }, [rows]);
+
+  const redo = useCallback(() => {
+    setRedoStack((r) => {
+      if (!r.length) return r;
+      const next = r[r.length - 1];
+      setUndoStack((u) => [...u, rows]);
+      setRows(next);
+      return r.slice(0, -1);
+    });
+  }, [rows]);
+
+  // Ctrl/Cmd+Z 실행취소, Ctrl/Cmd+Shift+Z (또는 Ctrl+Y) 다시실행
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const mod = e.metaKey || e.ctrlKey;
+      if (!mod) return;
+      const k = e.key.toLowerCase();
+      if (k === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+      } else if ((k === 'z' && e.shiftKey) || k === 'y') {
+        e.preventDefault();
+        redo();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [undo, redo]);
 
   const toggleCol = (key: string) =>
     setCollapsed((prev) => {
@@ -138,22 +190,26 @@ export default function KioskSubtitleGridPage() {
     });
 
   const columns = useMemo<Column<Row>[]>(() => {
-    // 컬럼 헤더: 더블클릭으로 접기/펼치기.
-    const header = (key: string, label: string) => (
+    const header = (key: string, label: string, isCol: boolean) => (
       <div
         onDoubleClick={() => toggleCol(key)}
-        title={`${label} — 더블클릭으로 접기/펼치기`}
+        title={`${label} — 더블클릭으로 ${isCol ? '펼치기' : '접기'}`}
         style={{
           cursor: 'pointer',
           width: '100%',
-          textAlign: 'center',
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
           overflow: 'hidden',
           whiteSpace: 'nowrap',
           textOverflow: 'ellipsis',
           userSelect: 'none',
+          fontSize: 12,
+          padding: '0 4px',
         }}
       >
-        {collapsed.has(key) ? '⋯' : label}
+        {isCol ? '▸' : label}
       </div>
     );
     const mk = (
@@ -165,13 +221,15 @@ export default function KioskSubtitleGridPage() {
     ): Column<Row> => {
       const base = kind === 'int' ? intColumn : textColumn;
       const isCol = collapsed.has(key);
-      const widthProps = isCol
-        ? { minWidth: 34, maxWidth: 34, grow: 0, basis: 34 }
-        : { minWidth: width, grow: 0 };
+      const w = isCol ? COLLAPSED_W : width;
       return {
         ...keyColumn(key as keyof Row, base),
-        title: header(key, label),
-        ...widthProps,
+        title: header(key, label, isCol),
+        basis: w,
+        grow: 0,
+        shrink: 0,
+        minWidth: w,
+        maxWidth: w,
         ...extra,
       } as unknown as Column<Row>;
     };
@@ -180,7 +238,7 @@ export default function KioskSubtitleGridPage() {
       mk('buttonName', '버튼', 130, 'text', { disabled: true }),
       mk('playKey', 'Key', 130),
       mk('sortOrder', '순서', 64, 'int'),
-      mk('videoFileName', '영상', 160),
+      mk('videoFileName', '영상', 170),
     ];
     SUBTITLE_LANGS.forEach((lang) => {
       cols.push(mk(`main_${lang}`, `본문·${lang}`, 340));
@@ -237,6 +295,15 @@ export default function KioskSubtitleGridPage() {
     }
   };
 
+  const btnSmall: React.CSSProperties = {
+    padding: '6px 12px',
+    borderRadius: 8,
+    border: '1px solid #cbd5e1',
+    background: '#fff',
+    fontSize: 13,
+    cursor: 'pointer',
+  };
+
   return (
     // 좌우 여백 축소 — 레이아웃(.main)의 30px 패딩을 상쇄해 그리드 폭 확보
     <div style={{ margin: '0 -30px' }}>
@@ -244,7 +311,7 @@ export default function KioskSubtitleGridPage() {
         <div className={shared.pageHeader}>
           <div>
             <h1 className={shared.pageTitle}>언어 텍스트 관리</h1>
-            <p className={shared.pageSubtitle}>키오스크 텍스트 데이터를 엑셀처럼 편집 · 복사/붙여넣기 · 일괄 저장</p>
+            <p className={shared.pageSubtitle}>키오스크 텍스트 데이터를 엑셀처럼 편집 · 복사/붙여넣기 · 실행취소 · 일괄 저장</p>
           </div>
         </div>
 
@@ -280,7 +347,7 @@ export default function KioskSubtitleGridPage() {
 
         {tab === 'subtitle' ? (
           <>
-            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12, margin: '0 0 10px' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10, margin: '0 0 10px' }}>
               <select
                 value={kioskId ?? ''}
                 onChange={(e) => setKioskId(Number(e.target.value))}
@@ -292,7 +359,18 @@ export default function KioskSubtitleGridPage() {
                   </option>
                 ))}
               </select>
-              <span style={{ fontSize: 12, color: '#94a3b8' }}>열 머리글을 더블클릭하면 해당 열을 접거나 펼칠 수 있습니다.</span>
+              <button type='button' onClick={undo} disabled={!undoStack.length} style={{ ...btnSmall, opacity: undoStack.length ? 1 : 0.45 }} title='Ctrl/Cmd+Z'>
+                ↶ 실행취소
+              </button>
+              <button type='button' onClick={redo} disabled={!redoStack.length} style={{ ...btnSmall, opacity: redoStack.length ? 1 : 0.45 }} title='Ctrl/Cmd+Shift+Z'>
+                ↷ 다시실행
+              </button>
+              {collapsed.size > 0 ? (
+                <button type='button' onClick={() => setCollapsed(new Set())} style={btnSmall}>
+                  접힌 열 모두 펼치기 ({collapsed.size})
+                </button>
+              ) : null}
+              <span style={{ fontSize: 12, color: '#94a3b8' }}>열 머리글 더블클릭 = 접기/펼치기</span>
 
               <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
                 {notice ? <span style={{ fontSize: 12, color: '#475569' }}>{notice}</span> : null}
@@ -314,7 +392,7 @@ export default function KioskSubtitleGridPage() {
               <div style={{ overflowX: 'auto' }}>
                 <DataSheetGrid<Row>
                   value={rows}
-                  onChange={setRows}
+                  onChange={handleChange}
                   columns={columns}
                   createRow={emptyRow}
                   rowHeight={44}
@@ -323,8 +401,7 @@ export default function KioskSubtitleGridPage() {
               </div>
             )}
             <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 8 }}>
-              · 엑셀에서 복사한 셀을 그대로 붙여넣을 수 있습니다(Ctrl/Cmd+V). · 맨 아래 빈 행에 입력하면 신규 자막이 추가됩니다(버튼 미지정 = 자동재생).
-              · 행을 선택해 삭제하면 저장 시 반영됩니다.
+              · 엑셀 복사/붙여넣기(Ctrl/Cmd+C·V), 실행취소(Ctrl/Cmd+Z)·다시실행(Ctrl/Cmd+Shift+Z) 지원. · 맨 아래 빈 행에 입력 = 신규 자막(버튼 미지정=자동재생). · 행 선택 후 삭제는 저장 시 반영.
             </p>
           </>
         ) : null}
