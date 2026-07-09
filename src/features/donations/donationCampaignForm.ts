@@ -13,6 +13,10 @@ export type CampaignFormState = {
   targetAmount: string;
   /** 기대효과 3개. 항상 길이 3으로 유지. */
   effects: string[];
+  /** 메인 배너 상단 안내 문구(선택). */
+  bannerSubtitle: string;
+  /** 메인 배너 큰 캐치프레이즈(선택). */
+  bannerTitle: string;
 };
 
 export type CampaignFieldErrors = Partial<
@@ -35,6 +39,8 @@ export function emptyCampaignForm(): CampaignFormState {
     organizationId: null,
     targetAmount: '0',
     effects: normalizeEffects([]),
+    bannerSubtitle: '',
+    bannerTitle: '',
   };
 }
 
@@ -46,6 +52,8 @@ export function campaignToFormState(campaign: DonationCampaign): CampaignFormSta
     organizationId: campaign.organization?.id ?? null,
     targetAmount: campaign.targetAmount != null ? String(campaign.targetAmount) : '0',
     effects: normalizeEffects(campaign.effects),
+    bannerSubtitle: campaign.bannerSubtitle ?? '',
+    bannerTitle: campaign.bannerTitle ?? '',
   };
 }
 
@@ -88,5 +96,7 @@ export function buildCampaignWriteBody(form: CampaignFormState): CampaignWriteBo
     organizationId: form.organizationId,
     targetAmount,
     effects: form.effects.map((e) => e.trim()),
+    bannerSubtitle: form.bannerSubtitle.trim() ? form.bannerSubtitle.trim() : null,
+    bannerTitle: form.bannerTitle.trim() ? form.bannerTitle.trim() : null,
   };
 }

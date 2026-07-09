@@ -29,6 +29,10 @@ export type CampaignWriteBody = {
   organizationId: number | null;
   targetAmount: number;
   effects: string[];
+  /** 메인 배너 상단 안내 문구(선택). */
+  bannerSubtitle?: string | null;
+  /** 메인 배너 큰 캐치프레이즈(선택). */
+  bannerTitle?: string | null;
 };
 
 export type DonationCampaignMultipartFiles = {

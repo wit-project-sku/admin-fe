@@ -274,6 +274,27 @@ export default function DonationCampaignManageModal({ open, mode, campaign, onCl
                 </span>
               ) : null}
             </div>
+
+            <div className={styles.sectionBlock}>
+              <div className={styles.sectionHeader}>
+                <span className={styles.sectionLabel}>메인 배너 문구</span>
+              </div>
+              <p className={styles.sectionHint}>
+                기부 선택 메인 하단 배너에 노출됩니다(선택). 이미지는 위 캠페인 이미지를 그대로 사용합니다.
+              </p>
+              <InputField
+                label='배너 상단 안내 문구'
+                placeholder='예: 오늘도 도움이 필요한 아이들이 있습니다'
+                value={form.bannerSubtitle}
+                onChange={(e) => setForm({ ...form, bannerSubtitle: e.target.value })}
+              />
+              <InputField
+                label='배너 큰 문구'
+                placeholder='예: 매일 어린이 1,200명이 말라리아로 인해 사망합니다'
+                value={form.bannerTitle}
+                onChange={(e) => setForm({ ...form, bannerTitle: e.target.value })}
+              />
+            </div>
           </div>
 
           <ModalFooter

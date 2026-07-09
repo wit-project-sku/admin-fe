@@ -18,6 +18,10 @@ export type DonationCampaign = {
   amountOptions: CampaignAmountOption[];
   /** 기대효과 3개. */
   effects: string[];
+  /** 메인 배너 상단 안내 문구(선택). */
+  bannerSubtitle: string | null;
+  /** 메인 배너 큰 캐치프레이즈(선택). */
+  bannerTitle: string | null;
   createdAt: string;
 };
 

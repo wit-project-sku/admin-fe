@@ -64,6 +64,8 @@ export default function DonationCampaignDetailModal({ open, campaign, onClose }:
           <InfoField label='캠페인명' value={campaign.name} />
           <InfoField label='주최 단체' value={campaign.organization?.name ?? '미지정'} />
           <InfoField label='설명' value={campaign.description || '-'} />
+          <InfoField label='배너 상단 문구' value={campaign.bannerSubtitle || '-'} />
+          <InfoField label='배너 큰 문구' value={campaign.bannerTitle || '-'} />
           <div className={m.fieldRow}>
             <InfoField label='목표 금액' value={formatKrw(campaign.targetAmount)} />
             <InfoField label='모금 금액' value={formatKrw(campaign.accumulatedAmount)} />
