@@ -15,7 +15,6 @@ import { useKioskSubtitleBulkSave } from '@/hooks/kiosk-api/useKioskSubtitleBulk
 import {
   SUBTITLE_LANGS,
   LANG_FIELD,
-  type SubtitleLang,
   type KioskSubtitleDto,
   type KioskSubtitlePayload,
 } from '@/hooks/kiosk-api/kioskSubtitleTypes';
@@ -88,17 +87,20 @@ function rowToPayload(row: Row, kioskId: number): KioskSubtitlePayload {
   return p;
 }
 
-/** 저장 대상: 원본 대비 바뀐 셀이 있는 행만 upsert, 사라진 id 는 delete. */
 function rowsEqual(a: Row, b: Row): boolean {
-  const keys = Object.keys(a);
-  return keys.every((k) => (a[k] ?? '') === (b[k] ?? ''));
+  return Object.keys(a).every((k) => (a[k] ?? '') === (b[k] ?? ''));
 }
 
+/** 시트 탭. 앞으로 다른 데이터 영역(행/열 테이블)이 여기에 추가된다. */
+type TabKey = 'subtitle';
+const TABS: { key: TabKey; label: string }[] = [{ key: 'subtitle', label: '영상 자막' }];
+
 export default function KioskSubtitleGridPage() {
+  const [tab, setTab] = useState<TabKey>('subtitle');
+
   const { data: kiosksRaw } = useGetKiosks();
   const kiosks = useMemo(() => (Array.isArray(kiosksRaw) ? kiosksRaw : []), [kiosksRaw]);
   const [kioskId, setKioskId] = useState<number | null>(null);
-
   useEffect(() => {
     if (kioskId == null && kiosks.length) setKioskId(kiosks[0].id);
   }, [kiosks, kioskId]);
@@ -115,53 +117,88 @@ export default function KioskSubtitleGridPage() {
 
   const [rows, setRows] = useState<Row[]>([]);
   const [original, setOriginal] = useState<Row[]>([]);
-  const [visibleLangs, setVisibleLangs] = useState<Set<SubtitleLang>>(new Set(SUBTITLE_LANGS));
-  const [showRt, setShowRt] = useState(true);
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [notice, setNotice] = useState<string | null>(null);
 
-  // 자막 로드 → 행 초기화
   useEffect(() => {
     if (!subtitles) return;
-    const mapped = subtitles.map((s) => dtoToRow(s, s.buttonId ? (buttonNameById.get(s.buttonId) ?? `#${s.buttonId}`) : '자동재생'));
+    const mapped = subtitles.map((s) =>
+      dtoToRow(s, s.buttonId ? (buttonNameById.get(s.buttonId) ?? `#${s.buttonId}`) : '자동재생'),
+    );
     setRows(mapped);
     setOriginal(mapped.map((r) => ({ ...r })));
   }, [subtitles, buttonNameById]);
 
-  const toggleLang = (lang: SubtitleLang) =>
-    setVisibleLangs((prev) => {
+  const toggleCol = (key: string) =>
+    setCollapsed((prev) => {
       const next = new Set(prev);
-      if (next.has(lang)) next.delete(lang);
-      else next.add(lang);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
       return next;
     });
 
   const columns = useMemo<Column<Row>[]>(() => {
-    // react-datasheet-grid 의 컬럼 제네릭 마찰을 피하려고 헬퍼로 캐스팅.
-    const txt = (key: string, title: string, extra?: Partial<Column<Row>>): Column<Row> =>
-      ({ ...keyColumn(key as keyof Row, textColumn), title, ...extra }) as unknown as Column<Row>;
-    const num = (key: string, title: string, extra?: Partial<Column<Row>>): Column<Row> =>
-      ({ ...keyColumn(key as keyof Row, intColumn), title, ...extra }) as unknown as Column<Row>;
+    // 컬럼 헤더: 더블클릭으로 접기/펼치기.
+    const header = (key: string, label: string) => (
+      <div
+        onDoubleClick={() => toggleCol(key)}
+        title={`${label} — 더블클릭으로 접기/펼치기`}
+        style={{
+          cursor: 'pointer',
+          width: '100%',
+          textAlign: 'center',
+          overflow: 'hidden',
+          whiteSpace: 'nowrap',
+          textOverflow: 'ellipsis',
+          userSelect: 'none',
+        }}
+      >
+        {collapsed.has(key) ? '⋯' : label}
+      </div>
+    );
+    const mk = (
+      key: string,
+      label: string,
+      width: number,
+      kind: 'text' | 'int' = 'text',
+      extra?: Partial<Column<Row>>,
+    ): Column<Row> => {
+      const base = kind === 'int' ? intColumn : textColumn;
+      const isCol = collapsed.has(key);
+      const widthProps = isCol
+        ? { minWidth: 34, maxWidth: 34, grow: 0, basis: 34 }
+        : { minWidth: width, grow: 0 };
+      return {
+        ...keyColumn(key as keyof Row, base),
+        title: header(key, label),
+        ...widthProps,
+        ...extra,
+      } as unknown as Column<Row>;
+    };
 
     const cols: Column<Row>[] = [
-      txt('buttonName', '버튼', { disabled: true, minWidth: 130 }),
-      txt('playKey', 'Key', { minWidth: 130 }),
-      num('sortOrder', '순서', { minWidth: 60, maxWidth: 70 }),
-      txt('videoFileName', '영상', { minWidth: 150 }),
+      mk('buttonName', '버튼', 130, 'text', { disabled: true }),
+      mk('playKey', 'Key', 130),
+      mk('sortOrder', '순서', 64, 'int'),
+      mk('videoFileName', '영상', 160),
     ];
-    SUBTITLE_LANGS.filter((l) => visibleLangs.has(l)).forEach((lang) => {
-      cols.push(txt(`main_${lang}`, `본문·${lang}`, { minWidth: 220 }));
-      if (showRt) cols.push(txt(`rt_${lang}`, `우측·${lang}`, { minWidth: 160 }));
+    SUBTITLE_LANGS.forEach((lang) => {
+      cols.push(mk(`main_${lang}`, `본문·${lang}`, 340));
+      cols.push(mk(`rt_${lang}`, `우측·${lang}`, 200));
     });
-    cols.push(txt('playCondition', '재생조건', { minWidth: 180 }));
-    cols.push(txt('description', '설명', { minWidth: 160 }));
+    cols.push(mk('playCondition', '재생조건', 200));
+    cols.push(mk('description', '설명', 180));
     return cols;
-  }, [visibleLangs, showRt]);
+  }, [collapsed]);
 
   const dirty = useMemo(() => {
     if (rows.length !== original.length) return true;
     const origById = new Map(original.filter((r) => r.id != null).map((r) => [r.id, r]));
     return rows.some((r) => {
-      if (r.id == null) return Object.keys(r).some((k) => k !== 'buttonName' && (r[k] ?? '') !== '' && k !== 'sortOrder');
+      if (r.id == null)
+        return Object.keys(r).some(
+          (k) => k !== 'buttonName' && k !== 'sortOrder' && (r[k] ?? '') !== '',
+        );
       const o = origById.get(r.id);
       return !o || !rowsEqual(r, o);
     });
@@ -180,7 +217,6 @@ export default function KioskSubtitleGridPage() {
         const o = origById.get(r.id);
         if (!o || !rowsEqual(r, o)) items.push(rowToPayload(r, kioskId));
       } else {
-        // 신규: play_key 또는 본문 하나라도 채워진 행만
         const hasContent =
           (r.playKey || '').trim() !== '' ||
           SUBTITLE_LANGS.some((l) => ((r[`main_${l}`] as string) || '').trim() !== '');
@@ -202,81 +238,97 @@ export default function KioskSubtitleGridPage() {
   };
 
   return (
-    <div>
-      <div className={shared.pageHeader}>
-        <div>
-          <h1 className={shared.pageTitle}>언어 텍스트 관리</h1>
-          <p className={shared.pageSubtitle}>키오스크 자막을 엑셀처럼 편집 · 복사/붙여넣기 · 일괄 저장</p>
+    // 좌우 여백 축소 — 레이아웃(.main)의 30px 패딩을 상쇄해 그리드 폭 확보
+    <div style={{ margin: '0 -30px' }}>
+      <div style={{ padding: '0 14px' }}>
+        <div className={shared.pageHeader}>
+          <div>
+            <h1 className={shared.pageTitle}>언어 텍스트 관리</h1>
+            <p className={shared.pageSubtitle}>키오스크 텍스트 데이터를 엑셀처럼 편집 · 복사/붙여넣기 · 일괄 저장</p>
+          </div>
         </div>
+
+        {/* 시트 탭 (엑셀 시트 선택처럼) */}
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, borderBottom: '1px solid #e2e8f0', margin: '2px 0 12px' }}>
+          {TABS.map((t) => {
+            const active = tab === t.key;
+            return (
+              <button
+                key={t.key}
+                type='button'
+                onClick={() => setTab(t.key)}
+                style={{
+                  padding: '7px 16px',
+                  border: '1px solid #e2e8f0',
+                  borderBottom: active ? '2px solid #ef4444' : '1px solid #e2e8f0',
+                  borderRadius: '8px 8px 0 0',
+                  background: active ? '#fff' : '#f8fafc',
+                  color: active ? '#0f172a' : '#64748b',
+                  fontWeight: active ? 700 : 500,
+                  fontSize: 13,
+                  cursor: 'pointer',
+                }}
+              >
+                {t.label}
+              </button>
+            );
+          })}
+          <span style={{ fontSize: 11, color: '#94a3b8', alignSelf: 'center', marginLeft: 8 }}>
+            앞으로 다른 데이터 영역이 탭으로 추가됩니다
+          </span>
+        </div>
+
+        {tab === 'subtitle' ? (
+          <>
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12, margin: '0 0 10px' }}>
+              <select
+                value={kioskId ?? ''}
+                onChange={(e) => setKioskId(Number(e.target.value))}
+                style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #cbd5e1' }}
+              >
+                {kiosks.map((k) => (
+                  <option key={k.id} value={k.id}>
+                    {k.name}
+                  </option>
+                ))}
+              </select>
+              <span style={{ fontSize: 12, color: '#94a3b8' }}>열 머리글을 더블클릭하면 해당 열을 접거나 펼칠 수 있습니다.</span>
+
+              <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
+                {notice ? <span style={{ fontSize: 12, color: '#475569' }}>{notice}</span> : null}
+                <button
+                  type='button'
+                  onClick={handleSave}
+                  disabled={!dirty || bulkSave.isPending || kioskId == null}
+                  className={shared.btnPrimary}
+                  style={{ opacity: !dirty || bulkSave.isPending ? 0.5 : 1 }}
+                >
+                  {bulkSave.isPending ? '저장 중…' : '저장'}
+                </button>
+              </div>
+            </div>
+
+            {isLoading ? (
+              <p style={{ color: '#94a3b8', fontSize: 13 }}>불러오는 중…</p>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <DataSheetGrid<Row>
+                  value={rows}
+                  onChange={setRows}
+                  columns={columns}
+                  createRow={emptyRow}
+                  rowHeight={44}
+                  height={680}
+                />
+              </div>
+            )}
+            <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 8 }}>
+              · 엑셀에서 복사한 셀을 그대로 붙여넣을 수 있습니다(Ctrl/Cmd+V). · 맨 아래 빈 행에 입력하면 신규 자막이 추가됩니다(버튼 미지정 = 자동재생).
+              · 행을 선택해 삭제하면 저장 시 반영됩니다.
+            </p>
+          </>
+        ) : null}
       </div>
-
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          gap: 12,
-          margin: '4px 0 12px',
-        }}
-      >
-        <select
-          value={kioskId ?? ''}
-          onChange={(e) => setKioskId(Number(e.target.value))}
-          style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #cbd5e1' }}
-        >
-          {kiosks.map((k) => (
-            <option key={k.id} value={k.id}>
-              {k.name}
-            </option>
-          ))}
-        </select>
-
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 12, color: '#64748b' }}>언어:</span>
-          {SUBTITLE_LANGS.map((lang) => (
-            <label key={lang} style={{ fontSize: 12, display: 'inline-flex', gap: 3, alignItems: 'center' }}>
-              <input type='checkbox' checked={visibleLangs.has(lang)} onChange={() => toggleLang(lang)} />
-              {lang}
-            </label>
-          ))}
-          <label style={{ fontSize: 12, display: 'inline-flex', gap: 3, alignItems: 'center', marginLeft: 8 }}>
-            <input type='checkbox' checked={showRt} onChange={(e) => setShowRt(e.target.checked)} />
-            우측상단(rt) 표시
-          </label>
-        </div>
-
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
-          {notice ? <span style={{ fontSize: 12, color: '#475569' }}>{notice}</span> : null}
-          <button
-            type='button'
-            onClick={handleSave}
-            disabled={!dirty || bulkSave.isPending || kioskId == null}
-            className={shared.btnPrimary}
-            style={{ opacity: !dirty || bulkSave.isPending ? 0.5 : 1 }}
-          >
-            {bulkSave.isPending ? '저장 중…' : '저장'}
-          </button>
-        </div>
-      </div>
-
-      {isLoading ? (
-        <p style={{ color: '#94a3b8', fontSize: 13 }}>불러오는 중…</p>
-      ) : (
-        <div style={{ overflowX: 'auto' }}>
-          <DataSheetGrid<Row>
-            value={rows}
-            onChange={setRows}
-            columns={columns}
-            createRow={emptyRow}
-            rowHeight={40}
-            height={640}
-          />
-        </div>
-      )}
-      <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 8 }}>
-        · 엑셀에서 복사한 셀을 그대로 붙여넣을 수 있습니다(Ctrl/Cmd+V). · 맨 아래 빈 행에 입력하면 신규 자막이 추가됩니다(버튼 미지정 = 자동재생).
-        · 행을 선택해 삭제하면 저장 시 반영됩니다.
-      </p>
     </div>
   );
 }
