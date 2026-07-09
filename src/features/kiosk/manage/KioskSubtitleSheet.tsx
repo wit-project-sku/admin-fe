@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import shared from '@commons/shared.module.css';
 import type { KioskButtonDto } from '@/hooks/kiosk-api/kioskButtonsTypes';
-import type {
-  KioskSubtitleDto,
-  KioskSubtitlePayload,
-  SubtitleLangText,
+import {
+  LANG_FIELD,
+  type KioskSubtitleDto,
+  type KioskSubtitlePayload,
 } from '@/hooks/kiosk-api/kioskSubtitleTypes';
 import {
   useKioskSubtitleMutations,
@@ -41,16 +41,12 @@ export function subtitleLineCount(text: string): number {
   return lines;
 }
 
-/** 기본 4개 언어 코드 ↔ 고정 필드 매핑. 그 외 코드는 extraTexts 저장. */
-const BASE_FIELD: Record<string, { main: keyof KioskSubtitleDto; rt: keyof KioskSubtitleDto }> = {
-  KR: { main: 'mainKr', rt: 'rtKr' },
-  EN: { main: 'mainEn', rt: 'rtEn' },
-  JP: { main: 'mainJp', rt: 'rtJp' },
-  CN: { main: 'mainCn', rt: 'rtCn' },
-};
-
 /** 드래프트 키: `s{subtitleId}` 기존 / `n{buttonId}-{seq}` 신규. 필드 키: videoFileName·playKey·main:{lang}·rt:{lang} */
 type Drafts = Record<string, Record<string, string>>;
+
+function langFieldOf(lang: string): { main: keyof KioskSubtitleDto; rt: keyof KioskSubtitleDto } | undefined {
+  return LANG_FIELD[lang as keyof typeof LANG_FIELD];
+}
 
 function fieldOf(s: KioskSubtitleDto | null, field: string): string {
   if (!s) return '';
@@ -58,10 +54,9 @@ function fieldOf(s: KioskSubtitleDto | null, field: string): string {
   if (field === 'playKey') return s.playKey ?? '';
   if (field === 'playCondition') return s.playCondition ?? '';
   const [kind, lang] = field.split(':');
-  const base = BASE_FIELD[lang];
-  if (base) return (s[kind === 'main' ? base.main : base.rt] as string | null | undefined) ?? '';
-  const t = s.extraTexts?.[lang];
-  return (kind === 'main' ? t?.main : t?.rt) ?? '';
+  const f = langFieldOf(lang);
+  if (f) return (s[kind === 'main' ? f.main : f.rt] as string | null | undefined) ?? '';
+  return '';
 }
 
 /** 자막·영상 시트 — 선택 버튼 1개 스코프 · 전 언어 열 · 언어 그룹 접기/펼치기. */
@@ -158,12 +153,10 @@ export function KioskSubtitleSheet({ kioskId, button, onNotice }: Props) {
       const f = `${kind}:${code}`;
       return d[f] !== undefined ? d[f] || null : fieldOf(s, f) || null;
     };
-    const extra: Record<string, SubtitleLangText> = { ...(s?.extraTexts ?? {}) };
-    Object.entries(d).forEach(([f, v]) => {
-      const [kind, code] = f.split(':');
-      if ((kind !== 'main' && kind !== 'rt') || BASE_FIELD[code]) return;
-      const cur = extra[code] ?? {};
-      extra[code] = { ...cur, [kind]: v || null };
+    const langFields: Partial<KioskSubtitlePayload> = {};
+    (Object.keys(LANG_FIELD) as (keyof typeof LANG_FIELD)[]).forEach((code) => {
+      (langFields as Record<string, string | null>)[LANG_FIELD[code].main] = baseText('main', code);
+      (langFields as Record<string, string | null>)[LANG_FIELD[code].rt] = baseText('rt', code);
     });
     return {
       kioskId: kioskId!,
@@ -173,18 +166,10 @@ export function KioskSubtitleSheet({ kioskId, button, onNotice }: Props) {
         d.videoFileName !== undefined ? d.videoFileName || null : (s?.videoKey ?? null),
       autoTrigger: s?.autoTrigger ?? null,
       sortOrder: s?.sortOrder ?? null,
-      mainKr: baseText('main', 'KR'),
-      mainEn: baseText('main', 'EN'),
-      mainJp: baseText('main', 'JP'),
-      mainCn: baseText('main', 'CN'),
-      rtKr: baseText('rt', 'KR'),
-      rtEn: baseText('rt', 'EN'),
-      rtJp: baseText('rt', 'JP'),
-      rtCn: baseText('rt', 'CN'),
+      ...langFields,
       playCondition:
         d.playCondition !== undefined ? d.playCondition || null : (s?.playCondition ?? null),
       description: s?.description ?? null,
-      extraTexts: Object.keys(extra).length > 0 ? extra : null,
     };
   };
 
