@@ -1,7 +1,6 @@
 import shared from '@commons/shared.module.css';
 import EditBtn from '@components/common/EditBtn';
 import DeleteBtn from '@components/common/DeleteBtn';
-import ImageZoom from '@components/common/ImageZoom';
 import type { ShopRow } from './shopsListMappers';
 import { SHOP_TABLE_MESSAGES } from './shopsListConfig';
 
@@ -68,17 +67,17 @@ export function ShopsManageTable({ loading, error, rows, onEdit, onDelete, onRow
                 <td className={`${shared.td} ${shared.tdLeft}`}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     {s.imageUrl ? (
-                      <ImageZoom
+                      <img
                         src={s.imageUrl}
-                        title={s.name}
-                        style={{ width: 36, height: 36, borderRadius: 6, objectFit: 'cover', flexShrink: 0 }}
+                        alt=''
+                        style={{ width: 48, height: 48, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }}
                       />
                     ) : (
                       <div
                         style={{
-                          width: 36,
-                          height: 36,
-                          borderRadius: 6,
+                          width: 48,
+                          height: 48,
+                          borderRadius: 8,
                           background: '#f1f5f9',
                           flexShrink: 0,
                         }}

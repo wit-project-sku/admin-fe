@@ -1,7 +1,6 @@
 import shared from '@commons/shared.module.css';
 import EditBtn from '@components/common/EditBtn';
 import DeleteBtn from '@components/common/DeleteBtn';
-import ImageZoom from '@components/common/ImageZoom';
 import type { ProductRow } from './productListMappers';
 import type { ProductStatus } from '../../hooks/product-api/productApiTypes';
 import { PRODUCT_TABLE_MESSAGES } from './productListConfig';
@@ -85,10 +84,10 @@ export function ProductManageTable({ loading, error, rows, onEdit, onDelete, onR
                   <td className={`${shared.td} ${shared.tdLeft}`}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                       {p.images?.[0]?.imageUrl ? (
-                        <ImageZoom
+                        <img
                           src={p.images[0].imageUrl}
-                          title={p.name}
-                          style={{ width: 36, height: 36, borderRadius: 6, objectFit: 'cover', flexShrink: 0 }}
+                          alt=''
+                          style={{ width: 48, height: 48, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }}
                         />
                       ) : null}
                       <div style={{ minWidth: 0 }}>

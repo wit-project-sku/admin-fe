@@ -6,7 +6,6 @@ import Pagination from '@components/common/Pagination';
 import RegisterBtn from '@components/common/RegisterBtn';
 import EditBtn from '@components/common/EditBtn';
 import DeleteBtn from '@components/common/DeleteBtn';
-import ImageZoom from '@components/common/ImageZoom';
 import DeleteModal from '@modals/DeleteModal';
 import DonationCampaignManageModal from '@modals/DonationCampaignManageModal';
 import DonationCampaignDetailModal from '@modals/DonationCampaignDetailModal';
@@ -502,10 +501,10 @@ export default function DonationManagePage() {
                       <td className={`${shared.td} ${shared.tdMuted} ${shared.tdCenter}`}>{c.id}</td>
                       <td className={`${shared.td} ${shared.tdCenter}`}>
                         {c.imageUrl ? (
-                          <ImageZoom
+                          <img
                             src={c.imageUrl}
-                            title={c.name}
-                            style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 8 }}
+                            alt=''
+                            style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 8 }}
                           />
                         ) : (
                           '-'
@@ -605,10 +604,10 @@ export default function DonationManagePage() {
                       <td className={shared.td}>{h.donatorName}</td>
                       <td className={`${shared.td} ${shared.tdCenter}`}>
                         {h.photoUrl ? (
-                          <ImageZoom
+                          <img
                             src={h.photoUrl}
-                            title={h.donatorName}
-                            style={{ width: 36, height: 36, objectFit: 'cover', borderRadius: 6 }}
+                            alt=''
+                            style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 8 }}
                           />
                         ) : (
                           '-'
@@ -749,10 +748,10 @@ export default function DonationManagePage() {
                       <td className={`${shared.td} ${shared.tdMuted} ${shared.tdCenter}`}>{s.id}</td>
                       <td className={`${shared.td} ${shared.tdCenter}`}>
                         {s.imageUrl ? (
-                          <ImageZoom
+                          <img
                             src={s.imageUrl}
-                            title={s.name}
-                            style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 8 }}
+                            alt=''
+                            style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 8 }}
                           />
                         ) : (
                           '-'

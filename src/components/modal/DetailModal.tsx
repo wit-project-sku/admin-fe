@@ -71,7 +71,7 @@ export default function DetailModal({ open, title, fields, images, onClose }: Pr
                   key={i}
                   src={im.src}
                   title={im.title ?? title}
-                  style={{ width: 88, height: 88, objectFit: 'cover', borderRadius: 8, border: '1px solid #e2e8f0' }}
+                  style={{ width: 140, height: 140, objectFit: 'cover', borderRadius: 8, border: '1px solid #e2e8f0' }}
                 />
               ))}
             </div>
