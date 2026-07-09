@@ -4,6 +4,7 @@ import type { KioskButtonDto } from '@/hooks/kiosk-api/kioskButtonsTypes';
 import { GRID_FIRST_LINE, GRID_LAST_LINE, SLOTS_PER_LINE, tileBgFor } from './constants';
 import { resolveKioskButtonIconKey } from './kioskButtonDisplay';
 import type { MoveRequest } from './KioskMirrorPreview';
+import { setScaledDragImage } from './scaledDragImage';
 import styles from './KioskMirrorHwaseong.module.css';
 
 type Props = {
@@ -134,6 +135,7 @@ export function KioskMirrorHwaseong({ buttons, onMove, onSelect, selectedId, dis
               title={`${b.buttonType} · ${line}열 ${p}${wide ? `~${p + 1}` : ''}`}
               onClick={() => onSelect?.(b)}
               onDragStart={(e) => {
+                setScaledDragImage(e, e.currentTarget, SCALE);
                 dragIdRef.current = b.id;
                 setDragId(b.id);
                 e.dataTransfer.effectAllowed = 'move';

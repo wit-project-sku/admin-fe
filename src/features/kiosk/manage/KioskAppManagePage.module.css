@@ -956,8 +956,9 @@
 
 /* ===== 미러 + 상세 2단 레이아웃 ===== */
 /* 세로 스택: 미러 → 미표시 아이콘 → 아이콘 정보 */
-.mirrorLayout { display: flex; flex-direction: column; gap: 16px; align-items: stretch; }
-.detailCol { width: 100%; max-width: 560px; }
+.mirrorLayout { display: flex; flex-direction: row; flex-wrap: wrap; gap: 24px; align-items: flex-start; }
+.mirrorLeft { display: flex; flex-direction: column; gap: 16px; flex: 0 0 auto; }
+.detailCol { flex: 1 1 360px; min-width: 320px; }
 .detailEmpty {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   text-align: center; min-height: 200px; color: #94a3b8;

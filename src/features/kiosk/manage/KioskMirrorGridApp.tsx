@@ -4,6 +4,7 @@ import type { KioskButtonDto } from '@/hooks/kiosk-api/kioskButtonsTypes';
 import { GRID_FIRST_LINE, GRID_LAST_LINE, SLOTS_PER_LINE, tileBgFor } from './constants';
 import { resolveKioskButtonIconKey } from './kioskButtonDisplay';
 import type { MoveRequest } from './KioskMirrorPreview';
+import { setScaledDragImage } from './scaledDragImage';
 import styles from './KioskMirrorGridApp.module.css';
 
 /** 스킨 = kiosk-electron 의 키오스크별 차이(테마색·공지배경·브랜드·타일처리). */
@@ -165,6 +166,7 @@ export function KioskMirrorGridApp({ buttons, skin, onMove, onSelect, selectedId
         title={`${b.buttonType} · ${line}열 ${p}${span === 2 ? `~${p + 1}` : ''}`}
         onClick={() => onSelect?.(b)}
         onDragStart={(e) => {
+          setScaledDragImage(e, e.currentTarget, SCALE);
           dragIdRef.current = b.id;
           setDragId(b.id);
           e.dataTransfer.effectAllowed = 'move';

@@ -186,6 +186,7 @@ export function KioskButtonByKioskPanel({
       </div>
 
       <div className={styles.mirrorLayout}>
+        <div className={styles.mirrorLeft}>
         <div>
           <div className={styles.previewLabel}>
             {kioskName} — 실기기 메인 화면 미리보기 · 3~6열 아이콘을 드래그해 서로 위치를 교환 · 아이콘 클릭 시 정보 편집
@@ -266,8 +267,9 @@ export function KioskButtonByKioskPanel({
             </div>
           </div>
         ) : null}
+        </div>
 
-        {/* 선택된 아이콘의 모든 정보 — 미표시 아래에 표시, 인라인으로 전부 수정 가능 */}
+        {/* 선택된 아이콘의 모든 정보 — 오른쪽 컬럼에 표시, 인라인으로 전부 수정 가능 */}
         <div className={styles.detailCol}>
           {!selected ? (
             <div className={`${shared.card} ${styles.detailEmpty}`}>
