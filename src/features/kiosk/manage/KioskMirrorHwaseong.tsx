@@ -160,8 +160,6 @@ export function KioskMirrorHwaseong({ buttons, onMove, onSelect, selectedId, dis
   const gridLines: number[] = [];
   for (let l = GRID_FIRST_LINE; l <= GRID_LAST_LINE; l += 1) gridLines.push(l);
 
-  const camImg = cam2?.imageUrl;
-
   return (
     <div
       className={styles.scaleWrap}
@@ -260,26 +258,29 @@ export function KioskMirrorHwaseong({ buttons, onMove, onSelect, selectedId, dis
           <div className={styles.menuGrid}>{gridLines.map(renderRow)}</div>
         </div>
 
-        {/* ── 하단 내비 (표시 전용, 카메라만 고정 버튼 선택) ── */}
+        {/* ── 하단 내비 (fg-bottomnav 합성 이미지 + 클릭존 3개 — 키오스크 앱과 동일) ── */}
         <div className={styles.bottomNav}>
-          <div className={styles.bottomNavItem} onClick={() => cam1 && onSelect?.(cam1)}>
-            <div className={styles.bottomNavCircle}>🧭</div>
-            <span className={styles.bottomNavLabel}>{cam1?.buttonType ?? '스마트 관광'}</span>
-          </div>
-          <div className={styles.bottomNavItem} onClick={() => cam2 && onSelect?.(cam2)}>
-            <div className={`${styles.bottomNavCircle} ${styles.bottomNavCircleBig}`}>
-              {camImg ? <img src={camImg} alt='' /> : '📷'}
-            </div>
-            <span className={styles.bottomNavLabel}>{cam2?.buttonType ?? 'AR 한복체험'}</span>
-          </div>
-          <div className={styles.bottomNavItem} onClick={() => cam3 && onSelect?.(cam3)}>
-            <div
-              className={`${styles.bottomNavCircle} ${cam3?.imageUrl ? styles.bottomNavCircleImg : ''}`}
-            >
-              {cam3?.imageUrl ? <img src={cam3.imageUrl} alt='' /> : '🚻'}
-            </div>
-            <span className={styles.bottomNavLabel}>{cam3?.buttonType ?? '화장실'}</span>
-          </div>
+          <img
+            src='/assets/hwaseong-bottomnav.png'
+            alt=''
+            draggable={false}
+            className={styles.bottomNavImg}
+          />
+          <div
+            className={`${styles.bottomNavZoneLeft} ${cam1 && selectedId === cam1.id ? styles.bottomNavZoneSel : ''}`}
+            title={cam1?.buttonType ?? '스마트 관광'}
+            onClick={() => cam1 && onSelect?.(cam1)}
+          />
+          <div
+            className={`${styles.bottomNavZoneCenter} ${cam2 && selectedId === cam2.id ? styles.bottomNavZoneSel : ''}`}
+            title={cam2?.buttonType ?? 'AR 한복체험'}
+            onClick={() => cam2 && onSelect?.(cam2)}
+          />
+          <div
+            className={`${styles.bottomNavZoneRight} ${cam3 && selectedId === cam3.id ? styles.bottomNavZoneSel : ''}`}
+            title={cam3?.buttonType ?? '화장실'}
+            onClick={() => cam3 && onSelect?.(cam3)}
+          />
         </div>
 
         {/* ── 배너 (표시 전용) ── */}

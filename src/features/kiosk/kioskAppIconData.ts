@@ -44,7 +44,7 @@ export const KIOSK_APP_ICON_OPTIONS: KioskIconOption[] = [
        { iconKey: 'shape-4', label: '지역화폐', color: '#94DFFF', Icon: '/assets/shape-4.svg' },
        { iconKey: 'car-2', label: '전국도로교통상황', color: '#FFB347', Icon: '/assets/car-2.svg' },
        { iconKey: 'door-2', label: "도와줘 '휴'", color: '#FF94AB', Icon: '/assets/door-2.svg' },
-       { iconKey: 'food-3', label: "'휴' 뭐먹지)", color: '#FF8724', Icon: '/assets/food-3.svg' },
+       { iconKey: 'food-3', label: "'휴' 뭐먹지", color: '#FF8724', Icon: '/assets/food-3.svg' },
        { iconKey: 'star', label: '준비중', color: '#9CDBFF', Icon: '/assets/star.svg' },
        { iconKey: 'shape-5', label: '전국시장(준비중)', color: '#87624A', Icon: '/assets/shape-5.svg' },
        { iconKey: 'house-4', label: '화성휴게소 지도', color: '#FFFFFF', Icon: '/assets/house-4.svg' },

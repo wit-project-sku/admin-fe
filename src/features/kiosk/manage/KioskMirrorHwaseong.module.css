@@ -398,46 +398,52 @@
   left: 0;
   width: 2160px;
   height: 446px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 260px;
   z-index: 1;
+  pointer-events: none;
 }
 
-.bottomNavItem {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 24px;
+/* fg-bottomnav 합성 이미지 (스마트관광·AR한복·화장실 3버튼 한 장) — 키오스크 앱과 동일 */
+.bottomNavImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  pointer-events: none;
+}
+
+/* 투명 클릭존 (편집 선택용) — 키오스크 좌표와 동일 */
+.bottomNavZoneLeft,
+.bottomNavZoneCenter,
+.bottomNavZoneRight {
+  position: absolute;
   cursor: pointer;
+  pointer-events: auto;
+  border-radius: 50%;
 }
-
-.bottomNavCircle {
+.bottomNavZoneLeft {
+  left: 345px;
+  top: 99px;
   width: 235px;
   height: 235px;
-  border-radius: 50%;
-  background: rgba(0, 90, 180, 0.08);
-  border: 5px dashed #9fc0e4;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 96px;
 }
-
-.bottomNavCircleBig {
+.bottomNavZoneCenter {
+  left: 903px;
+  top: 39px;
   width: 356px;
   height: 356px;
-  background: #005ab4;
-  border: none;
-  color: #fff;
-  overflow: hidden;
 }
-
-.bottomNavLabel {
-  font-size: 38px;
-  color: #333;
-  font-weight: 500;
+.bottomNavZoneRight {
+  left: 1583px;
+  top: 99px;
+  width: 235px;
+  height: 235px;
+}
+/* 선택 상태 하이라이트 (편집 대상) */
+.bottomNavZoneSel {
+  outline: 8px solid #005ab4;
+  outline-offset: 6px;
+  background: rgba(0, 90, 180, 0.12);
 }
 
 .bottomBanner {
@@ -461,16 +467,3 @@
   font-weight: 600;
 }
 
-.bottomNavCircleBig img,
-.bottomNavCircle img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* 화장실 이미지가 있을 때만: 점선 플레이스홀더 테두리/배경 제거하고 원형으로 클립 */
-.bottomNavCircleImg {
-  overflow: hidden;
-  border: none;
-  background: transparent;
-}
