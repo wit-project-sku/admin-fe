@@ -135,7 +135,7 @@ export function KioskMirrorHwaseong({ buttons, onMove, onSelect, selectedId, dis
               title={`${b.buttonType} · ${line}열 ${p}${wide ? `~${p + 1}` : ''}`}
               onClick={() => onSelect?.(b)}
               onDragStart={(e) => {
-                setScaledDragImage(e, e.currentTarget, SCALE);
+                setScaledDragImage(e, e.currentTarget);
                 dragIdRef.current = b.id;
                 setDragId(b.id);
                 e.dataTransfer.effectAllowed = 'move';

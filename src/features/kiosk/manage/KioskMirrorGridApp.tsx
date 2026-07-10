@@ -166,7 +166,7 @@ export function KioskMirrorGridApp({ buttons, skin, onMove, onSelect, selectedId
         title={`${b.buttonType} · ${line}열 ${p}${span === 2 ? `~${p + 1}` : ''}`}
         onClick={() => onSelect?.(b)}
         onDragStart={(e) => {
-          setScaledDragImage(e, e.currentTarget, SCALE);
+          setScaledDragImage(e, e.currentTarget);
           dragIdRef.current = b.id;
           setDragId(b.id);
           e.dataTransfer.effectAllowed = 'move';
