@@ -50,23 +50,37 @@ type InputFieldProps = {
   error?: string;
 } & InputHTMLAttributes<HTMLInputElement>;
 
-export const InputField = ({ label, required, error, className, ...props }: InputFieldProps) => (
-  <div className={m.field}>
-    <label className={m.label}>
-      {label} {required && <span className={m.required}>*</span>}
-    </label>
-    <input
-      className={[m.input, error ? m.inputError : '', className].filter(Boolean).join(' ')}
-      aria-invalid={error ? true : undefined}
-      {...props}
-    />
-    {error ? (
-      <span className={m.fieldError} role="alert">
-        {error}
-      </span>
-    ) : null}
-  </div>
-);
+export const InputField = ({ label, required, error, className, value, maxLength, ...props }: InputFieldProps) => {
+  // maxLength 가 주어졌을 때만 글자수 카운터 노출(다른 모달의 InputField 는 영향 없음).
+  const showCount = maxLength != null;
+  const len = typeof value === 'string' ? value.length : String(value ?? '').length;
+  return (
+    <div className={m.field}>
+      <div className={m.labelRow}>
+        <label className={m.label}>
+          {label} {required && <span className={m.required}>*</span>}
+        </label>
+        {showCount ? (
+          <span className={[m.counter, len >= maxLength ? m.counterMax : ''].filter(Boolean).join(' ')}>
+            {len}/{maxLength}
+          </span>
+        ) : null}
+      </div>
+      <input
+        className={[m.input, error ? m.inputError : '', className].filter(Boolean).join(' ')}
+        aria-invalid={error ? true : undefined}
+        value={value}
+        maxLength={maxLength}
+        {...props}
+      />
+      {error ? (
+        <span className={m.fieldError} role="alert">
+          {error}
+        </span>
+      ) : null}
+    </div>
+  );
+};
 
 export type SelectOption = { value?: string | number; id?: string | number; label?: string; name?: string };
 
@@ -115,24 +129,38 @@ type TextAreaFieldProps = {
   error?: string;
 } & TextareaHTMLAttributes<HTMLTextAreaElement>;
 
-export const TextAreaField = ({ label, required, error, className, ...props }: TextAreaFieldProps) => (
-  <div className={`${m.field} ${m.fieldFull}`}>
-    <span className={m.label}>
-      {label} {required && <span className={m.required}>*</span>}
-    </span>
-    <textarea
-      className={[m.fieldTextarea, error ? m.textareaError : '', className].filter(Boolean).join(' ')}
-      required={required}
-      aria-invalid={error ? true : undefined}
-      {...props}
-    />
-    {error ? (
-      <span className={m.fieldError} role="alert">
-        {error}
-      </span>
-    ) : null}
-  </div>
-);
+export const TextAreaField = ({ label, required, error, className, value, maxLength, ...props }: TextAreaFieldProps) => {
+  // maxLength 가 주어졌을 때만 글자수 카운터 노출.
+  const showCount = maxLength != null;
+  const len = typeof value === 'string' ? value.length : String(value ?? '').length;
+  return (
+    <div className={`${m.field} ${m.fieldFull}`}>
+      <div className={m.labelRow}>
+        <span className={m.label}>
+          {label} {required && <span className={m.required}>*</span>}
+        </span>
+        {showCount ? (
+          <span className={[m.counter, len >= maxLength ? m.counterMax : ''].filter(Boolean).join(' ')}>
+            {len}/{maxLength}
+          </span>
+        ) : null}
+      </div>
+      <textarea
+        className={[m.fieldTextarea, error ? m.textareaError : '', className].filter(Boolean).join(' ')}
+        required={required}
+        aria-invalid={error ? true : undefined}
+        value={value}
+        maxLength={maxLength}
+        {...props}
+      />
+      {error ? (
+        <span className={m.fieldError} role="alert">
+          {error}
+        </span>
+      ) : null}
+    </div>
+  );
+};
 
 export type MultiSelectItem = { id: string | number; name: string };
 

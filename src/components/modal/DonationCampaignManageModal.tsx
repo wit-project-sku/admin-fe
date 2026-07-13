@@ -27,6 +27,7 @@ import {
   type CampaignFieldErrors,
   type CampaignFormState,
 } from '../../features/donations/donationCampaignForm';
+import { DONATION_DESCRIPTION_MAX, DONATION_NAME_MAX } from '../../features/donations/donationContentLimits';
 
 type Props = {
   open: boolean;
@@ -184,6 +185,7 @@ export default function DonationCampaignManageModal({ open, mode, campaign, onCl
                   required
                   error={fieldErrors.name}
                   placeholder='예: 지구 지킴이 캠페인'
+                  maxLength={DONATION_NAME_MAX}
                   value={form.name}
                   onChange={(e) => {
                     clearError('name');
@@ -199,6 +201,7 @@ export default function DonationCampaignManageModal({ open, mode, campaign, onCl
                   error={fieldErrors.description}
                   placeholder='캠페인 소개 문구'
                   rows={3}
+                  maxLength={DONATION_DESCRIPTION_MAX}
                   value={form.description}
                   onChange={(e) => {
                     clearError('description');

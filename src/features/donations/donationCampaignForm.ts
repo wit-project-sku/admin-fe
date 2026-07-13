@@ -1,5 +1,6 @@
 import type { CampaignWriteBody } from '../../hooks/donation-api/donationApiTypes';
 import type { DonationCampaign } from '../../hooks/donation-api/useGetDonationCampaigns';
+import { DONATION_DESCRIPTION_MAX, DONATION_NAME_MAX } from './donationContentLimits';
 
 /** 기대효과 입력 개수(상세 화면 넘버링 칩) — 정확히 3개 고정. */
 export const CAMPAIGN_EFFECT_COUNT = 3;
@@ -69,7 +70,10 @@ export function validateCampaignForm(form: CampaignFormState): CampaignFieldErro
   const errors: CampaignFieldErrors = {};
 
   if (!form.name.trim()) errors.name = '캠페인명을 입력해 주세요.';
+  else if (form.name.length > DONATION_NAME_MAX) errors.name = `캠페인명은 ${DONATION_NAME_MAX}자 이하로 입력해 주세요.`;
   if (!form.description.trim()) errors.description = '설명을 입력해 주세요.';
+  else if (form.description.length > DONATION_DESCRIPTION_MAX)
+    errors.description = `내용은 ${DONATION_DESCRIPTION_MAX}자 이하로 입력해 주세요.`;
   if (form.status !== 'ACTIVE' && form.status !== 'INACTIVE') {
     errors.status = '상태를 선택해 주세요.';
   }

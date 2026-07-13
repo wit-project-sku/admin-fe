@@ -17,6 +17,7 @@ import {
   type SchoolWriteBody,
 } from '../../hooks/donation-api/useDonationSchools';
 import { SCHOOL_TABLE_MESSAGES } from '../../features/donations/donationListConfig';
+import { DONATION_DESCRIPTION_MAX, DONATION_NAME_MAX } from '../../features/donations/donationContentLimits';
 
 type Props = {
   open: boolean;
@@ -119,7 +120,10 @@ export default function DonationSchoolManageModal({ open, mode, school, onClose,
   const validate = (): FieldErrors => {
     const next: FieldErrors = {};
     if (!form.name.trim()) next.name = '학교명을 입력해 주세요.';
+    else if (form.name.length > DONATION_NAME_MAX) next.name = `학교명은 ${DONATION_NAME_MAX}자 이하로 입력해 주세요.`;
     if (!form.description.trim()) next.description = '설명을 입력해 주세요.';
+    else if (form.description.length > DONATION_DESCRIPTION_MAX)
+      next.description = `설명은 ${DONATION_DESCRIPTION_MAX}자 이하로 입력해 주세요.`;
     if (!form.address.trim()) next.address = '주소를 입력해 주세요.';
     if (!form.region.trim()) next.region = '지역을 선택해 주세요.';
     const sc = form.studentCount.trim();
@@ -189,6 +193,7 @@ export default function DonationSchoolManageModal({ open, mode, school, onClose,
                 required
                 error={errors.name}
                 placeholder='예: OO초등학교'
+                maxLength={DONATION_NAME_MAX}
                 value={form.name}
                 onChange={(e) => {
                   clearError('name');
@@ -204,6 +209,7 @@ export default function DonationSchoolManageModal({ open, mode, school, onClose,
                 error={errors.description}
                 placeholder='학교 소개 문구'
                 rows={3}
+                maxLength={DONATION_DESCRIPTION_MAX}
                 value={form.description}
                 onChange={(e) => {
                   clearError('description');
