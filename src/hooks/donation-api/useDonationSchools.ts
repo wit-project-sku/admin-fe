@@ -1,6 +1,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { APIService } from '../../utils/axios';
 import { buildDataImageMultipart } from '../../utils/formDataBuilder';
+import type { CampaignAmountOption } from './donationApiTypes';
 
 /**
  * 기부 학교 — 목록·단건·지역은 공용(`/api/donations/schools`),
@@ -20,6 +21,10 @@ export type DonationSchool = {
   /** 초성(ㄱ~ㅎ, 기타). */
   initial: string;
   active: boolean;
+  /** 목표 기부액. 0 = 목표 없음. */
+  targetAmount: number | null;
+  /** 기부 금액 프리셋(응답 전용, 오름차순). */
+  amountOptions: CampaignAmountOption[] | null;
   /** 누적 기부액. */
   accumulatedAmount: number | null;
   /** 참여자 수(기부한 사람 수 = 성공 결제 건수). 목록 조회에서만 채워짐. */
@@ -72,6 +77,10 @@ export type SchoolWriteBody = {
   region: string;
   /** 수혜자 수(재학생 수). 선택. */
   studentCount?: number | null;
+  /** 목표 기부액. 0 = 목표 없음. */
+  targetAmount: number;
+  /** 기부 금액 프리셋(오름차순 정수 배열). */
+  amountOptions: number[];
 };
 
 /** 지역(시·도) 옵션 — payment-be `GET /api/donations/schools/regions`. */

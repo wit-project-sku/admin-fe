@@ -153,12 +153,40 @@ const KIOSK_CONTENT_GROUP: NavGroupDef = {
         </svg>
       ),
     },
+  ],
+};
+
+const DONATION_GROUP: NavGroupDef = {
+  label: '기부 관리',
+  items: [
     {
-      label: '기부 관리',
-      path: '/admin/donations',
+      label: '기부 대시보드',
+      path: '/admin/donations/dashboard',
+      icon: (
+        <svg width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
+          <rect x='3' y='3' width='7' height='7' />
+          <rect x='14' y='3' width='7' height='7' />
+          <rect x='14' y='14' width='7' height='7' />
+          <rect x='3' y='14' width='7' height='7' />
+        </svg>
+      ),
+    },
+    {
+      label: 'NGO 기부',
+      path: '/admin/donations/ngo',
       icon: (
         <svg width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
           <path d='M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z' />
+        </svg>
+      ),
+    },
+    {
+      label: '학교 기부',
+      path: '/admin/donations/school',
+      icon: (
+        <svg width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
+          <path d='M22 10v6M2 10l10-5 10 5-10 5z' />
+          <path d='M6 12v5c3 3 9 3 12 0v-5' />
         </svg>
       ),
     },
@@ -249,6 +277,7 @@ const NAV_GROUPS: NavGroupDef[] = [
   AR_OUTFIT_GROUP,
   WITH_USAGE_GROUP,
   KIOSK_CONTENT_GROUP,
+  DONATION_GROUP,
   WITH_MARKET_GROUP,
   SYSTEM_GROUP,
 ];

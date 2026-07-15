@@ -18,6 +18,11 @@ import {
 } from '../../hooks/donation-api/useDonationSchools';
 import { SCHOOL_TABLE_MESSAGES } from '../../features/donations/donationListConfig';
 import { DONATION_DESCRIPTION_MAX, DONATION_NAME_MAX } from '../../features/donations/donationContentLimits';
+import { amountOptionsToNumbers, formatKrw } from '../../features/donations/donationFormatters';
+
+/** 신규 등록 시 기본 제공 금액 프리셋. */
+const DEFAULT_SCHOOL_AMOUNT_OPTIONS = [1000, 5000, 10000, 30000, 50000];
+const MAX_AMOUNT_OPTIONS = 8;
 
 type Props = {
   open: boolean;
@@ -33,9 +38,13 @@ type SchoolFormState = {
   address: string;
   region: string;
   studentCount: string;
+  targetAmount: string;
+  amountOptions: number[];
 };
 
-type FieldErrors = Partial<Record<'name' | 'description' | 'address' | 'region' | 'studentCount', string>>;
+type FieldErrors = Partial<
+  Record<'name' | 'description' | 'address' | 'region' | 'studentCount' | 'targetAmount' | 'amountOptions', string>
+>;
 
 const emptyForm = (): SchoolFormState => ({
   name: '',
@@ -43,6 +52,8 @@ const emptyForm = (): SchoolFormState => ({
   address: '',
   region: '',
   studentCount: '',
+  targetAmount: '0',
+  amountOptions: [...DEFAULT_SCHOOL_AMOUNT_OPTIONS],
 });
 
 export default function DonationSchoolManageModal({ open, mode, school, onClose, onSuccess }: Props) {
@@ -54,6 +65,7 @@ export default function DonationSchoolManageModal({ open, mode, school, onClose,
   const regionOptions = (regionsData?.data ?? []).map((r) => ({ value: r.code, label: r.label }));
 
   const [form, setForm] = useState<SchoolFormState>(emptyForm);
+  const [amountInput, setAmountInput] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string[]>([]);
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -70,12 +82,15 @@ export default function DonationSchoolManageModal({ open, mode, school, onClose,
         address: school.address ?? '',
         region: school.region ?? '',
         studentCount: school.studentCount != null ? String(school.studentCount) : '',
+        targetAmount: school.targetAmount != null ? String(school.targetAmount) : '0',
+        amountOptions: amountOptionsToNumbers(school.amountOptions),
       });
       setPreviewUrl(school.imageUrl ? [school.imageUrl] : []);
     } else {
       setForm(emptyForm());
       setPreviewUrl([]);
     }
+    setAmountInput('');
     setImageFile(null);
     setErrors({});
   }, [open, isEdit, school]);
@@ -117,6 +132,30 @@ export default function DonationSchoolManageModal({ open, mode, school, onClose,
     setPreviewUrl([]);
   };
 
+  const addAmountOption = () => {
+    const value = Number(amountInput.trim());
+    if (!Number.isInteger(value) || value <= 0) {
+      setErrors((prev) => ({ ...prev, amountOptions: '1 이상의 정수를 입력해 주세요.' }));
+      return;
+    }
+    if (form.amountOptions.includes(value)) {
+      setErrors((prev) => ({ ...prev, amountOptions: '이미 추가된 금액입니다.' }));
+      return;
+    }
+    if (form.amountOptions.length >= MAX_AMOUNT_OPTIONS) {
+      setErrors((prev) => ({ ...prev, amountOptions: `금액 옵션은 최대 ${MAX_AMOUNT_OPTIONS}개까지 등록할 수 있습니다.` }));
+      return;
+    }
+    clearError('amountOptions');
+    setForm((prev) => ({ ...prev, amountOptions: [...prev.amountOptions, value].sort((a, b) => a - b) }));
+    setAmountInput('');
+  };
+
+  const removeAmountOption = (value: number) => {
+    clearError('amountOptions');
+    setForm((prev) => ({ ...prev, amountOptions: prev.amountOptions.filter((v) => v !== value) }));
+  };
+
   const validate = (): FieldErrors => {
     const next: FieldErrors = {};
     if (!form.name.trim()) next.name = '학교명을 입력해 주세요.';
@@ -128,6 +167,9 @@ export default function DonationSchoolManageModal({ open, mode, school, onClose,
     if (!form.region.trim()) next.region = '지역을 선택해 주세요.';
     const sc = form.studentCount.trim();
     if (sc && !/^\d+$/.test(sc)) next.studentCount = '수혜자 수는 0 이상의 숫자로 입력해 주세요.';
+    const ta = form.targetAmount.trim();
+    if (ta && !/^\d+$/.test(ta)) next.targetAmount = '목표 금액은 0 이상의 숫자로 입력해 주세요. (0 = 목표 없음)';
+    if (form.amountOptions.length === 0) next.amountOptions = '금액 옵션을 1개 이상 등록해 주세요.';
     return next;
   };
 
@@ -148,6 +190,8 @@ export default function DonationSchoolManageModal({ open, mode, school, onClose,
         address: form.address.trim(),
         region: form.region,
         studentCount: form.studentCount.trim() ? Number(form.studentCount.trim()) : null,
+        targetAmount: form.targetAmount.trim() ? Number(form.targetAmount.trim()) : 0,
+        amountOptions: [...form.amountOptions].sort((a, b) => a - b),
       };
 
       if (isEdit && school) {
@@ -259,6 +303,68 @@ export default function DonationSchoolManageModal({ open, mode, school, onClose,
                   setForm({ ...form, studentCount: e.target.value });
                 }}
               />
+            </div>
+
+            <div className={styles.spanFull}>
+              <InputField
+                label='목표 기부액'
+                type='number'
+                min={0}
+                error={errors.targetAmount}
+                placeholder='0 = 목표 없음'
+                value={form.targetAmount}
+                onChange={(e) => {
+                  clearError('targetAmount');
+                  setForm({ ...form, targetAmount: e.target.value });
+                }}
+              />
+              <p className={styles.imageHint} style={{ marginTop: 4 }}>0을 입력하면 목표 금액 없이 등록됩니다.</p>
+            </div>
+
+            <div className={styles.spanFull}>
+              <label className={styles.amountLabel}>
+                기부 금액 옵션 <span className={styles.required}>*</span>
+              </label>
+              <div className={styles.amountInputRow}>
+                <input
+                  className={styles.amountInput}
+                  type='number'
+                  min={1}
+                  placeholder='예: 10000'
+                  value={amountInput}
+                  onChange={(e) => setAmountInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      addAmountOption();
+                    }
+                  }}
+                />
+                <button type='button' className={styles.amountAddBtn} onClick={addAmountOption}>
+                  추가
+                </button>
+              </div>
+              {form.amountOptions.length > 0 ? (
+                <div className={styles.chipRow}>
+                  {form.amountOptions.map((amount) => (
+                    <span key={amount} className={styles.chip}>
+                      {formatKrw(amount)}
+                      <button
+                        type='button'
+                        className={styles.chipRemove}
+                        aria-label={`${formatKrw(amount)} 삭제`}
+                        onClick={() => removeAmountOption(amount)}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+              {errors.amountOptions ? <p className={styles.amountError}>{errors.amountOptions}</p> : null}
+              <p className={styles.imageHint} style={{ marginTop: 6 }}>
+                키오스크 기부 화면에 노출될 금액 버튼입니다. 오름차순으로 자동 정렬됩니다.
+              </p>
             </div>
           </div>
         </div>

@@ -51,7 +51,9 @@ import {
   type DonationTab,
 } from '../features/donations/donationListConfig';
 import {
+  amountOptionsToNumbers,
   extractCampaignResult,
+  formatAmountShort,
   formatCampaignProgress,
   formatIsoDateTime,
   formatKrw,
@@ -61,7 +63,7 @@ import { useDonationCampaignManage } from '../features/donations/useDonationCamp
 const CAMPAIGN_COLS = 9;
 const HISTORY_COLS = 9; // 유형 열 제거
 const ORG_COLS = 5; // 종류 열 제거
-const SCHOOL_COLS = 9;
+const SCHOOL_COLS = 10;
 
 const filterSelectStyle: CSSProperties = {
   height: 36,
@@ -79,9 +81,22 @@ const DEFAULT_TAB: Record<DonationMode, DonationTab> = {
   SCHOOL: 'schools',
 };
 
-export default function DonationManagePage() {
-  const [mode, setMode] = useState<DonationMode>('NGO');
-  const [tab, setTab] = useState<DonationTab>('campaigns');
+type DonationManagePageProps = {
+  /** 특정 세그먼트(NGO/학교)로 고정. 지정 시 상단 세그먼트 토글을 숨긴다. */
+  lockedMode?: DonationMode;
+};
+
+export default function DonationManagePage({ lockedMode }: DonationManagePageProps = {}) {
+  const [modeState, setMode] = useState<DonationMode>(lockedMode ?? 'NGO');
+  // 고정 모드일 땐 항상 lockedMode 를 따른다. 라우터가 /ngo↔/school 전환 시 컴포넌트를
+  // 재사용(언마운트 없음)하므로 useState 초깃값만으로는 이전 세그먼트 상태가 남는다.
+  const mode = lockedMode ?? modeState;
+  const [tab, setTab] = useState<DonationTab>(DEFAULT_TAB[lockedMode ?? 'NGO']);
+
+  // 고정 세그먼트가 바뀌면(예: NGO 기부 → 학교 기부) 해당 세그먼트 기본 탭으로 리셋.
+  useEffect(() => {
+    if (lockedMode) setTab(DEFAULT_TAB[lockedMode]);
+  }, [lockedMode]);
 
   const changeMode = (nextMode: DonationMode) => {
     if (nextMode === mode) return;
@@ -332,22 +347,32 @@ export default function DonationManagePage() {
     <div>
       <div className={shared.pageHeader}>
         <div>
-          <h1 className={shared.pageTitle}>기부 관리</h1>
-          <p className={shared.pageSubtitle}>Donation Management</p>
+          <h1 className={shared.pageTitle}>
+            {lockedMode === 'SCHOOL' ? '학교 기부 관리' : lockedMode === 'NGO' ? 'NGO 기부 관리' : '기부 관리'}
+          </h1>
+          <p className={shared.pageSubtitle}>
+            {lockedMode === 'SCHOOL'
+              ? 'School Donation Management'
+              : lockedMode === 'NGO'
+                ? 'NGO Donation Management'
+                : 'Donation Management'}
+          </p>
         </div>
         {tab === 'campaigns' ? <RegisterBtn title='캠페인 등록' onClick={campaignManage.openCreate} /> : null}
         {tab === 'organizations' ? <RegisterBtn title='단체 등록' onClick={openOrgCreate} /> : null}
         {tab === 'schools' ? <RegisterBtn title='학교 등록' onClick={openSchoolCreate} /> : null}
       </div>
 
-      {/* NGO / 학교 세그먼트 토글 */}
-      <div style={{ marginBottom: 16 }}>
-        <FilterGroup
-          filters={DONATION_MODE_OPTIONS.map((o) => ({ key: o.key, label: o.label }))}
-          current={mode}
-          onFilterChange={(key) => changeMode(key as DonationMode)}
-        />
-      </div>
+      {/* NGO / 학교 세그먼트 토글 (고정 모드에서는 숨김) */}
+      {lockedMode ? null : (
+        <div style={{ marginBottom: 16 }}>
+          <FilterGroup
+            filters={DONATION_MODE_OPTIONS.map((o) => ({ key: o.key, label: o.label }))}
+            current={mode}
+            onFilterChange={(key) => changeMode(key as DonationMode)}
+          />
+        </div>
+      )}
 
       <div className={shared.card}>
         <div
@@ -405,9 +430,18 @@ export default function DonationManagePage() {
           ) : null}
 
           {tab === 'schools' ? (
-            <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+            <div
+              style={{
+                marginLeft: 'auto',
+                display: 'flex',
+                gap: 8,
+                flexWrap: 'nowrap',
+                alignItems: 'center',
+                minWidth: 0,
+              }}
+            >
               <select
-                style={filterSelectStyle}
+                style={{ ...filterSelectStyle, flexShrink: 0 }}
                 value={schoolRegion}
                 onChange={(e) => setSchoolRegion(e.target.value)}
               >
@@ -419,7 +453,7 @@ export default function DonationManagePage() {
                 ))}
               </select>
               <select
-                style={filterSelectStyle}
+                style={{ ...filterSelectStyle, flexShrink: 0 }}
                 value={schoolInitial}
                 onChange={(e) => setSchoolInitial(e.target.value)}
               >
@@ -431,7 +465,7 @@ export default function DonationManagePage() {
                 ))}
               </select>
               <select
-                style={filterSelectStyle}
+                style={{ ...filterSelectStyle, flexShrink: 0 }}
                 value={schoolSort}
                 onChange={(e) => setSchoolSort(e.target.value as SchoolSort)}
               >
@@ -441,12 +475,9 @@ export default function DonationManagePage() {
                   </option>
                 ))}
               </select>
-              <SearchBar
-                value={schoolKeyword}
-                onChange={setSchoolKeyword}
-                placeholder='학교명 검색...'
-                minWidth='200px'
-              />
+              <div style={{ flex: '1 1 150px', minWidth: 120, display: 'flex' }}>
+                <SearchBar value={schoolKeyword} onChange={setSchoolKeyword} placeholder='학교명 검색...' />
+              </div>
             </div>
           ) : null}
         </div>
@@ -707,9 +738,10 @@ export default function DonationManagePage() {
                   <th className={`${shared.th} ${shared.thCenter}`}>이미지</th>
                   <th className={shared.th}>학교명</th>
                   <th className={`${shared.th} ${shared.thCenter}`}>지역</th>
-                  <th className={`${shared.th} ${shared.thCenter}`}>초성</th>
+                  <th className={`${shared.th} ${shared.thRight}`}>목표 / 누적</th>
+                  <th className={`${shared.th} ${shared.thCenter}`}>달성률</th>
+                  <th className={shared.th}>금액 옵션</th>
                   <th className={`${shared.th} ${shared.thCenter}`}>활성</th>
-                  <th className={`${shared.th} ${shared.thRight}`}>누적 기부액</th>
                   <th className={`${shared.th} ${shared.thCenter}`}>등록일</th>
                   <th className={`${shared.th} ${shared.thRight}`}>관리</th>
                 </tr>
@@ -759,16 +791,47 @@ export default function DonationManagePage() {
                       </td>
                       <td className={`${shared.td} ${shared.tdBold}`}>{s.name}</td>
                       <td className={`${shared.td} ${shared.tdCenter}`}>{s.regionLabel ?? '-'}</td>
-                      <td className={`${shared.td} ${shared.tdCenter}`}>{s.initial ?? '-'}</td>
+                      <td className={`${shared.td} ${shared.tdRight} ${shared.tdMuted}`} style={{ fontSize: 11 }}>
+                        <div>{s.targetAmount && s.targetAmount > 0 ? formatKrw(s.targetAmount) : '목표 없음'}</div>
+                        <div style={{ color: 'var(--text-secondary)' }}>{formatKrw(s.accumulatedAmount)}</div>
+                      </td>
+                      <td className={`${shared.td} ${shared.tdCenter} ${shared.tdBold}`}>
+                        {formatCampaignProgress(s.accumulatedAmount, s.targetAmount)}
+                      </td>
+                      <td className={shared.td}>
+                        {(() => {
+                          const opts = amountOptionsToNumbers(s.amountOptions);
+                          if (opts.length === 0) return <span className={shared.tdMuted}>-</span>;
+                          return (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                              {opts.map((amount) => (
+                                <span
+                                  key={amount}
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    padding: '2px 7px',
+                                    borderRadius: 999,
+                                    background: 'var(--bg-muted, #f1f5f9)',
+                                    color: 'var(--text-secondary)',
+                                    fontSize: 11,
+                                    fontWeight: 600,
+                                    whiteSpace: 'nowrap',
+                                  }}
+                                >
+                                  {formatAmountShort(amount)}
+                                </span>
+                              ))}
+                            </div>
+                          );
+                        })()}
+                      </td>
                       <td className={`${shared.td} ${shared.tdCenter}`}>
                         {s.active ? (
                           <span className={`${shared.badge} ${shared.badgeGreen}`}>활성</span>
                         ) : (
                           <span className={`${shared.badge} ${shared.badgeGray}`}>비활성</span>
                         )}
-                      </td>
-                      <td className={`${shared.td} ${shared.tdRight} ${shared.tdBold}`}>
-                        {formatKrw(s.accumulatedAmount)}
                       </td>
                       <td className={`${shared.td} ${shared.tdMuted} ${shared.tdCenter}`}>
                         {formatIsoDateTime(s.createdAt)}
