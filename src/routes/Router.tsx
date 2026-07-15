@@ -12,6 +12,7 @@ const WithMarketDashboardPage = lazy(() => import('@pages/WithMarketDashboardPag
 const ProductManagePage = lazy(() => import('@pages/ProductManagePage'));
 const ShopsManagePage = lazy(() => import('@pages/ShopsManagePage'));
 const DonationManagePage = lazy(() => import('@pages/DonationManagePage'));
+const DonationDashboardPage = lazy(() => import('@pages/DonationDashboardPage'));
 const PaymentManagePage = lazy(() => import('@pages/PaymentManagePage'));
 const DeliveryManagePage = lazy(() => import('@pages/DeliveryManagePage'));
 const RefundManagePage = lazy(() => import('@pages/RefundManagePage'));
@@ -117,7 +118,10 @@ export default function AppRouter() {
             <Route path="dashboard" element={<RoleAwareDashboard />} />
             <Route path="products" element={<ProductManagePage />} />
             <Route path="shops" element={<ShopsManagePage />} />
-            <Route path="donations" element={<DonationManagePage />} />
+            <Route path="donations" element={<Navigate to="/admin/donations/dashboard" replace />} />
+            <Route path="donations/dashboard" element={<DonationDashboardPage />} />
+            <Route path="donations/ngo" element={<DonationManagePage lockedMode="NGO" />} />
+            <Route path="donations/school" element={<DonationManagePage lockedMode="SCHOOL" />} />
             <Route path="payments" element={<PaymentManagePage />} />
             <Route path="deliveries" element={<DeliveryManagePage />} />
             <Route path="refunds" element={<RefundManagePage />} />

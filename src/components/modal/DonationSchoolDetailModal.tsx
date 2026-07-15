@@ -3,7 +3,12 @@ import m from './DonationSchoolDetailModal.module.css';
 import { InfoField, ModalContainer, ModalFooter, ModalHeader } from './ModalElements';
 import ImageZoom from '@components/common/ImageZoom';
 import type { DonationSchool } from '../../hooks/donation-api/useDonationSchools';
-import { formatIsoDateTime, formatKrw } from '../../features/donations/donationFormatters';
+import {
+  formatAmountOptions,
+  formatCampaignProgress,
+  formatIsoDateTime,
+  formatKrw,
+} from '../../features/donations/donationFormatters';
 import shared from '@commons/shared.module.css';
 
 type Props = {
@@ -60,12 +65,30 @@ export default function DonationSchoolDetailModal({ open, school, onClose }: Pro
           <InfoField label='주소' value={school.address || '-'} />
           <InfoField label='설명' value={school.description || '-'} />
           <div className={m.fieldRow}>
-            <InfoField label='누적 기부액' value={formatKrw(school.accumulatedAmount)} />
+            <InfoField
+              label='목표 기부액'
+              value={school.targetAmount && school.targetAmount > 0 ? formatKrw(school.targetAmount) : '목표 없음'}
+            />
+            <InfoField
+              label='누적 기부액 (달성률)'
+              value={
+                school.targetAmount && school.targetAmount > 0
+                  ? `${formatKrw(school.accumulatedAmount)} (${formatCampaignProgress(school.accumulatedAmount, school.targetAmount)})`
+                  : formatKrw(school.accumulatedAmount)
+              }
+            />
+          </div>
+          <div className={m.fieldRow}>
             <InfoField
               label='수혜자 수(재학생 수)'
               value={school.studentCount != null ? `${school.studentCount.toLocaleString()}명` : '-'}
             />
+            <InfoField
+              label='참여자 수'
+              value={school.participantCount != null ? `${school.participantCount.toLocaleString()}명` : '-'}
+            />
           </div>
+          <InfoField label='기부 금액 옵션' value={formatAmountOptions(school.amountOptions)} />
           <InfoField label='등록일' value={formatIsoDateTime(school.createdAt)} />
         </div>
       </div>

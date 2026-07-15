@@ -59,3 +59,110 @@
     grid-template-columns: 1fr;
   }
 }
+
+/********************** 금액 옵션 에디터 *********************/
+.amountLabel {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+
+.required {
+  color: var(--red-text, #dc2626);
+  margin-left: 2px;
+}
+
+.amountInputRow {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.amountInput {
+  flex: 1;
+  min-width: 0;
+  background: var(--bg-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 9px 12px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+.amountInput:focus {
+  border-color: var(--accent);
+  background: var(--bg-card);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.amountAddBtn {
+  flex-shrink: 0;
+  padding: 0 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.amountAddBtn:hover {
+  background: var(--accent-hover, #1d4ed8);
+}
+
+.chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px 6px 12px;
+  border-radius: 999px;
+  background: var(--blue-bg, #eff6ff);
+  color: var(--blue-text, #1d4ed8);
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.chipRemove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(37, 99, 235, 0.14);
+  color: inherit;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+}
+
+.chipRemove:hover {
+  background: rgba(37, 99, 235, 0.28);
+}
+
+.amountError {
+  margin: 8px 0 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--red-text, #dc2626);
+}
