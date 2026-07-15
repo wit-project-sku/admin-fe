@@ -14,7 +14,10 @@ export type DonationSchool = {
   /** 정식 명칭(전체). 표시명(name)은 축약일 수 있음. */
   officialName: string | null;
   description: string | null;
+  /** 로고 이미지 URL(donation/school/logo). */
   imageUrl: string | null;
+  /** 썸네일 이미지 URL(donation/school/thumbnail). */
+  thumbnailUrl: string | null;
   address: string | null;
   /** 지역 코드(Region enum). */
   region: string;
@@ -147,8 +150,16 @@ export const useGetDonationSchoolRegions = () => {
 export const useCreateDonationSchool = () => {
   const queryClient = useQueryClient();
   const { mutate, mutateAsync, isPending, error } = useMutation({
-    mutationFn: ({ data, image }: { data: SchoolWriteBody; image?: File | null }) =>
-      APIService.private.post(SCHOOLS_ADMIN_PATH, buildDataImageMultipart(data, image), {
+    mutationFn: ({
+      data,
+      image,
+      thumbnail,
+    }: {
+      data: SchoolWriteBody;
+      image?: File | null;
+      thumbnail?: File | null;
+    }) =>
+      APIService.private.post(SCHOOLS_ADMIN_PATH, buildDataImageMultipart(data, image, thumbnail), {
         headers: { 'Content-Type': 'multipart/form-data' },
       }),
     onSuccess: () => {
@@ -161,10 +172,22 @@ export const useCreateDonationSchool = () => {
 export const useUpdateDonationSchool = () => {
   const queryClient = useQueryClient();
   const { mutate, mutateAsync, isPending, error } = useMutation({
-    mutationFn: ({ id, data, image }: { id: number; data: SchoolWriteBody; image?: File | null }) =>
-      APIService.private.put(`${SCHOOLS_ADMIN_PATH}/${id}`, buildDataImageMultipart(data, image), {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      }),
+    mutationFn: ({
+      id,
+      data,
+      image,
+      thumbnail,
+    }: {
+      id: number;
+      data: SchoolWriteBody;
+      image?: File | null;
+      thumbnail?: File | null;
+    }) =>
+      APIService.private.put(
+        `${SCHOOLS_ADMIN_PATH}/${id}`,
+        buildDataImageMultipart(data, image, thumbnail),
+        { headers: { 'Content-Type': 'multipart/form-data' } },
+      ),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [DONATION_SCHOOLS_QUERY_KEY] });
     },

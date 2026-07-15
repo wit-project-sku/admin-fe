@@ -75,6 +75,8 @@ export default function DonationSchoolManageModal({ open, mode, school, onClose,
   const [amountInput, setAmountInput] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string[]>([]);
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [thumbnailPreview, setThumbnailPreview] = useState<string[]>([]);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [saving, setSaving] = useState(false);
 
@@ -95,12 +97,15 @@ export default function DonationSchoolManageModal({ open, mode, school, onClose,
         amountOptions: amountOptionsToNumbers(school.amountOptions),
       });
       setPreviewUrl(school.imageUrl ? [school.imageUrl] : []);
+      setThumbnailPreview(school.thumbnailUrl ? [school.thumbnailUrl] : []);
     } else {
       setForm(emptyForm());
       setPreviewUrl([]);
+      setThumbnailPreview([]);
     }
     setAmountInput('');
     setImageFile(null);
+    setThumbnailFile(null);
     setErrors({});
   }, [open, isEdit, school]);
 
@@ -139,6 +144,23 @@ export default function DonationSchoolManageModal({ open, mode, school, onClose,
       return;
     }
     setPreviewUrl([]);
+  };
+
+  const handleThumbnailChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setThumbnailFile(file);
+    setThumbnailPreview([URL.createObjectURL(file)]);
+    e.target.value = '';
+  };
+
+  const handleDeleteThumbnail = () => {
+    setThumbnailFile(null);
+    if (isEdit && school?.thumbnailUrl) {
+      setThumbnailPreview([school.thumbnailUrl]);
+      return;
+    }
+    setThumbnailPreview([]);
   };
 
   const addAmountOption = () => {
@@ -208,9 +230,9 @@ export default function DonationSchoolManageModal({ open, mode, school, onClose,
       };
 
       if (isEdit && school) {
-        await updateSchoolAsync({ id: school.id, data, image: imageFile });
+        await updateSchoolAsync({ id: school.id, data, image: imageFile, thumbnail: thumbnailFile });
       } else {
-        await createSchoolAsync({ data, image: imageFile });
+        await createSchoolAsync({ data, image: imageFile, thumbnail: thumbnailFile });
       }
       onSuccess();
     } catch {
@@ -228,7 +250,7 @@ export default function DonationSchoolManageModal({ open, mode, school, onClose,
         <div className={styles.body}>
           <div className={styles.imageBlock}>
             <ImageUploadField
-              label='학교 이미지'
+              label='로고'
               spanFull
               previewUrls={previewUrl}
               onUpload={handleFileChange}
@@ -236,11 +258,20 @@ export default function DonationSchoolManageModal({ open, mode, school, onClose,
               isEdit
               maxCount={1}
             />
-            <p className={styles.imageHint}>
-              {isEdit
-                ? '이미지는 선택 사항입니다. 새 이미지를 선택하지 않으면 기존 이미지가 유지됩니다.'
-                : '이미지는 선택 사항입니다.'}
-            </p>
+            <p className={styles.imageHint}>학교 상징 로고입니다. 선택 사항이며, 수정 시 새로 올리지 않으면 기존 로고가 유지됩니다.</p>
+          </div>
+
+          <div className={styles.imageBlock}>
+            <ImageUploadField
+              label='썸네일'
+              spanFull
+              previewUrls={thumbnailPreview}
+              onUpload={handleThumbnailChange}
+              onDelete={handleDeleteThumbnail}
+              isEdit
+              maxCount={1}
+            />
+            <p className={styles.imageHint}>목록·카드에 노출되는 대표 이미지입니다. 선택 사항이며, 수정 시 새로 올리지 않으면 기존 썸네일이 유지됩니다.</p>
           </div>
 
           <div className={styles.basicGrid}>
