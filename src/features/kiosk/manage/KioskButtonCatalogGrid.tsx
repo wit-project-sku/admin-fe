@@ -3,11 +3,7 @@ import Pagination from '@components/common/Pagination';
 import { KioskAppIconVisual } from '../kioskAppIcons';
 import type { KioskButtonDto } from '@/hooks/kiosk-api/kioskButtonsTypes';
 import { formatDurationSeconds } from '../kioskFormatters';
-import {
-  formatKioskButtonStatusLabel,
-  isKioskButtonStatusActive,
-  resolveKioskButtonIconKey,
-} from './kioskButtonDisplay';
+import { resolveKioskButtonIconKey } from './kioskButtonDisplay';
 import styles from './KioskAppManagePage.module.css';
 
 type Props = {
@@ -63,7 +59,6 @@ export function KioskButtonCatalogGrid({
     <section className={styles.catalogWithPager} aria-label='전체 버튼 목록'>
       <div className={styles.grid}>
         {buttons.map((b) => {
-          const active = isKioskButtonStatusActive(b.status);
           const resolvedIcon = resolveKioskButtonIconKey(b.iconKey);
           const deleting = deletingButtonId === b.id;
           const toggling = togglingButtonId === b.id;
@@ -88,13 +83,9 @@ export function KioskButtonCatalogGrid({
                       ? `위치 ${b.line}·${b.position}`
                       : b.placement === 'FIXED'
                         ? '고정'
-                        : '미표시'}{' '}
-                    · {formatKioskButtonStatusLabel(b.status)}
+                        : '미표시'}
                   </div>
                 </div>
-                <span className={`${shared.badge} ${active ? shared.badgeGreen : shared.badgeGray}`}>
-                  {formatKioskButtonStatusLabel(b.status)}
-                </span>
               </div>
               <div className={styles.statsRow}>
                 <span className={styles.stat}>
@@ -116,9 +107,6 @@ export function KioskButtonCatalogGrid({
                   title='자막/영상·이미지 편집 (WITH별 시트로 이동)'
                 >
                   자막/영상
-                </button>
-                <button type='button' className={shared.btnOutline} onClick={() => onCardAction('toggle', b)} disabled={busy}>
-                  {toggling ? '처리 중…' : active ? '비활성화' : '활성화'}
                 </button>
                 {/* <button type='button' className={shared.btnOutline} onClick={() => onCardAction('delete', b)} disabled={busy}>
                   {deleting ? '삭제 중…' : '삭제'}

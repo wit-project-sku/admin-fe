@@ -56,8 +56,7 @@ export function KioskButtonByKioskPanel({
   // 인라인 편집 폼 상태
   const [buttonType, setButtonType] = useState('');
   const [buttonName, setButtonName] = useState('');
-  const [iconKey, setIconKey] = useState('map');
-  const [status, setStatus] = useState('ACTIVE');
+  const [iconKey, setIconKey] = useState('');
   const [placement, setPlacement] = useState<ButtonPlacement>('MAIN');
   const [span, setSpan] = useState(1);
 
@@ -72,8 +71,7 @@ export function KioskButtonByKioskPanel({
     if (!selected) return;
     setButtonType(selected.buttonType ?? '');
     setButtonName(selected.buttonName ?? '');
-    setIconKey(resolveKioskButtonIconKey(selected.iconKey));
-    setStatus(selected.status === 'INACTIVE' ? 'INACTIVE' : 'ACTIVE');
+    setIconKey(selected.iconKey ?? '');
     setPlacement((selected.placement as ButtonPlacement) ?? 'MAIN');
     setSpan(selected.span === 2 ? 2 : 1);
   }, [selectedId, selected]);
@@ -96,8 +94,7 @@ export function KioskButtonByKioskPanel({
           line: req.targetLine,
           position: req.targetPosition,
           span: src.span === 2 ? 2 : 1,
-          iconKey: resolveKioskButtonIconKey(src.iconKey),
-          status: src.status === 'INACTIVE' ? 'INACTIVE' : 'ACTIVE',
+          iconKey: src.iconKey ?? null,
         },
       });
       onNotice?.('버튼 위치를 변경했습니다.');
@@ -126,8 +123,7 @@ export function KioskButtonByKioskPanel({
           line: selected.line,
           position: selected.position,
           span,
-          iconKey: resolveKioskButtonIconKey(iconKey),
-          status,
+          iconKey: iconKey.trim() ? iconKey.trim() : null,
         },
       });
       const originalPlacement = (selected.placement as ButtonPlacement) ?? 'MAIN';
@@ -338,16 +334,15 @@ export function KioskButtonByKioskPanel({
                 </label>
                 <div className={styles.editRow}>
                   <label className={styles.editField}>
-                    <span>상태</span>
-                    <select
-                      className={styles.select}
-                      value={status}
-                      onChange={(e) => setStatus(e.target.value)}
+                    <span>아이콘 key</span>
+                    <input
+                      className={styles.input}
+                      value={iconKey}
+                      onChange={(e) => setIconKey(e.target.value)}
+                      placeholder='비우면 미지정'
+                      autoComplete='off'
                       disabled={saving}
-                    >
-                      <option value='ACTIVE'>활성화</option>
-                      <option value='INACTIVE'>비활성화</option>
-                    </select>
+                    />
                   </label>
                   <label className={styles.editField}>
                     <span>배치</span>
