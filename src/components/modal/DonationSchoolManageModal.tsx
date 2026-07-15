@@ -34,24 +34,31 @@ type Props = {
 
 type SchoolFormState = {
   name: string;
+  officialName: string;
   description: string;
   address: string;
   region: string;
   studentCount: string;
+  foundingYear: string;
   targetAmount: string;
   amountOptions: number[];
 };
 
 type FieldErrors = Partial<
-  Record<'name' | 'description' | 'address' | 'region' | 'studentCount' | 'targetAmount' | 'amountOptions', string>
+  Record<
+    'name' | 'description' | 'address' | 'region' | 'studentCount' | 'foundingYear' | 'targetAmount' | 'amountOptions',
+    string
+  >
 >;
 
 const emptyForm = (): SchoolFormState => ({
   name: '',
+  officialName: '',
   description: '',
   address: '',
   region: '',
   studentCount: '',
+  foundingYear: '',
   targetAmount: '0',
   amountOptions: [...DEFAULT_SCHOOL_AMOUNT_OPTIONS],
 });
@@ -78,10 +85,12 @@ export default function DonationSchoolManageModal({ open, mode, school, onClose,
     if (isEdit && school) {
       setForm({
         name: school.name ?? '',
+        officialName: school.officialName ?? '',
         description: school.description ?? '',
         address: school.address ?? '',
         region: school.region ?? '',
         studentCount: school.studentCount != null ? String(school.studentCount) : '',
+        foundingYear: school.foundingYear != null ? String(school.foundingYear) : '',
         targetAmount: school.targetAmount != null ? String(school.targetAmount) : '0',
         amountOptions: amountOptionsToNumbers(school.amountOptions),
       });
@@ -167,6 +176,8 @@ export default function DonationSchoolManageModal({ open, mode, school, onClose,
     if (!form.region.trim()) next.region = '지역을 선택해 주세요.';
     const sc = form.studentCount.trim();
     if (sc && !/^\d+$/.test(sc)) next.studentCount = '수혜자 수는 0 이상의 숫자로 입력해 주세요.';
+    const fy = form.foundingYear.trim();
+    if (fy && !/^\d{4}$/.test(fy)) next.foundingYear = '개교년도는 4자리 연도로 입력해 주세요. (예: 1955)';
     const ta = form.targetAmount.trim();
     if (ta && !/^\d+$/.test(ta)) next.targetAmount = '목표 금액은 0 이상의 숫자로 입력해 주세요. (0 = 목표 없음)';
     if (form.amountOptions.length === 0) next.amountOptions = '금액 옵션을 1개 이상 등록해 주세요.';
@@ -186,10 +197,12 @@ export default function DonationSchoolManageModal({ open, mode, school, onClose,
     try {
       const data: SchoolWriteBody = {
         name: form.name.trim(),
+        officialName: form.officialName.trim() || null,
         description: form.description.trim(),
         address: form.address.trim(),
         region: form.region,
         studentCount: form.studentCount.trim() ? Number(form.studentCount.trim()) : null,
+        foundingYear: form.foundingYear.trim() ? Number(form.foundingYear.trim()) : null,
         targetAmount: form.targetAmount.trim() ? Number(form.targetAmount.trim()) : 0,
         amountOptions: [...form.amountOptions].sort((a, b) => a - b),
       };
@@ -233,10 +246,10 @@ export default function DonationSchoolManageModal({ open, mode, school, onClose,
           <div className={styles.basicGrid}>
             <div className={styles.spanFull}>
               <InputField
-                label='이름'
+                label='이름(표시명)'
                 required
                 error={errors.name}
-                placeholder='예: OO초등학교'
+                placeholder='예: 이대부고 (최대 10자, 필요 시 축약)'
                 maxLength={DONATION_NAME_MAX}
                 value={form.name}
                 onChange={(e) => {
@@ -244,6 +257,18 @@ export default function DonationSchoolManageModal({ open, mode, school, onClose,
                   setForm({ ...form, name: e.target.value });
                 }}
               />
+            </div>
+
+            <div className={styles.spanFull}>
+              <InputField
+                label='정식 명칭'
+                placeholder='예: 이화여자대학교 부속고등학교 (선택)'
+                value={form.officialName}
+                onChange={(e) => setForm({ ...form, officialName: e.target.value })}
+              />
+              <p className={styles.imageHint} style={{ marginTop: 4 }}>
+                표시명은 최대 10자로 짧게, 정식 명칭에는 전체 교명을 입력합니다.
+              </p>
             </div>
 
             <div className={styles.spanFull}>
@@ -301,6 +326,20 @@ export default function DonationSchoolManageModal({ open, mode, school, onClose,
                 onChange={(e) => {
                   clearError('studentCount');
                   setForm({ ...form, studentCount: e.target.value });
+                }}
+              />
+            </div>
+
+            <div className={styles.spanFull}>
+              <InputField
+                label='개교년도'
+                type='number'
+                error={errors.foundingYear}
+                placeholder='예: 1955'
+                value={form.foundingYear}
+                onChange={(e) => {
+                  clearError('foundingYear');
+                  setForm({ ...form, foundingYear: e.target.value });
                 }}
               />
             </div>

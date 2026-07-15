@@ -11,6 +11,8 @@ import type { CampaignAmountOption } from './donationApiTypes';
 export type DonationSchool = {
   id: number;
   name: string;
+  /** 정식 명칭(전체). 표시명(name)은 축약일 수 있음. */
+  officialName: string | null;
   description: string | null;
   imageUrl: string | null;
   address: string | null;
@@ -31,6 +33,8 @@ export type DonationSchool = {
   participantCount: number | null;
   /** 수혜자 수(재학생 수). 등록/수정 시 입력. */
   studentCount: number | null;
+  /** 개교년도. 공공데이터 기준. */
+  foundingYear: number | null;
   /** 직전 순위 대비 변동(양수=상승▲ / 음수=하락▼ / 0=유지 / null=기준 없음). 기부액순·필터 없는 목록에서만. */
   rankChange: number | null;
   createdAt: string;
@@ -71,12 +75,16 @@ export type GetDonationSchoolsParams = {
 
 export type SchoolWriteBody = {
   name: string;
+  /** 정식 명칭(전체). 선택. */
+  officialName?: string | null;
   description: string;
   address: string;
   /** 지역 코드(Region enum). */
   region: string;
   /** 수혜자 수(재학생 수). 선택. */
   studentCount?: number | null;
+  /** 개교년도. 선택. */
+  foundingYear?: number | null;
   /** 목표 기부액. 0 = 목표 없음. */
   targetAmount: number;
   /** 기부 금액 프리셋(오름차순 정수 배열). */
