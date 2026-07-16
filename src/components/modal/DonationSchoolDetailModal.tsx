@@ -39,8 +39,8 @@ export default function DonationSchoolDetailModal({ open, school, onClose }: Pro
 
       <div className={m.body}>
         <div className={m.imageWrap}>
-          {school.imageUrl ? (
-            <ImageZoom src={school.imageUrl} alt={school.name} title={school.name} className={m.schoolImage} />
+          {school.logoImageUrl ? (
+            <ImageZoom src={school.logoImageUrl} alt={school.name} title={school.name} className={m.schoolImage} />
           ) : (
             <div className={m.imagePlaceholder}>등록된 이미지가 없습니다.</div>
           )}

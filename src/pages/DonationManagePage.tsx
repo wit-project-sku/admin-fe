@@ -779,9 +779,9 @@ export default function DonationManagePage({ lockedMode }: DonationManagePagePro
                     >
                       <td className={`${shared.td} ${shared.tdMuted} ${shared.tdCenter}`}>{s.id}</td>
                       <td className={`${shared.td} ${shared.tdCenter}`}>
-                        {s.imageUrl ? (
+                        {s.logoImageUrl ? (
                           <img
-                            src={s.imageUrl}
+                            src={s.logoImageUrl}
                             alt=''
                             style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 8 }}
                           />

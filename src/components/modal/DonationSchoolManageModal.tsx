@@ -96,7 +96,7 @@ export default function DonationSchoolManageModal({ open, mode, school, onClose,
         targetAmount: school.targetAmount != null ? String(school.targetAmount) : '0',
         amountOptions: amountOptionsToNumbers(school.amountOptions),
       });
-      setPreviewUrl(school.imageUrl ? [school.imageUrl] : []);
+      setPreviewUrl(school.logoImageUrl ? [school.logoImageUrl] : []);
       setThumbnailPreview(school.thumbnailUrl ? [school.thumbnailUrl] : []);
     } else {
       setForm(emptyForm());
@@ -139,8 +139,8 @@ export default function DonationSchoolManageModal({ open, mode, school, onClose,
 
   const handleDeleteImage = () => {
     setImageFile(null);
-    if (isEdit && school?.imageUrl) {
-      setPreviewUrl([school.imageUrl]);
+    if (isEdit && school?.logoImageUrl) {
+      setPreviewUrl([school.logoImageUrl]);
       return;
     }
     setPreviewUrl([]);

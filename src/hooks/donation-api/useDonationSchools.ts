@@ -15,7 +15,7 @@ export type DonationSchool = {
   officialName: string | null;
   description: string | null;
   /** 로고 이미지 URL(donation/school/logo). */
-  imageUrl: string | null;
+  logoImageUrl: string | null;
   /** 썸네일 이미지 URL(donation/school/thumbnail). */
   thumbnailUrl: string | null;
   address: string | null;
