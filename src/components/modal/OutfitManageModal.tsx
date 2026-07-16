@@ -5,7 +5,7 @@ import { useGetOutfitById } from '../../hooks/inventory-api/useGetOutfitById';
 import { useAddOutfit } from '../../hooks/inventory-api/useAddOutfit';
 import { useUpdateOutfit } from '../../hooks/inventory-api/useUpdateOutfit';
 import { useGetAllOutfitCategories } from '../../hooks/inventory-api/useGetAllOutfitCategories';
-import { useGetDonationSchools } from '../../hooks/donation-api/useDonationSchools';
+import SchoolSearchSelect from '@components/common/SchoolSearchSelect';
 import type { OutfitType, OutfitWriteBody } from '../../hooks/inventory-api/outfitApiTypes';
 import {
   extractKioskIdsFromDetail,
@@ -134,12 +134,6 @@ const EMPTY_FORM: OutfitFormState = {
 export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuccess }: OutfitManageModalProps) {
   const { data: categoriesData, isLoading: categoriesLoading, error: categoriesError } = useGetAllOutfitCategories();
   const categories = useMemo(() => unwrapList(categoriesData) as SelectOption[], [categoriesData]);
-  // 교복 학교 선택용 — 현재 학교(비활성 포함)도 항상 해석되도록 전체 조회
-  const { data: schoolsData } = useGetDonationSchools({ pageSize: 500, includeInactive: true });
-  const schoolOptions = useMemo<SelectOption[]>(() => {
-    const list = schoolsData?.data?.content ?? [];
-    return list.map((s) => ({ value: s.id, label: s.active ? s.name : `${s.name} (비활성)` }));
-  }, [schoolsData]);
   const { data: kiosksData } = useGetKiosks();
   const kiosks = unwrapList(kiosksData) as MultiSelectItem[];
   const { data: detailData, isLoading: detailLoading } = useGetOutfitById(open && mode === 'edit' ? outfitId : null);
@@ -151,6 +145,7 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
 
   const [image, setImage] = useState<File[]>([]);
   const [previewUrl, setPreviewUrl] = useState<string[]>([]);
+  const [schoolLabel, setSchoolLabel] = useState('');
   const [fieldErrors, setFieldErrors] = useState<OutfitFieldErrors>({});
 
   const isEdit = mode === 'edit';
@@ -162,6 +157,7 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
       setForm(EMPTY_FORM);
       setPreviewUrl([]);
       setImage([]);
+      setSchoolLabel('');
     }
     setFieldErrors({});
   }, [open, mode, outfitId, isEdit]);
@@ -175,6 +171,8 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
     const type: OutfitType =
       rawType === 'PREMIUM' || rawType === 'SCHOOL_UNIFORM' ? rawType : 'NORMAL';
     const schoolId = d.schoolId ?? d.school_id;
+    const rawSchoolName = d.schoolName ?? d.school_name;
+    setSchoolLabel(typeof rawSchoolName === 'string' ? rawSchoolName : '');
 
     setForm({
       outfitCode: pickOutfitCodeForInput(d),
@@ -318,16 +316,15 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
               {/* 2) 유형별 분류: 교복이면 학교, 그 외는 카테고리 */}
               <div className={m.gridRow}>
                 {isUniformType ? (
-                  <DropDownField
-                    label='학교'
-                    required
-                    error={fieldErrors.schoolId}
-                    options={schoolOptions}
+                  <SchoolSearchSelect
                     value={form.schoolId === '' ? '' : String(form.schoolId)}
+                    label={schoolLabel}
+                    error={fieldErrors.schoolId}
                     disabled={formDisabled}
-                    onChange={(e) => {
+                    onSelect={(id, name) => {
                       clearFieldError('schoolId');
-                      setForm({ ...form, schoolId: e.target.value });
+                      setForm((prev) => ({ ...prev, schoolId: id }));
+                      setSchoolLabel(name);
                     }}
                   />
                 ) : (
@@ -366,7 +363,9 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
                 label={isUniformType ? '의상 코드 (선택)' : '의상 코드'}
                 required={!isUniformType}
                 error={fieldErrors.outfitCode}
-                placeholder={isUniformType ? '교복은 비워둘 수 있습니다' : '예: OB-2024-001'}
+                // 서버 제약: 의상 코드는 최대 10자(@Size max=10). 초과 입력을 막아 저장 실패(400)를 예방.
+                maxLength={10}
+                placeholder={isUniformType ? '교복은 비워둘 수 있습니다' : '예: OB-2024-1 (최대 10자)'}
                 value={form.outfitCode}
                 disabled={formDisabled}
                 onChange={(e) => {
@@ -430,7 +429,9 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
               previewUrls={previewUrl}
               onUpload={handleFileChange}
               onDelete={handleDeleteImage}
-              isEdit={!formDisabled}
+              // 이미지 업로드는 카테고리 로딩과 무관하게 활성화(교복은 카테고리 불필요).
+              // 수정 시 상세 로딩 중에만 잠근다.
+              isEdit={!(isEdit && detailLoading)}
               maxCount={1}
             />
           </div>

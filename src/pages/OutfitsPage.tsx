@@ -97,7 +97,18 @@ export default function OutfitsPage() {
                 { label: '의상코드', value: detailRow.outfitCode },
                 { label: '의상명', value: detailRow.name },
                 { label: '표시명', value: detailRow.displayName },
-                { label: '카테고리', value: detailRow.categoryName },
+                {
+                  label: '의상 유형',
+                  value:
+                    detailRow.type === 'SCHOOL_UNIFORM'
+                      ? '교복 (SCHOOL_UNIFORM)'
+                      : detailRow.type === 'PREMIUM'
+                        ? '프리미엄 (PREMIUM)'
+                        : '일반 (NORMAL)',
+                },
+                detailRow.type === 'SCHOOL_UNIFORM'
+                  ? { label: '학교', value: detailRow.schoolName || '—' }
+                  : { label: '카테고리', value: detailRow.categoryName },
                 { label: '상태', value: detailRow.status === 'ACTIVE' ? '활성화' : '비활성화' },
                 { label: '설치 키오스크', value: detailRow.kioskIds?.length ? `${detailRow.kioskIds.length}곳` : '없음' },
                 {

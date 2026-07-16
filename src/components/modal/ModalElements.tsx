@@ -278,13 +278,15 @@ export const ImageUploadField = ({
         ))}
 
         {isEdit && previewUrls.length < maxCount && (
-          <div className={m.uploadArea}>
+          // 박스 전체를 <label>로 감싸 클릭 히트영역을 네이티브 연결(투명 input 오버레이의
+          // z-index/포인터 이슈 없이 어디를 눌러도 파일 선택창이 열린다).
+          <label className={m.uploadArea}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2.5">
               <line x1="12" y1="5" x2="12" y2="19" />
               <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
             <input type="file" className={m.fileInput} onChange={onUpload} accept="image/*" multiple={maxCount > 1} />
-          </div>
+          </label>
         )}
       </div>
       {error ? (
