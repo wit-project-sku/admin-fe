@@ -9,6 +9,7 @@ import {
   type ButtonPlacement,
 } from '@/hooks/kiosk-api/useUpdateKioskButtonPlacement';
 import { useKioskButtonImage } from '@/hooks/kiosk-api/useKioskButtonImage';
+import { useDeleteKioskButton } from '@/hooks/kiosk-api/useDeleteKioskButton';
 import { KioskMirrorPreview, type MoveRequest } from './KioskMirrorPreview';
 import { KioskMirrorHwaseong } from './KioskMirrorHwaseong';
 import { KioskMirrorGridApp, INSADONG_SKIN, OSAN_SKIN } from './KioskMirrorGridApp';
@@ -45,9 +46,11 @@ export function KioskButtonByKioskPanel({
   const { updateKioskButtonAsync } = useUpdateKioskButton();
   const { updatePlacementAsync } = useUpdateKioskButtonPlacement();
   const { uploadImageAsync } = useKioskButtonImage();
+  const { deleteKioskButtonAsync } = useDeleteKioskButton();
   const [moving, setMoving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const fileRef = useRef<HTMLInputElement | null>(null);
 
   // 드래그 SWAP 확인 대기
@@ -135,6 +138,21 @@ export function KioskButtonByKioskPanel({
       onNotice?.(err instanceof Error ? err.message : '저장하지 못했습니다.');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const deleteSelected = async () => {
+    if (!selected) return;
+    if (!window.confirm(`'${selected.buttonType}' 버튼을 삭제할까요? 되돌릴 수 없습니다.`)) return;
+    try {
+      setDeleting(true);
+      await deleteKioskButtonAsync(selected.id);
+      // 목록 재조회되면 selected 가 자동으로 사라져 상세 패널이 닫힌다.
+      onNotice?.('버튼을 삭제했습니다.');
+    } catch (err) {
+      onNotice?.(err instanceof Error ? err.message : '버튼을 삭제하지 못했습니다.');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -405,9 +423,18 @@ export function KioskButtonByKioskPanel({
                   type='button'
                   className={shared.btnPrimary}
                   onClick={() => void saveEdit()}
-                  disabled={saving}
+                  disabled={saving || deleting}
                 >
                   {saving ? '저장 중…' : '변경 저장'}
+                </button>
+                <button
+                  type='button'
+                  className={shared.btnOutline}
+                  style={{ color: '#dc2626', borderColor: '#dc2626' }}
+                  onClick={() => void deleteSelected()}
+                  disabled={saving || deleting}
+                >
+                  {deleting ? '삭제 중…' : '삭제'}
                 </button>
               </div>
             </div>
