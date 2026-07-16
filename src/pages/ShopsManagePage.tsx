@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import shared from '@commons/shared.module.css';
 import FilterGroup from '@components/common/FilterGroup';
+import SearchBar from '@components/common/SearchBar';
 import Pagination from '@components/common/Pagination';
 import ShopsManageModal from '@modals/ShopsManageModal';
 import DeleteModal from '@modals/DeleteModal';
@@ -34,6 +35,14 @@ export default function ShopsManagePage() {
             current={list.selectedKioskId != null ? String(list.selectedKioskId) : ''}
             onFilterChange={list.setKiosk}
           />
+          <div style={{ flexShrink: 0 }}>
+            <SearchBar
+              value={list.search}
+              onChange={list.setSearch}
+              placeholder="상점명·코드 검색..."
+              minWidth="280px"
+            />
+          </div>
         </div>
 
         <ShopsManageTable

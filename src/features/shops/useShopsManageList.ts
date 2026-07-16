@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useGetAllShops } from '../../hooks/shop-api/useGetAllShops';
 import { useDeleteShop } from '../../hooks/shop-api/useDeleteShop';
 import { useGetKiosks } from '../../hooks/useGetKiosks';
+import { useDebouncedValue } from '../../hooks/useDebouncedValue';
 import { extractPaginatedResult } from '../../utils/queryHelpers';
 import { unwrapList } from '../../utils/unwrapApi';
 import { mapShopListItemToRow, type ShopRow } from './shopsListMappers';
@@ -11,6 +12,8 @@ export type KioskOption = { key: string; label: string };
 
 export function useShopsManageList() {
   const [selectedKioskId, setSelectedKioskId] = useState<number | null>(null);
+  const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search, 300);
   const [page, setPage] = useState(1);
 
   const [showManageModal, setShowManageModal] = useState(false);
@@ -36,6 +39,7 @@ export function useShopsManageList() {
 
   const { data, isLoading, error, refetch } = useGetAllShops({
     kioskId: selectedKioskId,
+    keyword: debouncedSearch,
     pageNum: page,
     pageSize: SHOP_PAGE_SIZE,
   });
@@ -47,9 +51,10 @@ export function useShopsManageList() {
     [shops],
   );
 
+  // 키오스크 변경 또는 검색어 변경 시 1페이지로.
   useEffect(() => {
     setPage(1);
-  }, [selectedKioskId]);
+  }, [selectedKioskId, debouncedSearch]);
 
   useEffect(() => {
     setPage((p) => Math.min(Math.max(1, p), totalPages));
@@ -94,6 +99,8 @@ export function useShopsManageList() {
     selectedKioskId,
     kioskOptions,
     setKiosk,
+    search,
+    setSearch,
     page,
     setPage,
     loading: isLoading || (kiosksLoading && selectedKioskId == null),
