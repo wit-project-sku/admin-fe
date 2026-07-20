@@ -1,4 +1,5 @@
 import { useState, useEffect, type CSSProperties } from 'react';
+import type { AxiosError } from 'axios';
 import shared from '@commons/shared.module.css';
 import FilterGroup from '@components/common/FilterGroup';
 import SearchBar from '@components/common/SearchBar';
@@ -22,12 +23,14 @@ import { useGetDonationHistory, type DonationHistoryItem } from '../hooks/donati
 import {
   useGetDonationOrganizations,
   useDeleteDonationOrganization,
+  usePermanentDeleteDonationOrganization,
   type DonationOrganization,
 } from '../hooks/donation-api/useDonationOrganizations';
 import {
   useGetDonationSchools,
   useGetDonationSchoolRegions,
   useDeleteDonationSchool,
+  usePermanentDeleteDonationSchool,
   type DonationSchool,
   type SchoolSort,
 } from '../hooks/donation-api/useDonationSchools';
@@ -59,6 +62,12 @@ import {
   formatKrw,
 } from '../features/donations/donationFormatters';
 import { useDonationCampaignManage } from '../features/donations/useDonationCampaignManage';
+
+// 서버 BaseResponse 에러 메시지(예: FK 참조로 완전 삭제 거부)를 우선 노출, 없으면 기본 문구.
+function getApiErrorMessage(e: unknown, fallback: string): string {
+  const msg = (e as AxiosError<{ message?: string }>)?.response?.data?.message;
+  return typeof msg === 'string' && msg.trim() ? msg : fallback;
+}
 
 const CAMPAIGN_COLS = 9;
 const HISTORY_COLS = 9; // 유형 열 제거
@@ -120,7 +129,10 @@ export default function DonationManagePage({ lockedMode }: DonationManagePagePro
   const [orgModalMode, setOrgModalMode] = useState<'create' | 'edit'>('create');
   const [selectedOrg, setSelectedOrg] = useState<DonationOrganization | null>(null);
   const [showOrgDeleteModal, setShowOrgDeleteModal] = useState(false);
+  const [orgDeleteHard, setOrgDeleteHard] = useState(false); // true=완전삭제(물리), false=비활성화(소프트)
   const { deleteOrganizationAsync, isPending: isOrgDeleting } = useDeleteDonationOrganization();
+  const { deleteOrganizationPermanentlyAsync, isPending: isOrgHardDeleting } =
+    usePermanentDeleteDonationOrganization();
 
   // 학교 관리
   const [schoolPage, setSchoolPage] = useState(1);
@@ -133,9 +145,12 @@ export default function DonationManagePage({ lockedMode }: DonationManagePagePro
   const [schoolModalMode, setSchoolModalMode] = useState<'create' | 'edit'>('create');
   const [selectedSchool, setSelectedSchool] = useState<DonationSchool | null>(null);
   const [showSchoolDeleteModal, setShowSchoolDeleteModal] = useState(false);
+  const [schoolDeleteHard, setSchoolDeleteHard] = useState(false); // true=완전삭제(물리), false=비활성화(소프트)
   const [selectedSchoolDetail, setSelectedSchoolDetail] = useState<DonationSchool | null>(null);
   const [showSchoolDetailModal, setShowSchoolDetailModal] = useState(false);
   const { deleteSchoolAsync, isPending: isSchoolDeleting } = useDeleteDonationSchool();
+  const { deleteSchoolPermanentlyAsync, isPending: isSchoolHardDeleting } =
+    usePermanentDeleteDonationSchool();
 
   const campaignManage = useDonationCampaignManage();
   const [selectedCampaignDetail, setSelectedCampaignDetail] = useState<DonationCampaign | null>(null);
@@ -283,18 +298,30 @@ export default function DonationManagePage({ lockedMode }: DonationManagePagePro
     setShowOrgModal(true);
   };
 
-  const openOrgDelete = (org: DonationOrganization) => {
+  const openOrgDelete = (org: DonationOrganization, hard = false) => {
     setSelectedOrg(org);
+    setOrgDeleteHard(hard);
     setShowOrgDeleteModal(true);
   };
 
   const confirmOrgDelete = async () => {
     if (selectedOrg == null) return;
     try {
-      await deleteOrganizationAsync(selectedOrg.id);
+      if (orgDeleteHard) {
+        await deleteOrganizationPermanentlyAsync(selectedOrg.id);
+      } else {
+        await deleteOrganizationAsync(selectedOrg.id);
+      }
       setShowOrgDeleteModal(false);
-    } catch {
-      alert('단체 비활성화에 실패했습니다. 잠시 후 다시 시도해주세요.');
+    } catch (e) {
+      alert(
+        getApiErrorMessage(
+          e,
+          orgDeleteHard
+            ? '단체 완전 삭제에 실패했습니다. 잠시 후 다시 시도해주세요.'
+            : '단체 비활성화에 실패했습니다. 잠시 후 다시 시도해주세요.',
+        ),
+      );
     }
   };
 
@@ -315,18 +342,23 @@ export default function DonationManagePage({ lockedMode }: DonationManagePagePro
     setShowSchoolDetailModal(true);
   };
 
-  const openSchoolDelete = (school: DonationSchool) => {
+  const openSchoolDelete = (school: DonationSchool, hard = false) => {
     setSelectedSchool(school);
+    setSchoolDeleteHard(hard);
     setShowSchoolDeleteModal(true);
   };
 
   const confirmSchoolDelete = async () => {
     if (selectedSchool == null) return;
     try {
-      await deleteSchoolAsync(selectedSchool.id);
+      if (schoolDeleteHard) {
+        await deleteSchoolPermanentlyAsync(selectedSchool.id);
+      } else {
+        await deleteSchoolAsync(selectedSchool.id);
+      }
       setShowSchoolDeleteModal(false);
-    } catch {
-      alert(SCHOOL_TABLE_MESSAGES.deleteFailed);
+    } catch (e) {
+      alert(getApiErrorMessage(e, SCHOOL_TABLE_MESSAGES.deleteFailed));
     }
   };
 
@@ -722,7 +754,8 @@ export default function DonationManagePage({ lockedMode }: DonationManagePagePro
                       <td className={`${shared.td} ${shared.tdRight}`}>
                         <div className={shared.actionGroup}>
                           <EditBtn onClick={() => openOrgEdit(org)} />
-                          {org.active ? <DeleteBtn onClick={() => openOrgDelete(org)} /> : null}
+                          {/* 활성=비활성화(소프트), 비활성=완전삭제(물리) */}
+                          <DeleteBtn onClick={() => openOrgDelete(org, !org.active)} />
                         </div>
                       </td>
                     </tr>
@@ -775,7 +808,7 @@ export default function DonationManagePage({ lockedMode }: DonationManagePagePro
                       key={s.id}
                       className={shared.tr}
                       onClick={() => openSchoolDetail(s)}
-                      style={{ cursor: 'pointer', ...(s.active ? {} : { opacity: 0.55 }) }}
+                      style={{ cursor: 'pointer' }}
                     >
                       <td className={`${shared.td} ${shared.tdMuted} ${shared.tdCenter}`}>{s.id}</td>
                       <td className={`${shared.td} ${shared.tdCenter}`}>
@@ -839,7 +872,8 @@ export default function DonationManagePage({ lockedMode }: DonationManagePagePro
                       <td className={`${shared.td} ${shared.tdRight}`}>
                         <div className={shared.actionGroup} onClick={(e) => e.stopPropagation()}>
                           <EditBtn onClick={() => openSchoolEdit(s)} />
-                          {s.active ? <DeleteBtn onClick={() => openSchoolDelete(s)} /> : null}
+                          {/* 활성=비활성화(소프트), 비활성=완전삭제(물리) */}
+                          <DeleteBtn onClick={() => openSchoolDelete(s, !s.active)} />
                         </div>
                       </td>
                     </tr>
@@ -938,9 +972,9 @@ export default function DonationManagePage({ lockedMode }: DonationManagePagePro
       {showOrgDeleteModal ? (
         <DeleteModal
           open={showOrgDeleteModal}
-          title='단체를 비활성화하시겠습니까?'
+          title={orgDeleteHard ? '단체를 완전 삭제하시겠습니까?' : '단체를 비활성화하시겠습니까?'}
           target={selectedOrg?.name}
-          loading={isOrgDeleting}
+          loading={isOrgDeleting || isOrgHardDeleting}
           onConfirm={confirmOrgDelete}
           onClose={() => setShowOrgDeleteModal(false)}
         />
@@ -967,9 +1001,9 @@ export default function DonationManagePage({ lockedMode }: DonationManagePagePro
       {showSchoolDeleteModal ? (
         <DeleteModal
           open={showSchoolDeleteModal}
-          title='학교를 삭제하시겠습니까?'
+          title={schoolDeleteHard ? '학교를 완전 삭제하시겠습니까?' : '학교를 삭제하시겠습니까?'}
           target={selectedSchool?.name}
-          loading={isSchoolDeleting}
+          loading={isSchoolDeleting || isSchoolHardDeleting}
           onConfirm={confirmSchoolDelete}
           onClose={() => setShowSchoolDeleteModal(false)}
         />

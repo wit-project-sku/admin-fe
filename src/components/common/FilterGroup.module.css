@@ -53,3 +53,59 @@
 .active .count {
   background-color: rgba(255, 255, 255, 0.2);
 }
+
+/* ── 라벨 있는 세그먼트 컨트롤(여러 필터 기준 구분용) ───────────────────── */
+.labeledGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.groupLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.segment {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  background-color: var(--bg-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  flex-wrap: wrap;
+}
+
+.segBtn {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  min-height: 30px;
+  border: none;
+  border-radius: calc(var(--radius-md) - 3px);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+  white-space: nowrap;
+}
+
+.segBtn:hover {
+  color: var(--text-primary);
+}
+
+.segActive {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.1);
+}
+
+.segActive:hover {
+  color: var(--text-primary);
+}

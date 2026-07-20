@@ -15,6 +15,12 @@ export type AdminRefundListRow = {
   refundStatus: string;
   description?: string;
   images?: AdminRefundImage[];
+  // 결제(Payment) 조인 — 외주사 환불 요청 엑셀 추출용. 결제 미연동 시 null.
+  approvedDate?: string | null; // yyyyMMdd
+  approvedTime?: string | null; // HHmmss
+  cardNumber?: string | null; // 마스킹된 카드번호 (예: 5123-6500-****-367*)
+  approvalNumber?: string | null;
+  totalAmount?: number | null;
 };
 
 type RefundsAdminPage = {

@@ -160,7 +160,7 @@ export default function PaymentManagePage() {
                         className={`${shared.td} ${shared.tdMuted} ${shared.tdCenter}`}
                         style={{ fontFamily: 'monospace', fontSize: 10 }}
                       >
-                        {p.cardNumber ? `${p.cardNumber.slice(0, 4)}-****-****-${p.cardNumber.slice(-4)}` : '-'}
+                        {p.cardNumber || '-'}
                       </td>
                       <td className={`${shared.td} ${shared.tdRight} ${shared.tdBold}`}>
                         {Number(p.totalAmount).toLocaleString()}원

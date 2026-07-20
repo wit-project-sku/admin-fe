@@ -92,6 +92,8 @@ export type SchoolWriteBody = {
   targetAmount: number;
   /** 기부 금액 프리셋(오름차순 정수 배열). */
   amountOptions: number[];
+  /** 활성 상태(수정 시에만 전송). true=활성, false=비활성. 미전송 시 서버가 기존 상태 유지. */
+  active?: boolean;
 };
 
 /** 지역(시·도) 옵션 — payment-be `GET /api/donations/schools/regions`. */
@@ -204,4 +206,21 @@ export const useDeleteDonationSchool = () => {
     },
   });
   return { deleteSchool: mutate, deleteSchoolAsync: mutateAsync, isPending, error };
+};
+
+// 완전 삭제(물리) — 비활성 학교 정리용. 결제 이력·교복 연결이 있으면 서버가 409(DONATION4012)로 거부.
+export const usePermanentDeleteDonationSchool = () => {
+  const queryClient = useQueryClient();
+  const { mutate, mutateAsync, isPending, error } = useMutation({
+    mutationFn: (id: number) => APIService.private.delete(`${SCHOOLS_ADMIN_PATH}/${id}/permanent`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [DONATION_SCHOOLS_QUERY_KEY] });
+    },
+  });
+  return {
+    deleteSchoolPermanently: mutate,
+    deleteSchoolPermanentlyAsync: mutateAsync,
+    isPending,
+    error,
+  };
 };

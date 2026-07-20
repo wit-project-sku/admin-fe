@@ -35,9 +35,15 @@ export default function OutfitsPage() {
           className={shared.cardHead}
           style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-            <FilterGroup filters={[...OUTFIT_STATUS_FILTERS]} current={list.filter} onFilterChange={list.setFilter} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
             <FilterGroup
+              label="상태"
+              filters={[...OUTFIT_STATUS_FILTERS]}
+              current={list.filter}
+              onFilterChange={list.setFilter}
+            />
+            <FilterGroup
+              label="유형"
               filters={[...OUTFIT_TYPE_FILTERS]}
               current={list.typeFilter}
               onFilterChange={list.setTypeFilter}

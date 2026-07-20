@@ -103,3 +103,21 @@ export const useDeleteDonationOrganization = () => {
   });
   return { deleteOrganization: mutate, deleteOrganizationAsync: mutateAsync, isPending, error };
 };
+
+// 완전 삭제(물리) — 비활성 단체 정리용. 연결된 캠페인이 있으면 서버가 409(DONATION4013)로 거부.
+export const usePermanentDeleteDonationOrganization = () => {
+  const queryClient = useQueryClient();
+  const { mutate, mutateAsync, isPending, error } = useMutation({
+    mutationFn: (id: number) =>
+      APIService.private.delete(`${ORGANIZATIONS_ADMIN_PATH}/${id}/permanent`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [DONATION_ORGANIZATIONS_QUERY_KEY] });
+    },
+  });
+  return {
+    deleteOrganizationPermanently: mutate,
+    deleteOrganizationPermanentlyAsync: mutateAsync,
+    isPending,
+    error,
+  };
+};

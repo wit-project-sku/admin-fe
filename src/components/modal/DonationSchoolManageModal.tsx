@@ -42,6 +42,7 @@ type SchoolFormState = {
   foundingYear: string;
   targetAmount: string;
   amountOptions: number[];
+  active: boolean;
 };
 
 type FieldErrors = Partial<
@@ -61,6 +62,7 @@ const emptyForm = (): SchoolFormState => ({
   foundingYear: '',
   targetAmount: '0',
   amountOptions: [...DEFAULT_SCHOOL_AMOUNT_OPTIONS],
+  active: true,
 });
 
 export default function DonationSchoolManageModal({ open, mode, school, onClose, onSuccess }: Props) {
@@ -95,6 +97,7 @@ export default function DonationSchoolManageModal({ open, mode, school, onClose,
         foundingYear: school.foundingYear != null ? String(school.foundingYear) : '',
         targetAmount: school.targetAmount != null ? String(school.targetAmount) : '0',
         amountOptions: amountOptionsToNumbers(school.amountOptions),
+        active: school.active ?? true,
       });
       setPreviewUrl(school.logoImageUrl ? [school.logoImageUrl] : []);
       setThumbnailPreview(school.thumbnailUrl ? [school.thumbnailUrl] : []);
@@ -227,6 +230,8 @@ export default function DonationSchoolManageModal({ open, mode, school, onClose,
         foundingYear: form.foundingYear.trim() ? Number(form.foundingYear.trim()) : null,
         targetAmount: form.targetAmount.trim() ? Number(form.targetAmount.trim()) : 0,
         amountOptions: [...form.amountOptions].sort((a, b) => a - b),
+        // 상태는 수정 시에만 전송(등록은 항상 활성). null 미전송 시 서버가 기존 상태 유지.
+        active: isEdit ? form.active : undefined,
       };
 
       if (isEdit && school) {
@@ -345,6 +350,23 @@ export default function DonationSchoolManageModal({ open, mode, school, onClose,
                 }}
               />
             </div>
+
+            {isEdit ? (
+              <div className={styles.spanFull}>
+                <DropDownField
+                  label='상태'
+                  options={[
+                    { value: 'ACTIVE', label: '활성' },
+                    { value: 'INACTIVE', label: '비활성' },
+                  ]}
+                  value={form.active ? 'ACTIVE' : 'INACTIVE'}
+                  onChange={(e) => setForm({ ...form, active: e.target.value === 'ACTIVE' })}
+                />
+                <p className={styles.imageHint} style={{ marginTop: 4 }}>
+                  비활성 학교는 키오스크에 노출되지 않습니다. 목록에서는 계속 관리할 수 있습니다.
+                </p>
+              </div>
+            ) : null}
 
             <div className={styles.spanFull}>
               <InputField

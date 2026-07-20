@@ -1,43 +1,54 @@
-import { downloadOutfitCsv } from '../../utils/outfitReportUtils';
+import { APIService } from '../../utils/axios';
+import { downloadXlsx, type XlsxColumn } from '../../utils/xlsxExport';
+import type { MonthlyShootingSort } from '../../hooks/dashboard-api/useGetMonthlyShootingStats';
+import { buildShootingStatsTableModel } from './shootingStatsMappers';
 
-function monthlyExportTag(rows: Record<string, string | number>[]): string {
-  if (rows.length === 0) return new Date().toISOString().slice(0, 10);
-  if (rows.length === 1) return String(rows[0]?.month ?? '').trim() || 'export';
-  const first = String(rows[0]?.month ?? '').trim();
-  const last = String(rows[rows.length - 1]?.month ?? '').trim();
-  return first && last ? `${first}_${last}` : first || 'export';
+type Row = Record<string, string | number>;
+
+/** 시간열 + 지점(키오스크)별 열 + 합계 열 정의. */
+function buildColumns(timeKey: 'month' | 'date', timeHeader: string, kioskNames: string[]): XlsxColumn<Row>[] {
+  return [
+    { header: timeHeader, value: (r) => String(r[timeKey] ?? ''), width: 12 },
+    ...kioskNames.map<XlsxColumn<Row>>((k) => ({ header: k, value: (r) => r[k] ?? 0, width: 12 })),
+    { header: '합계', value: (r) => r.total ?? 0, width: 10 },
+  ];
 }
 
-/** 월별 상세 테이블 → CSV (UTF-8 BOM, Excel 호환). */
-export function downloadMonthlyShootingCsv(
-  rows: Record<string, string | number>[],
-  kioskNames: string[],
-): void {
+/**
+ * 지점별 월별 상세 → 진짜 .xlsx. 화면의 현재 페이지가 아니라 <b>조회된 전체 데이터</b>를 추출하며,
+ * 정렬(최신순/등록순)은 화면과 동일하게 반영한다(추출 시점에 pageSize=전체건수로 재조회).
+ */
+export async function downloadMonthlyShootingXlsx(
+  monthSort: MonthlyShootingSort,
+  totalElements: number,
+): Promise<void> {
+  const sort = monthSort === 'latest' ? 'DESC' : 'ASC';
+  const raw = await APIService.private.get('/admin/stats/monthly', {
+    params: { pageNum: 1, pageSize: Math.max(1, totalElements), sort },
+  });
+  const { rows, kioskNames } = buildShootingStatsTableModel(raw, 'month');
   if (rows.length === 0) return;
-  const headers = ['Month', ...kioskNames, 'Total'];
-  const dataRows = rows.map((row) => [
-    String(row.month ?? ''),
-    ...kioskNames.map((k) => row[k] ?? 0),
-    row.total ?? 0,
-  ]);
-  downloadOutfitCsv(`지점_월별_상세_${monthlyExportTag(rows)}.csv`, headers, dataRows);
+  downloadXlsx('지점_월별_상세.xlsx', '월별 상세', buildColumns('month', '월', kioskNames), rows);
 }
 
-/** 일별 상세 테이블 → CSV. */
-export function downloadDailyShootingCsv(
-  rows: Record<string, string | number>[],
-  kioskNames: string[],
+/**
+ * 지점별 일별 상세 → 진짜 .xlsx. <b>조회 기간(start~end) 내 전체 데이터</b>만 추출한다
+ * (추출 시점에 동일 기간 + pageSize=전체건수로 재조회).
+ */
+export async function downloadDailyShootingXlsx(
   range: { start: string; end: string },
-): void {
+  totalElements: number,
+): Promise<void> {
+  if (!range.start || !range.end) return;
+  const raw = await APIService.private.get('/admin/stats/daily', {
+    params: { start: range.start, end: range.end, pageNum: 1, pageSize: Math.max(1, totalElements) },
+  });
+  const { rows, kioskNames } = buildShootingStatsTableModel(raw, 'date');
   if (rows.length === 0) return;
-  const s = range.start?.trim();
-  const e = range.end?.trim();
-  const tag = s && e ? `${s}_${e}` : 'export';
-  const headers = ['Date', ...kioskNames, 'Total'];
-  const dataRows = rows.map((row) => [
-    String(row.date ?? ''),
-    ...kioskNames.map((k) => row[k] ?? 0),
-    row.total ?? 0,
-  ]);
-  downloadOutfitCsv(`지점_일별_상세_${tag}.csv`, headers, dataRows);
+  downloadXlsx(
+    `지점_일별_상세_${range.start}_${range.end}.xlsx`,
+    '일별 상세',
+    buildColumns('date', '일자', kioskNames),
+    rows,
+  );
 }
