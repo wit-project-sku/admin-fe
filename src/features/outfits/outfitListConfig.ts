@@ -6,6 +6,13 @@ export const OUTFIT_STATUS_FILTERS = [
   { key: 'INACTIVE', label: '비활성화' },
 ] as const;
 
+export const OUTFIT_TYPE_FILTERS = [
+  { key: 'ALL', label: '전체' },
+  { key: 'NORMAL', label: '일반' },
+  { key: 'PREMIUM', label: '프리미엄' },
+  { key: 'SCHOOL_UNIFORM', label: '교복' },
+] as const;
+
 export const OUTFIT_TABLE_MESSAGES = {
   loadError: '의상 데이터를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
   empty: '데이터가 없습니다.',

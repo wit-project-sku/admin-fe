@@ -9,7 +9,11 @@ import DetailModal from '@modals/DetailModal';
 import RegisterBtn from '@components/common/RegisterBtn';
 import { OutfitsTable } from '../features/outfits/OutfitsTable';
 import type { OutfitRow } from '../features/outfits/outfitListMappers';
-import { OUTFIT_PAGE_SIZE, OUTFIT_STATUS_FILTERS } from '../features/outfits/outfitListConfig';
+import {
+  OUTFIT_PAGE_SIZE,
+  OUTFIT_STATUS_FILTERS,
+  OUTFIT_TYPE_FILTERS,
+} from '../features/outfits/outfitListConfig';
 import { useOutfitManageList } from '../features/outfits/useOutfitManageList';
 
 export default function OutfitsPage() {
@@ -29,9 +33,16 @@ export default function OutfitsPage() {
       <div className={shared.card}>
         <div
           className={shared.cardHead}
-          style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}
+          style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}
         >
-          <FilterGroup filters={[...OUTFIT_STATUS_FILTERS]} current={list.filter} onFilterChange={list.setFilter} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+            <FilterGroup filters={[...OUTFIT_STATUS_FILTERS]} current={list.filter} onFilterChange={list.setFilter} />
+            <FilterGroup
+              filters={[...OUTFIT_TYPE_FILTERS]}
+              current={list.typeFilter}
+              onFilterChange={list.setTypeFilter}
+            />
+          </div>
           <div style={{ flexShrink: 0 }}>
             <SearchBar
               value={list.search}
@@ -89,14 +100,20 @@ export default function OutfitsPage() {
 
       <DetailModal
         open={!!detailRow}
-        title={detailRow ? `의상 상세 — ${detailRow.name || detailRow.outfitCode}` : '의상 상세'}
+        title={
+          detailRow
+            ? `의상 상세 — ${
+                detailRow.type === 'SCHOOL_UNIFORM'
+                  ? detailRow.schoolName || detailRow.outfitCode
+                  : detailRow.categoryName || detailRow.outfitCode
+              }`
+            : '의상 상세'
+        }
         onClose={() => setDetailRow(null)}
         fields={
           detailRow
             ? [
                 { label: '의상코드', value: detailRow.outfitCode },
-                { label: '의상명', value: detailRow.name },
-                { label: '표시명', value: detailRow.displayName },
                 {
                   label: '의상 유형',
                   value:
@@ -127,7 +144,7 @@ export default function OutfitsPage() {
           const urls = [detailRow.imageUrl, ...(detailRow.images ?? []).map((im) => im.imageUrl)].filter(
             (u): u is string => !!u,
           );
-          return [...new Set(urls)].map((src) => ({ src, title: detailRow.name }));
+          return [...new Set(urls)].map((src) => ({ src, title: detailRow.outfitCode }));
         })()}
       />
     </div>

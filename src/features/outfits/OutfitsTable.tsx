@@ -177,7 +177,10 @@ export function OutfitsTable({
             rows.map((o, i) => {
               const src = thumbSrc(o);
               const kioskNames = resolveKioskNames(o.kioskIds, kioskNameById);
-              const previewTitle = [o.name, o.outfitCode].filter(Boolean).join(' · ') || '의상 미리보기';
+              const previewTitle =
+                [o.type === 'SCHOOL_UNIFORM' ? o.schoolName : o.categoryName, o.outfitCode]
+                  .filter(Boolean)
+                  .join(' · ') || '의상 미리보기';
               return (
                 <tr
                   key={String(o.id)}
@@ -218,7 +221,7 @@ export function OutfitsTable({
                             교복
                           </span>
                         ) : null}
-                        {o.name || '—'}
+                        {(o.type === 'SCHOOL_UNIFORM' ? o.schoolName : o.categoryName) || '—'}
                       </span>
                       <span className={s.outfitInfoCode}>{o.outfitCode}</span>
                     </div>

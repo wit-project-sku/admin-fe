@@ -13,6 +13,7 @@ export function useOutfitManageList() {
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebouncedValue(search, 300);
   const [filter, setFilter] = useState('ALL');
+  const [typeFilter, setTypeFilter] = useState('ALL');
   const [page, setPage] = useState(1);
 
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
@@ -23,12 +24,17 @@ export function useOutfitManageList() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const statusParam = filter === 'ACTIVE' || filter === 'INACTIVE' ? filter : undefined;
+  const typeParam =
+    typeFilter === 'NORMAL' || typeFilter === 'PREMIUM' || typeFilter === 'SCHOOL_UNIFORM'
+      ? typeFilter
+      : undefined;
 
   const { data: outfitsData, isLoading: loading, error: outfitsError, refetch } = useGetAllOutfits({
     pageNum: page,
     pageSize: OUTFIT_PAGE_SIZE,
     keyword: debouncedSearch.trim() || undefined,
     status: statusParam,
+    type: typeParam,
   });
 
   const { content: outfits, totalPages, totalElements } = extractPaginatedResult(outfitsData);
@@ -43,7 +49,7 @@ export function useOutfitManageList() {
 
   useEffect(() => {
     setPage(1);
-  }, [filter, debouncedSearch]);
+  }, [filter, typeFilter, debouncedSearch]);
 
   useEffect(() => {
     setPage((p) => Math.min(Math.max(1, p), totalPages));
@@ -88,6 +94,8 @@ export function useOutfitManageList() {
     setSearch,
     filter,
     setFilter,
+    typeFilter,
+    setTypeFilter,
     page,
     setPage,
     loading,
