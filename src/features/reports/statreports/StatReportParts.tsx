@@ -1,6 +1,6 @@
 // 통계 리포트 공용 파츠 — KPI 행, 섹션 헤더, 전기 비교 차트, AI 분석 패널.
 // 색상 규칙(클라이언트 확정): 증가 파랑 / 감소 빨강, 첫 KPI 진한 테두리.
-import type { ReactNode } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import {
   Bar,
   BarChart,
@@ -103,23 +103,79 @@ export function CompareBarChart({
   );
 }
 
-/** AI 종합 분석 패널 — ① 전체 ② 키오스크별 */
+/** AI 분석 편집 토글 — 내용은 서버/Gemini 생성(P3), 이 화면에서는 다운로드 전 가필·수정 */
+function AiEditToggle({ editing, onToggle }: { editing: boolean; onToggle: () => void }) {
+  return (
+    <button
+      type='button'
+      onClick={onToggle}
+      style={{
+        border: editing ? '1px solid var(--accent)' : '1px solid var(--border)',
+        background: editing ? 'var(--blue-bg)' : 'var(--bg-card)',
+        color: editing ? 'var(--blue-text)' : 'var(--text-secondary)',
+        borderRadius: 6, padding: '4px 12px', fontSize: 11.5, fontWeight: 700, cursor: 'pointer',
+      }}
+    >
+      {editing ? '✓ 수정 완료' : '✏️ 내용 수정'}
+    </button>
+  );
+}
+
+/** AI 종합 분석 패널 — ① 전체 ② 키오스크별. '내용 수정'으로 다운로드 전 직접 가필 가능 */
 export function AiPanel({ tag, overall, sites }: { tag: string; overall: string[][]; sites: string[][] }) {
+  const [editing, setEditing] = useState(false);
+  const bodyRef = useRef<HTMLDivElement>(null);
   return (
     <div className={s.ai}>
-      <span className={s.aiTag}>✦ {tag}</span>
-      <p className={s.aiHead}>① 전체 분석</p>
-      <ul className={s.aiList}>
-        {overall.map(([head, body]) => (
-          <li key={head}><b>{head}</b>{body}</li>
-        ))}
-      </ul>
-      <p className={s.aiHead}>② 키오스크별 분석</p>
-      <ul className={s.aiList}>
-        {sites.map(([head, body]) => (
-          <li key={head}><b>{head}</b> — {body}</li>
-        ))}
-      </ul>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+        <span className={s.aiTag}>✦ {tag}</span>
+        <span data-export-ignore>
+          <AiEditToggle editing={editing} onToggle={() => { setEditing(!editing); if (!editing) setTimeout(() => bodyRef.current?.focus(), 0); }} />
+        </span>
+      </div>
+      <div
+        ref={bodyRef}
+        contentEditable={editing}
+        suppressContentEditableWarning
+        style={editing ? { outline: '1.5px dashed var(--accent)', borderRadius: 8, padding: 6, marginTop: 4 } : undefined}
+      >
+        <p className={s.aiHead}>① 전체 분석</p>
+        <ul className={s.aiList}>
+          {overall.map(([head, body]) => (
+            <li key={head}><b>{head}</b>{body}</li>
+          ))}
+        </ul>
+        <p className={s.aiHead}>② 키오스크별 분석</p>
+        <ul className={s.aiList}>
+          {sites.map(([head, body]) => (
+            <li key={head}><b>{head}</b> — {body}</li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+/** 라이브 뷰용 AI 카드 — 서버/Gemini 생성 전 안내 + 수기 작성·수정 가능 */
+export function EditableAiCard({ tag, placeholder }: { tag: string; placeholder: string }) {
+  const [editing, setEditing] = useState(false);
+  const bodyRef = useRef<HTMLDivElement>(null);
+  return (
+    <div className={s.ai}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+        <span className={s.aiTag}>✦ {tag}</span>
+        <span data-export-ignore>
+          <AiEditToggle editing={editing} onToggle={() => { setEditing(!editing); if (!editing) setTimeout(() => bodyRef.current?.focus(), 0); }} />
+        </span>
+      </div>
+      <div
+        ref={bodyRef}
+        contentEditable={editing}
+        suppressContentEditableWarning
+        style={editing ? { outline: '1.5px dashed var(--accent)', borderRadius: 8, padding: 6, marginTop: 4 } : undefined}
+      >
+        <p className={s.note} style={{ marginTop: 8 }}>{placeholder}</p>
+      </div>
     </div>
   );
 }

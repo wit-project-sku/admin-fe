@@ -107,44 +107,16 @@ export function ButtonReportView({ variant }: { variant: 'weekly' | 'monthly' })
                   </tbody>
                 </table>
                 </div>
+                {ki === d.perKiosk.length - 1 ? (
+                  <>
+                    <p className={s.note}>※ 클릭 = 홈 화면 버튼 터치 1회 · 사용 시간 = 버튼 진입 후 다른 메뉴 이동/홈 복귀까지 체류 시간 합계 · 평균 체류 = 사용 시간 ÷ 클릭 수 (관리자 웹 '키오스크 분석'과 동일 지표).</p>
+                    <p className={s.footer}>집계 기준: 홈 버튼 클릭 이벤트 · WIT 통계 시스템 자동 생성{variant === 'monthly' ? ' · 월간 발행 주차에는 주간 리포트 동시 발행' : ''} (표본 데이터는 목업용 가상 수치)</p>
+                  </>
+                ) : null}
               </div>
             );
           })}
 
-      <div data-report-page>
-      <p className={s.note}>
-        ※ 클릭 = 홈 화면 버튼 터치 1회 · 사용 시간 = 버튼 진입 후 다른 메뉴 이동/홈 복귀까지 체류 시간 합계 · 평균 체류 = 사용 시간 ÷ 클릭 수 (관리자 웹 '키오스크 분석'과 동일 지표).
-      </p>
-      <Section title={d.dailyHead} sub={`키오스크 세로 × ${variant === 'weekly' ? '일자' : '주차'} 가로`}>
-        <table className={s.table}>
-          <thead>
-            <tr>
-              <th style={{ textAlign: 'left' }}>지점</th>
-              {d.daily.map((r) => <th key={r.d}>{variant === 'weekly' ? fmtMD(r.d) : r.d.split(' ')[0]}</th>)}
-              <th>합계</th>
-            </tr>
-          </thead>
-          <tbody>
-            {KIOSK_SHORT.map((k, ki) => (
-              <tr key={k}>
-                <td className={`${s.tdL} ${s.tdB}`}>{k}</td>
-                {d.daily.map((r) => <td key={r.d}>{r.per[ki].toLocaleString()}</td>)}
-                <td className={s.tdB}>{d.dailySum.per[ki].toLocaleString()}</td>
-              </tr>
-            ))}
-            <tr className={s.sumRow}>
-              <td className={s.tdL}>합계</td>
-              {d.daily.map((r) => <td key={r.d}>{r.sum.toLocaleString()}</td>)}
-              <td>{d.dailySum.sum.toLocaleString()}</td>
-            </tr>
-          </tbody>
-        </table>
-      </Section>
-
-      <p className={s.footer}>
-        집계 기준: 홈 버튼 클릭 이벤트 · WIT 통계 시스템 자동 생성{variant === 'monthly' ? ' · 월간 발행 주차에는 주간 리포트 동시 발행' : ''} (표본 데이터는 목업용 가상 수치)
-      </p>
-      </div>
     </div>
   );
 }

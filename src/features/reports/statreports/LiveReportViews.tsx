@@ -2,7 +2,7 @@
 // 서버 API가 아직 없는 섹션(오전/오후·시간대별·AI 분석·카테고리별 1위·의상 매트릭스·
 // 버튼 일별 지점 분해)은 SampleTag 를 붙여 표본임을 명시한다(P2/P3 개발 목록).
 import s from './StatReports.module.css';
-import { AiPanel, CompareBarChart, Diff, HBarChart, KpiRow, Section } from './StatReportParts';
+import { CompareBarChart, Diff, EditableAiCard, HBarChart, KpiRow, Section } from './StatReportParts';
 import { fmtMD, type KpiItem } from './statReportsMockData';
 import { NewOutfitsSection } from './NewOutfitsSection';
 import {
@@ -154,12 +154,7 @@ export function ShootingWeeklyLiveView() {
       </Section>
 
       <Section title='AI 종합 분석'>
-        <div className={s.ai}>
-          <span className={s.aiTag}>✦ AI INSIGHT</span>
-          <p className={s.note} style={{ marginTop: 8 }}>
-            AI 자동 분석은 P3(리포트 자동 발행) 단계에서 제공됩니다 — 발행 시점의 실데이터로 전체/키오스크별 분석을 자동 작성.
-          </p>
-        </div>
+        <EditableAiCard tag='AI INSIGHT' placeholder='AI 자동 분석은 P3(리포트 자동 발행) 단계에서 제공됩니다 — 발행 시점의 실데이터로 전체/키오스크별 분석을 자동 작성.' />
       </Section>
 
       <NewOutfitsSection periodLabel='이번 주' start={r.start} end={r.end} mode='live' />
@@ -302,10 +297,7 @@ export function ShootingMonthlyLiveView() {
       </Section>
 
       <Section title='AI 종합 분석'>
-        <div className={s.ai}>
-          <span className={s.aiTag}>✦ AI INSIGHT</span>
-          <p className={s.note} style={{ marginTop: 8 }}>AI 자동 분석은 P3(리포트 자동 발행) 단계에서 제공됩니다.</p>
-        </div>
+        <EditableAiCard tag='AI INSIGHT' placeholder='AI 자동 분석은 P3(리포트 자동 발행) 단계에서 제공됩니다.' />
       </Section>
 
       <NewOutfitsSection periodLabel='이번 달' start={r.start} end={r.end} mode='live' />
@@ -426,10 +418,7 @@ export function ButtonLiveView({ variant }: { variant: 'weekly' | 'monthly' }) {
       </Section>
 
       <Section title='AI 종합 분석'>
-        <div className={s.ai}>
-          <span className={s.aiTag}>✦ AI INSIGHT</span>
-          <p className={s.note} style={{ marginTop: 8 }}>AI 자동 분석은 P3(리포트 자동 발행) 단계에서 제공됩니다.</p>
-        </div>
+        <EditableAiCard tag='AI INSIGHT' placeholder='AI 자동 분석은 P3(리포트 자동 발행) 단계에서 제공됩니다.' />
       </Section>
 
       </div>
@@ -478,36 +467,16 @@ export function ButtonLiveView({ variant }: { variant: 'weekly' | 'monthly' }) {
                   </tbody>
                 </table>
                 </div>
+                {ki === kiosks.length - 1 ? (
+                  <>
+                    <p className={s.note}>※ 클릭 = 홈 화면 버튼 터치 1회 · 사용 시간 = 버튼 진입 후 다른 메뉴 이동/홈 복귀까지 체류 시간 합계 · 평균 체류 = 사용 시간 ÷ 클릭 수 (관리자 웹 '키오스크 분석'과 동일 지표).</p>
+                    <p className={s.footer}>집계 기준: 홈 버튼 클릭 이벤트 · 실데이터(서버 집계)</p>
+                  </>
+                ) : null}
               </div>
             );
           })}
 
-      <div data-report-page>
-      <p className={s.note}>※ 클릭 = 홈 화면 버튼 터치 1회 · 사용 시간 = 버튼 진입 후 다른 메뉴 이동/홈 복귀까지 체류 시간 합계 · 평균 체류 = 사용 시간 ÷ 클릭 수 (관리자 웹 '키오스크 분석'과 동일 지표).</p>
-      <Section title={variant === 'weekly' ? '일별 상세' : '일별 추이'}>
-        {block.chartData.length > 0 ? (
-          <table className={s.table}>
-            <thead>
-              <tr><th>일자</th><th>클릭</th><th>사용 시간</th></tr>
-            </thead>
-            <tbody>
-              {block.chartData.map((p) => (
-                <tr key={p.label}>
-                  <td>{fmtMD(p.label)}</td>
-                  <td className={s.tdB}>{p.clicks.toLocaleString()}회</td>
-                  <td>{fmtDurationSec(p.duration)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <p className={s.note}>기간 내 일별 데이터가 없습니다.</p>
-        )}
-        <p className={s.note}>※ 일×지점 분해 표는 버튼 일별 지점별 집계 API 개발 후 제공됩니다.</p>
-      </Section>
-
-      <p className={s.footer}>집계 기준: 홈 버튼 클릭 이벤트 · 실데이터(서버 집계)</p>
-      </div>
     </div>
   );
 }

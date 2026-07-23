@@ -34,30 +34,32 @@ export async function exportReportPdf(): Promise<boolean> {
   const CONTENT_W = 210 - MARGIN * 2;
   const CONTENT_H = 297 - MARGIN * 2;
 
-  for (let i = 0; i < pages.length; i += 1) {
+  // 1패스: 캡처 — 페이지별 비율 수집
+  const captured: { dataUrl: string; ratio: number }[] = [];
+  for (const p of pages) {
     // 뷰포트가 좁거나 숨겨진 환경에서도 폭이 0으로 잡히지 않도록 명시
-    const capW = pages[i].offsetWidth || root.offsetWidth || 780;
-    const canvas = await html2canvas(pages[i], {
+    const capW = p.offsetWidth || root.offsetWidth || 780;
+    const canvas = await html2canvas(p, {
       scale: 2,
       width: capW,
       useCORS: true,
       backgroundColor: '#ffffff',
       logging: false,
       windowWidth: Math.max(1280, capW),
+      ignoreElements: (el) => el instanceof HTMLElement && el.dataset.exportIgnore != null,
     });
     if (canvas.width === 0 || canvas.height === 0) throw new Error('캡처 크기가 0입니다(창이 표시된 상태에서 다시 시도)');
-    if (i > 0) doc.addPage();
-    // 페이지 콘텐츠를 A4 안에 맞춤 — 세로가 넘치면 비율 축소(걸침 원천 봉쇄)
-    const ratio = canvas.height / canvas.width;
-    let wMm = CONTENT_W;
-    let hMm = wMm * ratio;
-    if (hMm > CONTENT_H) {
-      hMm = CONTENT_H;
-      wMm = hMm / ratio;
-    }
-    const x = MARGIN + (CONTENT_W - wMm) / 2;
-    doc.addImage(canvas.toDataURL('image/png'), 'PNG', x, MARGIN, wMm, hMm);
+    captured.push({ dataUrl: canvas.toDataURL('image/png'), ratio: canvas.height / canvas.width });
   }
+  // 2패스: 모든 페이지에 동일 폭 적용(가장 긴 페이지 기준 축소율) — 페이지별 좌우 여백 통일
+  const maxRatio = Math.max(...captured.map((c) => c.ratio));
+  const scale = Math.min(1, CONTENT_H / (CONTENT_W * maxRatio));
+  const wMm = CONTENT_W * scale;
+  const x = MARGIN + (CONTENT_W - wMm) / 2;
+  captured.forEach((c, i) => {
+    if (i > 0) doc.addPage();
+    doc.addImage(c.dataUrl, 'PNG', x, MARGIN, wMm, wMm * c.ratio);
+  });
 
   doc.save(`${title}_${todayStamp()}.pdf`);
   return true;
@@ -153,6 +155,7 @@ async function convertPage(dx: DocxModule, page: HTMLElement): Promise<(Instance
 
   const run = (t: string, o: Record<string, unknown> = {}) => new TextRun({ text: t, font: 'Apple SD Gothic Neo', size: 18, color: INK2, ...o });
   const para = (runs: InstanceType<DocxModule['TextRun']>[], o: Record<string, unknown> = {}) => new Paragraph({ children: runs, spacing: { after: 100 }, ...o });
+  const spacer = () => new Paragraph({ children: [], spacing: { after: 60 } });
 
   const chartImage = async (svg: SVGSVGElement, width: number) => {
     const png = await svgToPng(svg);
@@ -165,7 +168,10 @@ async function convertPage(dx: DocxModule, page: HTMLElement): Promise<(Instance
     const rowsHtml = Array.from(tb.rows);
     if (rowsHtml.length === 0) return null;
     const nCols = Math.max(...rowsHtml.map((r) => r.cells.length));
-    const colW = Math.floor(TBL_W / nCols);
+    // 첫 열(항목명)은 넓게 — 데이터 열의 2.2배
+    const hasWideFirst = rowsHtml.some((r) => r.cells[0] != null && (cls(r.cells[0], 'tdL') || (r.cells[0] as HTMLElement).style.textAlign === 'left'));
+    const unit = TBL_W / (nCols - 1 + (hasWideFirst ? 2.2 : 1));
+    const colWidths = Array.from({ length: nCols }, (_, i) => Math.floor(i === 0 && hasWideFirst ? unit * 2.2 : unit));
     const rows = rowsHtml.map((tr) => {
       const isHead = tr.cells[0]?.tagName === 'TH';
       const isSum = cls(tr, 'sumRow');
@@ -179,7 +185,7 @@ async function convertPage(dx: DocxModule, page: HTMLElement): Promise<(Instance
           const isDown = t.startsWith('▼');
           const isUp = t.startsWith('▲');
           return new TableCell({
-            width: { size: colW, type: WidthType.DXA },
+            width: { size: colWidths[Math.min(colWidths.length - 1, Array.prototype.indexOf.call(tr.cells, cell))], type: WidthType.DXA },
             shading: isHead ? { type: ShadingType.CLEAR, fill: INK } : isSum ? { type: ShadingType.CLEAR, fill: 'f6f8fb' } : undefined,
             margins: { top: 60, bottom: 60, left: 70, right: 70 },
             borders: { top: thin, bottom: thin, left: noB, right: noB },
@@ -191,7 +197,7 @@ async function convertPage(dx: DocxModule, page: HTMLElement): Promise<(Instance
         }),
       });
     });
-    return new Table({ width: { size: TBL_W, type: WidthType.DXA }, columnWidths: Array(nCols).fill(colW), rows });
+    return new Table({ width: { size: TBL_W, type: WidthType.DXA }, columnWidths: colWidths, rows });
   };
 
   /** KPI 그리드 → 5열 표 */
@@ -212,7 +218,7 @@ async function convertPage(dx: DocxModule, page: HTMLElement): Promise<(Instance
           const badgeDown = (b.querySelector('[class*="badgeDown"]') != null);
           const children = [
             para([run(label, { size: 14 })], { spacing: { after: 40 } }),
-            para([run(value, { size: 22, bold: true, color: INK })], { spacing: { after: 40 } }),
+            para([run(value, { size: 24, bold: true, color: INK })], { spacing: { after: 50 } }),
           ];
           if (badge) children.push(para([run(badge, { size: 13, bold: true, color: badgeDown ? RED : ACCENT })], { spacing: { after: 20 } }));
           if (hint) children.push(para([run(hint, { size: 13, color: MUT })], { spacing: { after: 20 } }));
@@ -241,11 +247,11 @@ async function convertPage(dx: DocxModule, page: HTMLElement): Promise<(Instance
       const children: InstanceType<DocxModule['Paragraph']>[] = [];
       if (imgEl) {
         const png = await imgToPng(imgEl.src, 180, 135);
-        if (png) children.push(new Paragraph({ children: [new ImageRun({ type: 'png', data: dataUrlToUint8(png), transformation: { width: 118, height: 88 } })], spacing: { after: 40 } }));
+        if (png) children.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [new ImageRun({ type: 'png', data: dataUrlToUint8(png), transformation: { width: 118, height: 88 } })], spacing: { after: 50 } }));
       }
-      children.push(para([run(`${rank ? `${rank}. ` : ''}${name}`, { size: 16, bold: true, color: INK })], { spacing: { after: 20 } }));
-      if (cat) children.push(para([run(cat, { size: 14, bold: true, color: ACCENT })], { spacing: { after: 20 } }));
-      if (foot) children.push(para([run(foot, { size: 13, color: MUT })], { spacing: { after: 20 } }));
+      children.push(para([run(`${rank ? `${rank}. ` : ''}${name}`, { size: 16, bold: true, color: INK })], { alignment: AlignmentType.CENTER, spacing: { after: 20 } }));
+      if (cat) children.push(para([run(cat, { size: 14, bold: true, color: ACCENT })], { alignment: AlignmentType.CENTER, spacing: { after: 20 } }));
+      if (foot) children.push(para([run(foot, { size: 13, color: MUT })], { alignment: AlignmentType.CENTER, spacing: { after: 20 } }));
       cells.push(new TableCell({ width: { size: w, type: WidthType.DXA }, borders: { top: thin, bottom: thin, left: thin, right: thin }, margins: { top: 70, bottom: 70, left: 70, right: 70 }, children }));
     }
     const rows: InstanceType<DocxModule['TableRow']>[] = [];
@@ -265,10 +271,10 @@ async function convertPage(dx: DocxModule, page: HTMLElement): Promise<(Instance
     for (const card of chartCards.slice(0, 2)) {
       const title = text(card.querySelector('h4'));
       const svg = card.querySelector('svg');
-      const children: InstanceType<DocxModule['Paragraph']>[] = [para([run(title, { size: 15, bold: true, color: INK2 })], { spacing: { after: 40 } })];
+      const children: InstanceType<DocxModule['Paragraph']>[] = [para([run(title, { size: 15, bold: true, color: INK2 })], { alignment: AlignmentType.CENTER, spacing: { after: 40 } })];
       if (svg) {
-        const img = await chartImage(svg as SVGSVGElement, 330);
-        if (img) children.push(new Paragraph({ children: [img] }));
+        const img = await chartImage(svg as SVGSVGElement, 320);
+        if (img) children.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [img] }));
       } else {
         const note = text(card);
         children.push(para([run(note, { size: 13, color: MUT })]));
@@ -283,6 +289,7 @@ async function convertPage(dx: DocxModule, page: HTMLElement): Promise<(Instance
   /** 재귀 순회 */
   const walk = async (el: Element): Promise<void> => {
     if (!(el instanceof HTMLElement) && !(el instanceof SVGSVGElement)) return;
+    if (el instanceof HTMLElement && el.dataset.exportIgnore != null) return;
 
     if (cls(el, 'head') && el.querySelector('[class*="headTitle"]')) {
       const title = text(el.querySelector('[class*="headTitle"]'));
@@ -292,21 +299,21 @@ async function convertPage(dx: DocxModule, page: HTMLElement): Promise<(Instance
       out.push(new Paragraph({ children: [run(sub, { size: 20, color: INK2 })], spacing: { after: 160 }, border: { bottom: { style: BorderStyle.SINGLE, size: 12, color: INK } } }));
       return;
     }
-    if (cls(el, 'kpis')) { out.push(convertKpis(el as HTMLElement)); return; }
+    if (cls(el, 'kpis')) { out.push(convertKpis(el as HTMLElement)); out.push(spacer()); return; }
     if (cls(el, 'sec') && el.querySelector('[class*="secTitle"]')) {
       const t = text(el.querySelector('[class*="secTitle"]'));
       const sub = text(el.querySelector('[class*="secSub"]'));
-      out.push(para([run('▎', { size: 26, bold: true, color: ACCENT }), run(` ${t}`, { size: 26, bold: true, color: INK }), ...(sub ? [run(`   ${sub}`, { size: 14, color: ACCENT })] : [])], { spacing: { before: 240, after: 120 } }));
+      out.push(para([run('▎', { size: 26, bold: true, color: ACCENT }), run(` ${t}`, { size: 26, bold: true, color: INK }), ...(sub ? [run(`   ${sub}`, { size: 14, color: ACCENT })] : [])], { spacing: { before: 320, after: 140 } }));
       return;
     }
     if (cls(el, 'row2')) {
       const t = await convertChartsRow(el as HTMLElement);
-      if (t) { out.push(t); return; }
+      if (t) { out.push(t); out.push(spacer()); return; }
     }
-    if (cls(el, 'gal')) { out.push(await convertGallery(el as HTMLElement)); return; }
+    if (cls(el, 'gal')) { out.push(await convertGallery(el as HTMLElement)); out.push(spacer()); return; }
     if (el.tagName === 'TABLE') {
       const t = convertTable(el as HTMLTableElement);
-      if (t) out.push(t);
+      if (t) { out.push(t); out.push(spacer()); }
       return;
     }
     if (cls(el, 'ai')) {
