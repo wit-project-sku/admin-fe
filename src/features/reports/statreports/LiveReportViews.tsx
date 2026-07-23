@@ -4,6 +4,7 @@
 import s from './StatReports.module.css';
 import { AiPanel, CompareBarChart, Diff, HBarChart, KpiRow, Section } from './StatReportParts';
 import { fmtMD, type KpiItem } from './statReportsMockData';
+import { NewOutfitsSection } from './NewOutfitsSection';
 import {
   diffBadge,
   fmtDurationSec,
@@ -127,6 +128,7 @@ export function ShootingWeeklyLiveView() {
 
   return (
     <div className={s.report} data-report-root data-report-title='주간 촬영 통계 리포트'>
+      <div data-report-page>
       <div className={s.head}>
         <div className={s.headRow}>
           <div>
@@ -160,6 +162,10 @@ export function ShootingWeeklyLiveView() {
         </div>
       </Section>
 
+      <NewOutfitsSection periodLabel='이번 주' start={r.start} end={r.end} mode='live' />
+      </div>
+
+      <div data-report-page>
       <Section title='지점별 상세' sub='전체 · 전주 대비'>
         <table className={s.table}>
           <thead>
@@ -217,11 +223,15 @@ export function ShootingWeeklyLiveView() {
         )}
       </Section>
 
+</div>
+
+      <div data-report-page>
       <Section title='이번 주 인기 의상 TOP 10' sub='실물 등록 사진 · 실데이터'>
         {outfits.isPending ? <LoadingCard text='의상 랭킹을 불러오는 중…' /> : <LiveOutfitGallery cards={outfits.data ?? []} />}
       </Section>
 
       <p className={s.footer}>집계 기준: AR 촬영 완료 건 · 실데이터(서버 집계) · 카테고리별 1위/키오스크별 전체 의상 매트릭스는 서버 집계 API 개발 후 제공</p>
+      </div>
     </div>
   );
 }
@@ -262,6 +272,7 @@ export function ShootingMonthlyLiveView() {
 
   return (
     <div className={s.report} data-report-root data-report-title='월간 촬영 통계 리포트'>
+      <div data-report-page>
       <div className={s.head}>
         <div className={s.headRow}>
           <div>
@@ -297,6 +308,10 @@ export function ShootingMonthlyLiveView() {
         </div>
       </Section>
 
+      <NewOutfitsSection periodLabel='이번 달' start={r.start} end={r.end} mode='live' />
+      </div>
+
+      <div data-report-page>
       <Section title='지점별 상세' sub='전체 · 전월 대비'>
         <table className={s.table}>
           <thead>
@@ -324,11 +339,15 @@ export function ShootingMonthlyLiveView() {
         </table>
       </Section>
 
+</div>
+
+      <div data-report-page>
       <Section title='이번 달 인기 의상 TOP 10' sub='실물 등록 사진 · 실데이터'>
         {outfits.isPending ? <LoadingCard text='의상 랭킹을 불러오는 중…' /> : <LiveOutfitGallery cards={outfits.data ?? []} />}
       </Section>
 
       <p className={s.footer}>집계 기준: AR 촬영 완료 건 · 실데이터(서버 집계) · 카테고리별 1위/의상 월별 매트릭스는 서버 집계 API 개발 후 제공</p>
+      </div>
     </div>
   );
 }
@@ -371,6 +390,7 @@ export function ButtonLiveView({ variant }: { variant: 'weekly' | 'monthly' }) {
 
   return (
     <div className={s.report} data-report-root data-report-title={`${variant === 'weekly' ? '주간' : '월간'} 버튼 사용 통계 리포트`}>
+      <div data-report-page>
       <div className={s.head}>
         <div className={s.headRow}>
           <div>
@@ -412,13 +432,20 @@ export function ButtonLiveView({ variant }: { variant: 'weekly' | 'monthly' }) {
         </div>
       </Section>
 
-      <Section title='지점별 상세' sub='키오스크별 버튼 터치 수·사용 시간 그래프 + 테이블'>
-        <div className={s.kioskGrid}>
-          {kiosks.map(([k, v]) => {
+      </div>
+
+      {kiosks.map(([k, v], ki) => {
             const pb = diffBadge(v.clicks, prevByKiosk.get(k) ?? 0, '회', '');
             const rows = [...v.rows].sort((a, b) => b.totalClicks - a.totalClicks);
             return (
-              <div key={k} className={s.kioskBlock}>
+              <div data-report-page key={k}>
+                {ki === 0 ? (
+                  <div className={s.sec}>
+                    <h3 className={s.secTitle}>지점별 상세</h3>
+                    <span className={s.secSub}>키오스크별 버튼 터치 수·사용 시간 그래프 + 테이블 — 키오스크당 1페이지</span>
+                  </div>
+                ) : null}
+                <div className={s.kioskBlock}>
                 <h4 className={s.kioskBlockTitle}>{k}</h4>
                 <p className={s.kioskBlockSummary}>
                   클릭 <b>{v.clicks.toLocaleString()}회</b> · 사용 시간 {fmtDurationSec(v.duration)}
@@ -450,13 +477,13 @@ export function ButtonLiveView({ variant }: { variant: 'weekly' | 'monthly' }) {
                     </tr>
                   </tbody>
                 </table>
+                </div>
               </div>
             );
           })}
-        </div>
-        <p className={s.note}>※ 클릭 = 홈 화면 버튼 터치 1회 · 사용 시간 = 버튼 진입 후 다른 메뉴 이동/홈 복귀까지 체류 시간 합계 · 평균 체류 = 사용 시간 ÷ 클릭 수 (관리자 웹 '키오스크 분석'과 동일 지표).</p>
-      </Section>
 
+      <div data-report-page>
+      <p className={s.note}>※ 클릭 = 홈 화면 버튼 터치 1회 · 사용 시간 = 버튼 진입 후 다른 메뉴 이동/홈 복귀까지 체류 시간 합계 · 평균 체류 = 사용 시간 ÷ 클릭 수 (관리자 웹 '키오스크 분석'과 동일 지표).</p>
       <Section title={variant === 'weekly' ? '일별 상세' : '일별 추이'}>
         {block.chartData.length > 0 ? (
           <table className={s.table}>
@@ -480,6 +507,7 @@ export function ButtonLiveView({ variant }: { variant: 'weekly' | 'monthly' }) {
       </Section>
 
       <p className={s.footer}>집계 기준: 홈 버튼 클릭 이벤트 · 실데이터(서버 집계)</p>
+      </div>
     </div>
   );
 }

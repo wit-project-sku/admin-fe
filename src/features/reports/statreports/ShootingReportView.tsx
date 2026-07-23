@@ -5,6 +5,7 @@
 import s from './StatReports.module.css';
 import { AiPanel, CompareBarChart, Diff, KpiRow, Section } from './StatReportParts';
 import { useOutfitTopLive, type LiveOutfitCard } from './useStatReportLive';
+import { NewOutfitsSection } from './NewOutfitsSection';
 import {
   KIOSK_SHORT,
   fmtMD,
@@ -131,6 +132,7 @@ export function ShootingWeeklyView() {
   const cards = useRealisticCards(d.outfitTop10);
   return (
     <div className={s.report} data-report-root data-report-title='주간 촬영 통계 리포트'>
+      <div data-report-page>
       <div className={s.head}>
         <div className={s.headRow}>
           <div>
@@ -158,6 +160,10 @@ export function ShootingWeeklyView() {
         <AiPanel tag='AI WEEKLY INSIGHT' overall={d.aiOverall} sites={d.aiSites} />
       </Section>
 
+      <NewOutfitsSection periodLabel='이번 주' start='2026-07-13' end='2026-07-19' mode='sample' />
+      </div>
+
+      <div data-report-page>
       <Section title='지점별 상세' sub='전체 · 전주 대비 · 오전/오후 · 요일별'>
         <table className={s.table}>
           <thead>
@@ -213,10 +219,16 @@ export function ShootingWeeklyView() {
         </table>
       </Section>
 
+</div>
+
+      <div data-report-page>
       <Section title='이번 주 인기 의상 TOP 10' sub='사진(카테고리 표기) + 수치 표 — 자동 생성 시 실물 사진으로 삽입'>
         <OutfitTop10 cards={cards} note={d.outfitTop10Note} />
       </Section>
 
+</div>
+
+      <div data-report-page>
       <Section title='카테고리별 1위 의상' sub='전체 · 키오스크별'>
         <CatWinners rows={d.catWinners} />
       </Section>
@@ -259,6 +271,7 @@ export function ShootingWeeklyView() {
       </Section>
 
       <p className={s.footer}>집계 기준: AR 촬영 완료 건 · WIT 통계 시스템 자동 생성 · DOCX 편집 가능 (표본 데이터는 목업용 가상 수치)</p>
+      </div>
     </div>
   );
 }
@@ -268,6 +281,7 @@ export function ShootingMonthlyView() {
   const cards = useRealisticCards(d.outfitTop10);
   return (
     <div className={s.report} data-report-root data-report-title='월간 촬영 통계 리포트'>
+      <div data-report-page>
       <div className={s.head}>
         <div className={s.headRow}>
           <div>
@@ -290,6 +304,10 @@ export function ShootingMonthlyView() {
         <AiPanel tag='AI MONTHLY INSIGHT' overall={d.aiOverall} sites={d.aiSites} />
       </Section>
 
+      <NewOutfitsSection periodLabel='이번 달' start='2026-06-01' end='2026-06-30' mode='sample' />
+      </div>
+
+      <div data-report-page>
       <Section title='지점별 상세' sub='전체 · 전월 대비 · 오전/오후'>
         <table className={s.table}>
           <thead>
@@ -332,10 +350,16 @@ export function ShootingMonthlyView() {
         </table>
       </Section>
 
+</div>
+
+      <div data-report-page>
       <Section title='이번 달 인기 의상 TOP 10' sub='사진(카테고리 표기) + 수치 표 — 자동 생성 시 실물 사진으로 삽입'>
         <OutfitTop10 cards={cards} note={d.outfitTop10Note} />
       </Section>
 
+</div>
+
+      <div data-report-page>
       <Section title='카테고리별 1위 의상' sub='전체 · 키오스크별 (6월 기준)'>
         <CatWinners rows={d.catWinners} />
       </Section>
@@ -373,6 +397,7 @@ export function ShootingMonthlyView() {
       </Section>
 
       <p className={s.footer}>집계 기준: AR 촬영 완료 건 · 월간 발행 주차에는 주간 리포트 동시 발행 (표본 데이터는 목업용 가상 수치)</p>
+      </div>
     </div>
   );
 }

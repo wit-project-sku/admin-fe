@@ -27,6 +27,7 @@ export function ButtonReportView({ variant }: { variant: 'weekly' | 'monthly' })
 
   return (
     <div className={s.report} data-report-root data-report-title={`${variant === 'weekly' ? '주간' : '월간'} 버튼 사용 통계 리포트`}>
+      <div data-report-page>
       <div className={s.head}>
         <div className={s.headRow}>
           <div>
@@ -60,14 +61,21 @@ export function ButtonReportView({ variant }: { variant: 'weekly' | 'monthly' })
         <AiPanel tag={variant === 'weekly' ? 'AI WEEKLY INSIGHT' : 'AI MONTHLY INSIGHT'} overall={d.aiOverall} sites={d.aiSites} />
       </Section>
 
-      <Section title='지점별 상세' sub='키오스크별 버튼 터치 수·사용 시간 그래프 + 테이블'>
-        <div className={s.kioskGrid}>
-          {d.perKiosk.map((k, ki) => {
+      </div>
+
+      {d.perKiosk.map((k, ki) => {
             const kSum = d.kioskSummary[ki];
             const kClicks = k.buttons.reduce((a, [, v]) => a + v, 0);
             const kUsage = k.buttons.reduce((a, [name, v]) => a + v * BUTTON_AVG_SEC[name], 0);
             return (
-              <div key={k.kiosk} className={s.kioskBlock}>
+              <div data-report-page key={k.kiosk}>
+                {ki === 0 ? (
+                  <div className={s.sec}>
+                    <h3 className={s.secTitle}>지점별 상세</h3>
+                    <span className={s.secSub}>키오스크별 버튼 터치 수·사용 시간 그래프 + 테이블 — 키오스크당 1페이지</span>
+                  </div>
+                ) : null}
+                <div className={s.kioskBlock}>
                 <h4 className={s.kioskBlockTitle}>{k.kiosk}</h4>
                 <p className={s.kioskBlockSummary}>
                   클릭 <b>{kClicks.toLocaleString()}회</b> · 사용 시간 {fmtDur(kUsage)} · 평균 체류 {Math.floor(kUsage / kClicks)}초
@@ -98,15 +106,15 @@ export function ButtonReportView({ variant }: { variant: 'weekly' | 'monthly' })
                     </tr>
                   </tbody>
                 </table>
+                </div>
               </div>
             );
           })}
-        </div>
-        <p className={s.note}>
-          ※ 클릭 = 홈 화면 버튼 터치 1회 · 사용 시간 = 버튼 진입 후 다른 메뉴 이동/홈 복귀까지 체류 시간 합계 · 평균 체류 = 사용 시간 ÷ 클릭 수 (관리자 웹 '키오스크 분석'과 동일 지표).
-        </p>
-      </Section>
 
+      <div data-report-page>
+      <p className={s.note}>
+        ※ 클릭 = 홈 화면 버튼 터치 1회 · 사용 시간 = 버튼 진입 후 다른 메뉴 이동/홈 복귀까지 체류 시간 합계 · 평균 체류 = 사용 시간 ÷ 클릭 수 (관리자 웹 '키오스크 분석'과 동일 지표).
+      </p>
       <Section title={d.dailyHead} sub={`키오스크 세로 × ${variant === 'weekly' ? '일자' : '주차'} 가로`}>
         <table className={s.table}>
           <thead>
@@ -136,6 +144,7 @@ export function ButtonReportView({ variant }: { variant: 'weekly' | 'monthly' })
       <p className={s.footer}>
         집계 기준: 홈 버튼 클릭 이벤트 · WIT 통계 시스템 자동 생성{variant === 'monthly' ? ' · 월간 발행 주차에는 주간 리포트 동시 발행' : ''} (표본 데이터는 목업용 가상 수치)
       </p>
+      </div>
     </div>
   );
 }
