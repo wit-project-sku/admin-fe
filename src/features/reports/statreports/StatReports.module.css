@@ -414,3 +414,160 @@
   font-size: 11px;
   color: var(--text-muted);
 }
+
+/* ── 목업(stats-mockup) 정합 — 상단 다운로드 버튼 · 안내 배너 · 카드형 선택기 · A4 프레임 ── */
+.pageActions {
+  display: flex;
+  gap: 8px;
+}
+
+.btnPrimary {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btnPrimary:hover {
+  background: var(--accent-hover);
+}
+
+.btnGhost {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.btnGhost:hover {
+  border-color: var(--border-md);
+}
+
+.infoBanner {
+  border: 1px dashed var(--border-md);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  padding: 12px 16px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.infoBanner b {
+  color: var(--text-primary);
+}
+
+.infoBanner code {
+  font-size: 11px;
+  background: var(--blue-bg);
+  color: var(--blue-text);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-weight: 700;
+}
+
+/* 카드형 리포트 선택기 */
+.kindCards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.kindCard {
+  min-width: 200px;
+  text-align: left;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.kindCard:hover {
+  border-color: var(--border-md);
+}
+
+.kindCardActive {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+.kindBadge {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin-bottom: 7px;
+  background: var(--blue-bg);
+  color: var(--blue-text);
+}
+
+.kindBadgeGreen {
+  background: var(--green-bg);
+  color: var(--green-text);
+}
+
+.kindTitle {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.kindDesc {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
+/* A4 프레임 — 리포트를 용지 비율 폭으로 중앙 정렬 */
+.a4wrap {
+  display: flex;
+  justify-content: center;
+}
+
+.a4wrap > * {
+  width: 100%;
+  max-width: 820px;
+}
+
+/* 리포트 헤더 우측 — 파일 페이지 서식 표기 */
+.headRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.headMeta {
+  text-align: right;
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  padding-top: 6px;
+}
+
+.headMeta b {
+  display: block;
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 700;
+}

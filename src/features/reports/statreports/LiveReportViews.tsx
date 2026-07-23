@@ -3,7 +3,7 @@
 // 버튼 일별 지점 분해)은 SampleTag 를 붙여 표본임을 명시한다(P2/P3 개발 목록).
 import s from './StatReports.module.css';
 import { AiPanel, CompareBarChart, Diff, KpiRow, Section } from './StatReportParts';
-import type { KpiItem } from './statReportsMockData';
+import { statsSinceLabel, type KpiItem } from './statReportsMockData';
 import {
   diffBadge,
   fmtDurationSec,
@@ -97,6 +97,8 @@ export function ShootingWeeklyLiveView() {
   const prevTotal = (prev.data?.rows ?? []).reduce((a, row) => a + Number(row.total ?? 0), 0);
   const weekend = rows.slice(-2).reduce((a, row) => a + Number(row.total ?? 0), 0);
   const cumTotal = (monthly.data?.rows ?? []).reduce((a, row) => a + Number(row.total ?? 0), 0);
+  const oldestMonth = String((monthly.data?.rows ?? []).at(-1)?.month ?? '');
+  const earliestMonthStart = /^\d{4}-\d{2}$/.test(oldestMonth) ? `${oldestMonth}-01` : undefined;
   const badge = diffBadge(total, prevTotal, '건', '전주 대비');
 
   const siteTotals = kioskNames.map((k) => rows.reduce((a, row) => a + Number(row[k] ?? 0), 0));
@@ -107,7 +109,7 @@ export function ShootingWeeklyLiveView() {
     { label: '일평균', value: `${(total / 7).toFixed(1)}건` },
     { label: '주말 비중', value: total > 0 ? `${Math.round((weekend / total) * 100)}%` : '—', hint: `토·일 ${weekend.toLocaleString()}건` },
     { label: '오전 / 오후', value: '—', hint: '서버 집계 개발 예정' },
-    { label: '총 누적 촬영', value: `${cumTotal.toLocaleString()}건`, hint: '월별 집계 합산' },
+    { label: '총 누적 촬영', value: `${cumTotal.toLocaleString()}건`, hint: statsSinceLabel(earliestMonthStart) },
   ];
 
   const weekdayTrend = rows.map((row, i) => ({
@@ -119,8 +121,13 @@ export function ShootingWeeklyLiveView() {
   return (
     <div className={s.report}>
       <div className={s.head}>
-        <h2 className={s.headTitle}>주간 촬영 통계 리포트</h2>
-        <p className={s.headSub}>대상 기간: {r.start} ~ {r.end} · {kioskNames.length}개 지점 · 실데이터</p>
+        <div className={s.headRow}>
+          <div>
+            <h2 className={s.headTitle}>주간 촬영 통계 리포트</h2>
+            <p className={s.headSub}>대상 기간: {r.start} ~ {r.end} · {kioskNames.length}개 지점 · 실데이터</p>
+          </div>
+          <div className={s.headMeta}><b>주간 촬영 통계 리포트</b>1 / 3 page</div>
+        </div>
       </div>
       <KpiRow items={kpis} />
 
@@ -218,6 +225,8 @@ export function ShootingMonthlyLiveView() {
   const total = rows.reduce((a, row) => a + Number(row.total ?? 0), 0);
   const days = rows.length || 1;
   const cumTotal = (monthly.data?.rows ?? []).reduce((a, row) => a + Number(row.total ?? 0), 0);
+  const oldestMonth = String((monthly.data?.rows ?? []).at(-1)?.month ?? '');
+  const earliestMonthStart = /^\d{4}-\d{2}$/.test(oldestMonth) ? `${oldestMonth}-01` : undefined;
 
   // 전월 합계: 월별 집계에서 직전 2개월 행 비교
   const monthRows = monthly.data?.rows ?? [];
@@ -240,15 +249,20 @@ export function ShootingMonthlyLiveView() {
   return (
     <div className={s.report}>
       <div className={s.head}>
-        <h2 className={s.headTitle}>월간 촬영 통계 리포트</h2>
-        <p className={s.headSub}>대상: {r.label} ({r.start} ~ {r.end}) · {kioskNames.length}개 지점 · 실데이터</p>
+        <div className={s.headRow}>
+          <div>
+            <h2 className={s.headTitle}>월간 촬영 통계 리포트</h2>
+            <p className={s.headSub}>대상: {r.label} ({r.start} ~ {r.end}) · {kioskNames.length}개 지점 · 실데이터</p>
+          </div>
+          <div className={s.headMeta}><b>월간 촬영 통계 리포트</b>1 / 3 page</div>
+        </div>
       </div>
       <KpiRow items={[
         { label: '월 총 촬영', value: `${total.toLocaleString()}건`, diff: badge?.text, dir: badge?.dir },
         { label: '일평균', value: `${(total / days).toFixed(1)}건` },
         { label: '오전 / 오후', value: '—', hint: '서버 집계 개발 예정' },
         { label: '주말 비중', value: '—', hint: '요일 집계 개발 예정' },
-        { label: '총 누적 촬영', value: `${cumTotal.toLocaleString()}건`, hint: '월별 집계 합산' },
+        { label: '총 누적 촬영', value: `${cumTotal.toLocaleString()}건`, hint: statsSinceLabel(earliestMonthStart) },
       ]} />
 
       <Section title='월간 추이' sub='주차별 촬영(실데이터)'>
@@ -351,15 +365,20 @@ export function ButtonLiveView({ variant }: { variant: 'weekly' | 'monthly' }) {
   return (
     <div className={s.report}>
       <div className={s.head}>
-        <h2 className={s.headTitle}>{variant === 'weekly' ? '주간' : '월간'} 버튼 사용 통계 리포트</h2>
-        <p className={s.headSub}>대상 기간: {r.start} ~ {r.end} · {kiosks.length}개 지점 · 실데이터</p>
+        <div className={s.headRow}>
+          <div>
+            <h2 className={s.headTitle}>{variant === 'weekly' ? '주간' : '월간'} 버튼 사용 통계 리포트</h2>
+            <p className={s.headSub}>대상 기간: {r.start} ~ {r.end} · {kiosks.length}개 지점 · 실데이터</p>
+          </div>
+          <div className={s.headMeta}><b>{variant === 'weekly' ? '주간' : '월간'} 버튼 사용 통계 리포트</b>1 / 2 page</div>
+        </div>
       </div>
       <KpiRow items={[
         { label: '총 클릭', value: `${block.totalClicks.toLocaleString()}회`, diff: badge?.text, dir: badge?.dir },
         { label: '총 사용 시간', value: fmtDurationSec(block.totalDuration), hint: prevBlock ? `${prevLabel} ${fmtDurationSec(prevBlock.totalDuration)}` : undefined },
         { label: '평균 체류', value: `${Math.round(block.avgDuration)}초`, hint: prevBlock ? `${prevLabel} ${Math.round(prevBlock.avgDuration)}초` : undefined },
-        { label: '누적 클릭', value: cumBlock ? `${cumBlock.totalClicks.toLocaleString()}회` : '—', hint: '2024.11 서비스 개시 후' },
-        { label: '누적 사용 시간', value: cumBlock ? fmtDurationSec(cumBlock.totalDuration) : '—', hint: '2024.11 서비스 개시 후' },
+        { label: '누적 클릭', value: cumBlock ? `${cumBlock.totalClicks.toLocaleString()}회` : '—', hint: statsSinceLabel() },
+        { label: '누적 사용 시간', value: cumBlock ? fmtDurationSec(cumBlock.totalDuration) : '—', hint: statsSinceLabel() },
       ]} />
 
       <Section title='키오스크별 사용 집계' sub={`클릭 · 사용 시간 — ${prevLabel} 대비 비교(점선)`}>

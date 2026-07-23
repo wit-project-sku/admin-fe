@@ -2,6 +2,23 @@
 // 모든 행·열 합계가 교차 검증된 수치(리포트 문서 v8/v9와 동일 데이터 세트).
 // 실서버 연동 시 이 파일만 API 응답 매핑으로 교체한다.
 
+
+/** 통계 집계 개시일 = 통계 스키마(photo_shot·menu_touch) 도입일(admin-be V1, 2026-05-18).
+    실데이터 뷰는 서버 데이터의 최초 집계 시점에서 유도하고, 이 상수는 표본/폴백 용도. */
+export const STATS_SINCE = '2026-05-18';
+export function statsSinceLabel(since: string = STATS_SINCE): string {
+  const st = new Date(`${since}T00:00:00`);
+  if (Number.isNaN(st.getTime())) return '통계 집계 개시 후';
+  const now = new Date();
+  let y = now.getFullYear() - st.getFullYear();
+  let m = now.getMonth() - st.getMonth();
+  let d = now.getDate() - st.getDate();
+  if (d < 0) { m -= 1; d += new Date(now.getFullYear(), now.getMonth(), 0).getDate(); }
+  if (m < 0) { y -= 1; m += 12; }
+  const parts = [y > 0 ? `${y}년` : '', m > 0 ? `${m}개월` : '', `${d}일`].filter(Boolean).join(' ');
+  return `통계 집계 개시 ${st.getFullYear()}. ${st.getMonth() + 1}. ${st.getDate()}. · ${parts} 경과`;
+}
+
 export const KIOSK_NAMES = ['북인사광장', '인사동쉼터', '남인사광장', '오색시장', '화성휴게소'] as const;
 export const KIOSK_SHORT = ['북인사', '쉼터', '남인사', '오색', '화성'] as const;
 
@@ -27,7 +44,7 @@ export const shootWeekly = {
     { label: '일평균', value: '30.6건', hint: '최고 토 52건' },
     { label: '오전 / 오후', value: '34/66%', hint: '피크 15시' },
     { label: '주말 비중', value: '44%', hint: '토·일 94건' },
-    { label: '총 누적 촬영', value: '38,412건', hint: '2024.11 서비스 개시 후' },
+    { label: '총 누적 촬영', value: '38,412건', hint: statsSinceLabel() },
   ] as KpiItem[],
   weekday: [
     { label: '월', cur: 22, prev: 20 }, { label: '화', cur: 21, prev: 22 }, { label: '수', cur: 26, prev: 24 },
@@ -124,7 +141,7 @@ export const shootMonthly = {
     { label: '일평균', value: '63.4건', hint: '최고 6/13(토) 118건' },
     { label: '오전 / 오후', value: '36/64%', hint: '피크 14~16시' },
     { label: '주말 비중', value: '47%', hint: '주말 일평균 111건' },
-    { label: '총 누적 촬영', value: '38,412건', hint: '2024.11 서비스 개시 후' },
+    { label: '총 누적 촬영', value: '38,412건', hint: statsSinceLabel() },
   ] as KpiItem[],
   weeks: [
     { label: '1주', cur: 438 }, { label: '2주', cur: 462 }, { label: '3주', cur: 419 },
@@ -215,8 +232,8 @@ export const buttonWeekly = {
     { label: '총 클릭', value: '1,284회', diff: '전주 대비 ▲ 7.9% (+94회)', dir: 'up' },
     { label: '총 사용 시간', value: '19시간 40분', hint: '전주 17시간 11분' },
     { label: '평균 체류', value: '55초', diff: '전주 52초 → +3초', dir: 'up' },
-    { label: '누적 클릭', value: '231,480회', hint: '2024.11 서비스 개시 후' },
-    { label: '누적 사용 시간', value: '3,540시간', hint: '2024.11 서비스 개시 후' },
+    { label: '누적 클릭', value: '231,480회', hint: statsSinceLabel() },
+    { label: '누적 사용 시간', value: '3,540시간', hint: statsSinceLabel() },
   ] as KpiItem[],
   /* 키오스크별 집계 그래프 데이터 — 클릭·사용 시간(분), 전기 비교 */
   kioskClicks: [
@@ -276,8 +293,8 @@ export const buttonMonthly = {
     { label: '총 클릭', value: '5,412회', diff: '전월 대비 ▼ 8.1% (−478회)', dir: 'down' },
     { label: '총 사용 시간', value: '82시간 56분', hint: '전월 86시간 42분' },
     { label: '평균 체류', value: '55초', diff: '전월 53초 → +2초', dir: 'up' },
-    { label: '누적 클릭', value: '227,110회', hint: '2024.11 서비스 개시 후' },
-    { label: '누적 사용 시간', value: '3,469시간', hint: '2024.11 서비스 개시 후' },
+    { label: '누적 클릭', value: '227,110회', hint: statsSinceLabel() },
+    { label: '누적 사용 시간', value: '3,469시간', hint: statsSinceLabel() },
   ] as KpiItem[],
   kioskClicks: [
     { label: '북인사', cur: 1442, prev: 1557 }, { label: '쉼터', cur: 836, prev: 898 },

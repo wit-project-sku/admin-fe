@@ -91,8 +91,13 @@ export function ShootingWeeklyView() {
   return (
     <div className={s.report}>
       <div className={s.head}>
-        <h2 className={s.headTitle}>{d.title}</h2>
-        <p className={s.headSub}>{d.sub}</p>
+        <div className={s.headRow}>
+          <div>
+            <h2 className={s.headTitle}>{d.title}</h2>
+            <p className={s.headSub}>{d.sub}</p>
+          </div>
+          <div className={s.headMeta}><b>주간 촬영 통계 리포트</b>1 / 3 page</div>
+        </div>
       </div>
       <KpiRow items={d.kpis} />
 
@@ -201,8 +206,13 @@ export function ShootingMonthlyView() {
   return (
     <div className={s.report}>
       <div className={s.head}>
-        <h2 className={s.headTitle}>{d.title}</h2>
-        <p className={s.headSub}>{d.sub}</p>
+        <div className={s.headRow}>
+          <div>
+            <h2 className={s.headTitle}>{d.title}</h2>
+            <p className={s.headSub}>{d.sub}</p>
+          </div>
+          <div className={s.headMeta}><b>월간 촬영 통계 리포트</b>1 / 3 page</div>
+        </div>
       </div>
       <KpiRow items={d.kpis} />
 
