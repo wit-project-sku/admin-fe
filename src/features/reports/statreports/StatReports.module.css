@@ -1,0 +1,416 @@
+/* 통계 리포트 뷰 — 클라이언트 확정 규칙:
+   ① 증감: 증가 파랑 / 감소 빨강 ② 첫 KPI(핵심 지표) 진한 테두리
+   ③ 표 컬럼 헤더 1.5배(16px)·고대비 ④ 의상 사진+표 연속 배치(카테고리 표기) */
+
+.viewer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.toolbarHint {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+/* ── 리포트 프레임 ── */
+.report {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 28px 32px 24px;
+}
+
+.head {
+  border-bottom: 2px solid var(--text-primary);
+  padding-bottom: 12px;
+  margin-bottom: 18px;
+}
+
+.headTitle {
+  margin: 0;
+  font-size: 27px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+.headSub {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+/* ── KPI ── */
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+
+.kpi {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 12px 14px;
+  background: var(--bg-card);
+}
+
+/* 첫 번째(핵심) 지표 — 진한 테두리 강조 */
+.kpiPrimary {
+  border: 2px solid var(--text-primary);
+}
+
+.kpiLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+}
+
+.kpiValue {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-top: 2px;
+}
+
+.kpiHint {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* 증감 배지 — 증가 파랑 / 감소 빨강 (전 데이터 공통) */
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  margin-top: 4px;
+  white-space: nowrap;
+}
+
+.badgeUp {
+  background: var(--blue-bg);
+  color: var(--blue-text);
+}
+
+.badgeDown {
+  background: var(--red-bg);
+  color: var(--red-text);
+}
+
+.up {
+  color: var(--blue-text);
+  font-weight: 700;
+}
+
+.down {
+  color: var(--red-text);
+  font-weight: 700;
+}
+
+/* ── 섹션 ── */
+.sec {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px;
+  margin: 26px 0 12px;
+}
+
+.secTitle {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+.secSub {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.row2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.chartCard {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px 8px;
+}
+
+.chartTitle {
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.chartLegend {
+  display: flex;
+  gap: 14px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  padding: 4px 2px 6px;
+}
+
+.legendDot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  margin-right: 5px;
+  vertical-align: -1px;
+}
+
+/* ── AI 분석 ── */
+.ai {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px 12px;
+}
+
+.aiTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 12px;
+  border-radius: 999px;
+  letter-spacing: 0.04em;
+}
+
+.aiHead {
+  margin: 12px 0 6px;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.aiList {
+  margin: 0 0 4px 18px;
+  padding: 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.aiList li {
+  margin-bottom: 5px;
+  line-height: 1.55;
+}
+
+.aiList b {
+  color: var(--text-primary);
+}
+
+/* ── 표 — 컬럼 헤더 1.5배(16px)·고대비 ── */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: center;
+}
+
+.table th {
+  background: #0f172a;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+  padding: 10px 10px;
+  white-space: nowrap;
+}
+
+.table th:first-child {
+  border-radius: 6px 0 0 0;
+}
+
+.table th:last-child {
+  border-radius: 0 6px 0 0;
+}
+
+.table td {
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 8px 10px;
+  color: var(--text-primary);
+}
+
+.tdL {
+  text-align: left;
+  padding-left: 14px !important;
+}
+
+.tdB {
+  font-weight: 800;
+}
+
+.sumRow td {
+  background: #f6f8fb;
+  font-weight: 700;
+}
+
+.note {
+  margin: 6px 0 0;
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+.code {
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+  margin-left: 5px;
+}
+
+/* ── 인기 의상 TOP 10 갤러리(사진 + 카테고리 텍스트) ── */
+.gal {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.gcard {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--bg-card);
+}
+
+.gcardRank {
+  position: absolute;
+  top: 7px;
+  left: 7px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #0f172a;
+  color: #f8fafc;
+  font-size: 12px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+/* 1~3위 골드 배지 — 관리자 웹 랭킹 카드와 동일 문법 */
+.gcard:nth-child(-n + 3) .gcardRank {
+  background: #fbbf24;
+  color: #0f172a;
+}
+
+.gcardImg {
+  aspect-ratio: 4 / 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.gcardMeta {
+  padding: 8px 10px 4px;
+}
+
+.gcardCode {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.03em;
+}
+
+.gcardName {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 카테고리 텍스트(클라이언트 요청) */
+.gcardCat {
+  display: block;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+.gcardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--border-subtle);
+  margin-top: 6px;
+  padding: 7px 10px;
+}
+
+.gcardFooterLabel {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.gcardFooterVal {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+/* ── 키오스크별 버튼 블록 ── */
+.kioskGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.kioskBlock {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 12px 14px 8px;
+}
+
+.kioskBlockTitle {
+  margin: 0 0 2px;
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.kioskBlockSummary {
+  margin: 0 0 8px;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}
+
+.footer {
+  margin-top: 22px;
+  border-top: 1px solid var(--border);
+  padding-top: 10px;
+  font-size: 11px;
+  color: var(--text-muted);
+}

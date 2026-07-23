@@ -6,6 +6,7 @@ const TABS: { id: ReportTab; label: string }[] = [
   { id: 'daily', label: '지점별 일별 상세' },
   { id: 'ranking', label: '의상별 인기 랭킹' },
   { id: 'stats', label: '전체 의상 통계' },
+  { id: 'statreports', label: '통계 리포트' },
 ];
 
 type ReportTabBarProps = {

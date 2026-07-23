@@ -4,6 +4,7 @@ import { DailyShootingReportPanel } from '../features/reports/DailyShootingRepor
 import { MonthlyShootingReportTable } from '../features/reports/MonthlyShootingReportTable';
 import { OutfitRankingTabPanel } from '../features/reports/OutfitRankingTabPanel';
 import { OutfitStatsTabPanel } from '../features/reports/OutfitStatsTabPanel';
+import { StatReportsTabPanel } from '../features/reports/statreports/StatReportsTabPanel';
 import { ReportPageHeader } from '../features/reports/ReportPageHeader';
 import { ReportTabBar } from '../features/reports/ReportTabBar';
 import type { ReportTab } from '../features/reports/reportTypes';
@@ -17,7 +18,7 @@ import { useOutfitReportFilters } from '../features/reports/useOutfitReportFilte
 
 function tabFromSearch(searchParams: URLSearchParams): ReportTab | null {
   const t = searchParams.get('tab');
-  if (t === 'monthly' || t === 'daily' || t === 'ranking' || t === 'stats') return t;
+  if (t === 'monthly' || t === 'daily' || t === 'ranking' || t === 'stats' || t === 'statreports') return t;
   return null;
 }
 
@@ -126,6 +127,7 @@ export default function ReportsPage() {
 
       {tab === 'ranking' && <OutfitRankingTabPanel outfit={outfitFilters} />}
       {tab === 'stats' && <OutfitStatsTabPanel outfit={outfitFilters} />}
+      {tab === 'statreports' && <StatReportsTabPanel />}
 
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
