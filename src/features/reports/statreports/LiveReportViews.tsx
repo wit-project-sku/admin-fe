@@ -377,7 +377,18 @@ export function ButtonLiveView({ variant }: { variant: 'weekly' | 'monthly' }) {
     const key = row.representativeKioskName || `키오스크 ${row.kioskId}`;
     prevByKiosk.set(key, (prevByKiosk.get(key) ?? 0) + row.totalClicks);
   }
-  const kiosks = [...byKiosk.entries()];
+  // 전체 키오스크 합집합(금기·전기·누적) — 기간 내 사용이 0인 지점도 그래프·상세에 모두 표시
+  const kioskOrder = new Map<string, number>();
+  for (const b of [block, prevBlock, cumBlock]) {
+    for (const row of b?.buttonDetails ?? []) {
+      const key = row.representativeKioskName || `키오스크 ${row.kioskId}`;
+      if (!kioskOrder.has(key)) kioskOrder.set(key, row.kioskId);
+    }
+  }
+  const kiosks: [string, { rows: typeof block.buttonDetails; clicks: number; duration: number }][] =
+    [...kioskOrder.entries()]
+      .sort((a, b) => a[1] - b[1])
+      .map(([name]) => [name, byKiosk.get(name) ?? { rows: [], clicks: 0, duration: 0 }]);
 
 
   return (
@@ -404,7 +415,7 @@ export function ButtonLiveView({ variant }: { variant: 'weekly' | 'monthly' }) {
         <div className={s.row2}>
           <CompareBarChart
             title={`키오스크별 클릭 vs ${prevLabel}(점선)`}
-            data={kiosks.map(([k, v]) => ({ label: k, cur: v.clicks, prev: prevByKiosk.get(k) || undefined }))}
+            data={kiosks.map(([k, v]) => ({ label: k, cur: v.clicks, prev: prevByKiosk.get(k) ?? 0 }))}
             curName={`합계 ${block.totalClicks.toLocaleString()}회`}
             prevName={prevLabel}
           />
@@ -441,10 +452,15 @@ export function ButtonLiveView({ variant }: { variant: 'weekly' | 'monthly' }) {
                   {v.clicks > 0 ? ` · 평균 체류 ${Math.round(v.duration / v.clicks)}초` : ''}
                   {pb ? <> · {prevLabel} 대비 <Diff text={pb.text.split(' (')[0].trim()} /></> : null}
                 </p>
+                {rows.length === 0 ? (
+                  <EmptyNote title='기간 내 사용 데이터가 없습니다' hint='해당 키오스크에서 버튼 클릭이 집계되면 그래프와 표가 채워집니다.' />
+                ) : (
                 <div className={s.row2}>
                   <HBarChart title='버튼별 클릭(회)' data={rows.map((r) => ({ label: r.buttonName, value: r.totalClicks }))} unit='회' />
                   <HBarChart title='버튼별 사용 시간(분)' data={rows.map((r) => ({ label: r.buttonName, value: Math.round(r.totalDuration / 60) }))} unit='분' color='#f59e0b' />
                 </div>
+                )}
+                {rows.length === 0 ? null : (
                 <table className={s.table} style={{ marginTop: 10 }}>
                   <thead>
                     <tr><th>아이콘</th><th>클릭</th><th>사용 시간</th><th>평균 체류</th></tr>
@@ -466,6 +482,7 @@ export function ButtonLiveView({ variant }: { variant: 'weekly' | 'monthly' }) {
                     </tr>
                   </tbody>
                 </table>
+                )}
                 </div>
                 {ki === kiosks.length - 1 ? (
                   <>
