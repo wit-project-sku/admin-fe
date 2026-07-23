@@ -17,6 +17,7 @@ const PaymentManagePage = lazy(() => import('@pages/PaymentManagePage'));
 const DeliveryManagePage = lazy(() => import('@pages/DeliveryManagePage'));
 const RefundManagePage = lazy(() => import('@pages/RefundManagePage'));
 const ReportsPage = lazy(() => import('@pages/ReportsPage'));
+const StatReportsPage = lazy(() => import('@pages/StatReportsPage'));
 const OutfitsPage = lazy(() => import('@pages/OutfitsPage'));
 const KioskAnalyticsPage = lazy(() => import('@pages/KioskAnalyticsPage'));
 const KioskButtonManagePage = lazy(() => import('@pages/KioskButtonManagePage'));
@@ -126,6 +127,7 @@ export default function AppRouter() {
             <Route path="deliveries" element={<DeliveryManagePage />} />
             <Route path="refunds" element={<RefundManagePage />} />
             <Route path="reports" element={<ReportsPage />} />
+            <Route path="stat-reports" element={<StatReportsPage />} />
             <Route path="outfits" element={<OutfitsPage />} />
             <Route path="kiosk-analytics" element={<KioskAnalyticsPage />} />
             <Route path="kiosk-buttons" element={<KioskButtonManagePage />} />
