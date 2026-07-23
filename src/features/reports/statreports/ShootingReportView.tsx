@@ -13,6 +13,16 @@ import {
   type ShootWeeklyData,
 } from './statReportsMockData';
 
+/** 키오스크 컬럼 분할 — 6개 이하면 표 1개, 초과 시 표를 나눠 균형 배치(예: 8개 → 4+4) */
+export function chunkKioskCols<T>(cols: T[], maxSingle = 6, chunkMax = 5): T[][] {
+  if (cols.length <= maxSingle) return [cols];
+  const n = Math.ceil(cols.length / Math.min(chunkMax, Math.ceil(cols.length / 2)));
+  const size = Math.ceil(cols.length / n);
+  const out: T[][] = [];
+  for (let i = 0; i < cols.length; i += size) out.push(cols.slice(i, i + size));
+  return out;
+}
+
 const MONTH_LABELS = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
 
 type OutfitCard = ShootWeeklyData['outfitTop10'][number] & { imageUrl?: string };
@@ -80,24 +90,32 @@ function OutfitTop10({ cards, note }: { cards: OutfitCard[]; note: string }) {
 
 /** 카테고리별 1위 의상 — 전체 · 키오스크별 (사진 없음) */
 function CatWinners({ rows }: { rows: ShootWeeklyData['catWinners'] }) {
+  // 키오스크 수 증가 대비: 컬럼 분할 렌더(첫 표에만 '전체' 포함)
+  const idx = KIOSK_SHORT.map((_, i) => i);
+  const chunks = chunkKioskCols(idx);
   return (
-    <table className={s.table}>
-      <thead>
-        <tr>
-          <th>카테고리</th><th>전체</th>
-          {KIOSK_SHORT.map((k) => <th key={k}>{k}</th>)}
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map((r) => (
-          <tr key={r.cat}>
-            <td className={`${s.tdL} ${s.tdB}`}>{r.cat}</td>
-            <td className={s.tdB}>{r.overall}</td>
-            {r.per.map((v, i) => <td key={i}>{v}</td>)}
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <>
+      {chunks.map((chunk, ci) => (
+        <table key={ci} className={s.table} style={ci > 0 ? { marginTop: 10 } : undefined}>
+          <thead>
+            <tr>
+              <th>카테고리</th>
+              {ci === 0 ? <th>전체</th> : null}
+              {chunk.map((i) => <th key={i}>{KIOSK_SHORT[i]}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.cat}>
+                <td className={`${s.tdL} ${s.tdB}`}>{r.cat}</td>
+                {ci === 0 ? <td className={s.tdB}>{r.overall}</td> : null}
+                {chunk.map((i) => <td key={i}>{r.per[i]}</td>)}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ))}
+    </>
   );
 }
 
@@ -196,30 +214,41 @@ export function ShootingWeeklyView() {
         <CatWinners rows={d.catWinners} />
       </Section>
 
-      <Section title='키오스크별 전체 의상 통계' sub='전체 의상 × 키오스크 촬영 건수 — 굵게 = 각 키오스크 1위'>
-        <table className={s.table}>
-          <thead>
-            <tr><th>의상</th><th>카테고리</th>{KIOSK_SHORT.map((k) => <th key={k}>{k}</th>)}<th>합계</th></tr>
-          </thead>
-          <tbody>
-            {d.outfitAll.map((o) => (
-              <tr key={o.code}>
-                <td className={s.tdL}>{o.name}<span className={s.code}>{o.code}</span></td>
-                <td>{o.cat}</td>
-                {o.per.map((v, i) => {
-                  const isTop = v > 0 && v === Math.max(...d.outfitAll.map((x) => x.per[i]));
-                  return <td key={i} className={isTop ? s.tdB : ''}>{v}</td>;
-                })}
-                <td className={s.tdB}>{o.total}</td>
-              </tr>
-            ))}
-            <tr className={s.sumRow}>
-              <td className={s.tdL}>합계</td><td>—</td>
-              {d.outfitAllColSum.map((v, i) => <td key={i}>{v}</td>)}
-              <td>214</td>
-            </tr>
-          </tbody>
-        </table>
+      <Section title='키오스크별 전체 의상 통계' sub='전체 의상 × 키오스크 촬영 건수 — 굵게 = 각 키오스크 1위 · 키오스크 증가 시 표 분할'>
+        {chunkKioskCols(KIOSK_SHORT.map((_, i) => i)).map((chunk, ci, arr) => {
+          const isLast = ci === arr.length - 1;
+          return (
+            <table key={ci} className={s.table} style={ci > 0 ? { marginTop: 10 } : undefined}>
+              <thead>
+                <tr>
+                  <th>의상</th>
+                  {ci === 0 ? <th>카테고리</th> : null}
+                  {chunk.map((i) => <th key={i}>{KIOSK_SHORT[i]}</th>)}
+                  {isLast ? <th>합계</th> : null}
+                </tr>
+              </thead>
+              <tbody>
+                {d.outfitAll.map((o) => (
+                  <tr key={o.code}>
+                    <td className={s.tdL}>{o.name}<span className={s.code}>{o.code}</span></td>
+                    {ci === 0 ? <td>{o.cat}</td> : null}
+                    {chunk.map((i) => {
+                      const isTop = o.per[i] > 0 && o.per[i] === Math.max(...d.outfitAll.map((x) => x.per[i]));
+                      return <td key={i} className={isTop ? s.tdB : ''}>{o.per[i]}</td>;
+                    })}
+                    {isLast ? <td className={s.tdB}>{o.total}</td> : null}
+                  </tr>
+                ))}
+                <tr className={s.sumRow}>
+                  <td className={s.tdL}>합계</td>
+                  {ci === 0 ? <td>—</td> : null}
+                  {chunk.map((i) => <td key={i}>{d.outfitAllColSum[i]}</td>)}
+                  {isLast ? <td>214</td> : null}
+                </tr>
+              </tbody>
+            </table>
+          );
+        })}
       </Section>
 
       <p className={s.footer}>집계 기준: AR 촬영 완료 건 · WIT 통계 시스템 자동 생성 · DOCX 편집 가능 (표본 데이터는 목업용 가상 수치)</p>
@@ -305,7 +334,7 @@ export function ShootingMonthlyView() {
       </Section>
 
       <Section title='인기 의상 월별 통계' sub='올해 1월~12월 · 당월 비중 (7~12월은 UI 확인용 예시 수치)'>
-        <table className={s.table} style={{ fontSize: 12 }}>
+        <table className={`${s.table} ${s.tableCompact}`}>
           <thead>
             <tr>
               <th>의상</th>

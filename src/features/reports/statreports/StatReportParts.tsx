@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react';
 import {
   Bar,
+  BarChart,
   CartesianGrid,
   ComposedChart,
   LabelList,
@@ -119,6 +120,37 @@ export function AiPanel({ tag, overall, sites }: { tag: string; overall: string[
           <li key={head}><b>{head}</b> — {body}</li>
         ))}
       </ul>
+    </div>
+  );
+}
+
+/** 가로 바차트 — 버튼별 클릭/사용 시간 등 항목 수가 늘어도 행만 늘어난다(관리자 웹 방식) */
+export function HBarChart({
+  title,
+  data,
+  color = '#2563eb',
+  unit = '',
+}: {
+  title: string;
+  data: { label: string; value: number }[];
+  color?: string;
+  unit?: string;
+}) {
+  const height = Math.max(120, data.length * 30 + 40);
+  return (
+    <div className={s.chartCard}>
+      <h4 className={s.chartTitle}>{title}</h4>
+      <ResponsiveContainer width='100%' height={height}>
+        <BarChart layout='vertical' data={data} margin={{ top: 4, right: 44, left: 8, bottom: 4 }}>
+          <CartesianGrid strokeDasharray='3 3' stroke='var(--border-subtle)' horizontal={false} />
+          <XAxis type='number' tick={{ fontSize: 10, fill: 'var(--text-muted)' }} axisLine={false} tickLine={false} />
+          <YAxis type='category' dataKey='label' width={104} tick={{ fontSize: 11, fill: 'var(--text-secondary)' }} axisLine={false} tickLine={false} />
+          <Tooltip {...TOOLTIP_STYLE} formatter={(v: number) => [`${v.toLocaleString()}${unit}`, '']} />
+          <Bar dataKey='value' fill={color} radius={[0, 4, 4, 0]} maxBarSize={16}>
+            <LabelList dataKey='value' position='right' style={{ fontSize: 10.5, fontWeight: 700, fill: 'var(--text-primary)' }} formatter={(v: number) => v.toLocaleString()} />
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
     </div>
   );
 }

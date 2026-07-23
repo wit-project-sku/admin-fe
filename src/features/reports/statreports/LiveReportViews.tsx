@@ -2,7 +2,7 @@
 // 서버 API가 아직 없는 섹션(오전/오후·시간대별·AI 분석·카테고리별 1위·의상 매트릭스·
 // 버튼 일별 지점 분해)은 SampleTag 를 붙여 표본임을 명시한다(P2/P3 개발 목록).
 import s from './StatReports.module.css';
-import { AiPanel, CompareBarChart, Diff, KpiRow, Section } from './StatReportParts';
+import { AiPanel, CompareBarChart, Diff, HBarChart, KpiRow, Section } from './StatReportParts';
 import { statsSinceLabel, type KpiItem } from './statReportsMockData';
 import {
   diffBadge,
@@ -372,16 +372,6 @@ export function ButtonLiveView({ variant }: { variant: 'weekly' | 'monthly' }) {
   }
   const kiosks = [...byKiosk.entries()];
 
-  // 아이콘별 전체 집계
-  const byButton = new Map<string, { clicks: number; duration: number; sites: number }>();
-  for (const row of block.buttonDetails) {
-    const cu = byButton.get(row.buttonName) ?? { clicks: 0, duration: 0, sites: 0 };
-    cu.clicks += row.totalClicks;
-    cu.duration += row.totalDuration;
-    cu.sites += 1;
-    byButton.set(row.buttonName, cu);
-  }
-  const overall = [...byButton.entries()].sort((a, b) => b[1].clicks - a[1].clicks);
 
   return (
     <div className={s.report}>
@@ -426,37 +416,11 @@ export function ButtonLiveView({ variant }: { variant: 'weekly' | 'monthly' }) {
         </div>
       </Section>
 
-      <Section title='지점별 상세' sub='아이콘별 클릭 · 사용 시간 · 평균 체류 — 전체 및 키오스크별'>
-        <div className={s.kioskBlock} style={{ marginBottom: 12 }}>
-          <h4 className={s.kioskBlockTitle}>전체 ({kiosks.length}개 지점 합산)</h4>
-          <table className={s.table}>
-            <thead>
-              <tr><th>아이콘</th><th>운영 지점</th><th>클릭</th><th>비중</th><th>사용 시간</th><th>평균 체류</th></tr>
-            </thead>
-            <tbody>
-              {overall.map(([name, v], i) => (
-                <tr key={name}>
-                  <td className={`${s.tdL} ${i < 3 ? s.tdB : ''}`}>{name}</td>
-                  <td>{v.sites}곳</td>
-                  <td className={i < 3 ? s.tdB : ''}>{v.clicks.toLocaleString()}회</td>
-                  <td>{block.totalClicks > 0 ? Math.round((v.clicks / block.totalClicks) * 100) : 0}%</td>
-                  <td>{fmtDurationSec(v.duration)}</td>
-                  <td>{v.clicks > 0 ? Math.round(v.duration / v.clicks) : 0}초</td>
-                </tr>
-              ))}
-              <tr className={s.sumRow}>
-                <td className={s.tdL}>합계</td><td>—</td>
-                <td>{block.totalClicks.toLocaleString()}회</td><td>100%</td>
-                <td>{fmtDurationSec(block.totalDuration)}</td>
-                <td>{Math.round(block.avgDuration)}초</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
+      <Section title='지점별 상세' sub='키오스크별 버튼 터치 수·사용 시간 그래프 + 테이블'>
         <div className={s.kioskGrid}>
           {kiosks.map(([k, v]) => {
             const pb = diffBadge(v.clicks, prevByKiosk.get(k) ?? 0, '회', '');
+            const rows = [...v.rows].sort((a, b) => b.totalClicks - a.totalClicks);
             return (
               <div key={k} className={s.kioskBlock}>
                 <h4 className={s.kioskBlockTitle}>{k}</h4>
@@ -465,12 +429,16 @@ export function ButtonLiveView({ variant }: { variant: 'weekly' | 'monthly' }) {
                   {v.clicks > 0 ? ` · 평균 체류 ${Math.round(v.duration / v.clicks)}초` : ''}
                   {pb ? <> · {prevLabel} 대비 <Diff text={pb.text.split(' (')[0].trim()} /></> : null}
                 </p>
-                <table className={s.table} style={{ fontSize: 12 }}>
+                <div className={s.row2}>
+                  <HBarChart title='버튼별 클릭(회)' data={rows.map((r) => ({ label: r.buttonName, value: r.totalClicks }))} unit='회' />
+                  <HBarChart title='버튼별 사용 시간(분)' data={rows.map((r) => ({ label: r.buttonName, value: Math.round(r.totalDuration / 60) }))} unit='분' color='#f59e0b' />
+                </div>
+                <table className={s.table} style={{ marginTop: 10 }}>
                   <thead>
                     <tr><th>아이콘</th><th>클릭</th><th>사용 시간</th><th>평균 체류</th></tr>
                   </thead>
                   <tbody>
-                    {[...v.rows].sort((a, b) => b.totalClicks - a.totalClicks).map((row, i) => (
+                    {rows.map((row, i) => (
                       <tr key={`${row.kioskId}-${row.buttonType}-${row.position}`}>
                         <td className={`${s.tdL} ${i === 0 ? s.tdB : ''}`}>{row.buttonName}</td>
                         <td className={i === 0 ? s.tdB : ''}>{row.totalClicks.toLocaleString()}회</td>
