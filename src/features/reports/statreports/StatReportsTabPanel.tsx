@@ -55,7 +55,7 @@ export function StatReportsTabPanel() {
         </div>
       </div>
 
-      <div className={s.a4wrap}>
+      <div className={`${s.a4wrap} ${s.printRoot}`}>
         {mode === 'live' ? (
           kind === 'shoot-weekly' ? <ShootingWeeklyLiveView />
           : kind === 'shoot-monthly' ? <ShootingMonthlyLiveView />

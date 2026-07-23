@@ -130,7 +130,7 @@ export function ShootingWeeklyView() {
   const d: ShootWeeklyData = shootWeekly;
   const cards = useRealisticCards(d.outfitTop10);
   return (
-    <div className={s.report}>
+    <div className={s.report} data-report-root data-report-title='주간 촬영 통계 리포트'>
       <div className={s.head}>
         <div className={s.headRow}>
           <div>
@@ -267,7 +267,7 @@ export function ShootingMonthlyView() {
   const d: ShootMonthlyData = shootMonthly;
   const cards = useRealisticCards(d.outfitTop10);
   return (
-    <div className={s.report}>
+    <div className={s.report} data-report-root data-report-title='월간 촬영 통계 리포트'>
       <div className={s.head}>
         <div className={s.headRow}>
           <div>

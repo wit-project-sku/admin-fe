@@ -128,7 +128,7 @@ export function ShootingWeeklyLiveView() {
   }));
 
   return (
-    <div className={s.report}>
+    <div className={s.report} data-report-root data-report-title='주간 촬영 통계 리포트'>
       <div className={s.head}>
         <div className={s.headRow}>
           <div>
@@ -265,7 +265,7 @@ export function ShootingMonthlyLiveView() {
   const sitePrev = kioskNames.map((k) => Number(prevRow?.[k] ?? 0));
 
   return (
-    <div className={s.report}>
+    <div className={s.report} data-report-root data-report-title='월간 촬영 통계 리포트'>
       <div className={s.head}>
         <div className={s.headRow}>
           <div>
@@ -374,7 +374,7 @@ export function ButtonLiveView({ variant }: { variant: 'weekly' | 'monthly' }) {
 
 
   return (
-    <div className={s.report}>
+    <div className={s.report} data-report-root data-report-title={`${variant === 'weekly' ? '주간' : '월간'} 버튼 사용 통계 리포트`}>
       <div className={s.head}>
         <div className={s.headRow}>
           <div>

@@ -26,7 +26,7 @@ export function ButtonReportView({ variant }: { variant: 'weekly' | 'monthly' })
   const totalUsage = d.perKiosk.reduce((a, k) => a + k.buttons.reduce((x, [name, v]) => x + v * BUTTON_AVG_SEC[name], 0), 0);
 
   return (
-    <div className={s.report}>
+    <div className={s.report} data-report-root data-report-title={`${variant === 'weekly' ? '주간' : '월간'} 버튼 사용 통계 리포트`}>
       <div className={s.head}>
         <div className={s.headRow}>
           <div>
