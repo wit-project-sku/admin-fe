@@ -7,6 +7,7 @@ import { AiPanel, CompareBarChart, Diff, KpiRow, Section } from './StatReportPar
 import { useOutfitTopLive, type LiveOutfitCard } from './useStatReportLive';
 import {
   KIOSK_SHORT,
+  fmtMD,
   shootMonthly,
   shootWeekly,
   type ShootMonthlyData,
@@ -89,6 +90,12 @@ function OutfitTop10({ cards, note }: { cards: OutfitCard[]; note: string }) {
 }
 
 /** 카테고리별 1위 의상 — 전체 · 키오스크별 (사진 없음) */
+/** "홍색 한복 47" → "홍색 한복 / 47건" (클라이언트 확정 표기) */
+function fmtWinner(v: string): string {
+  const m = v.match(/^(.*?)\s+(\d[\d,]*)$/);
+  return m ? `${m[1]} / ${m[2]}건` : v;
+}
+
 function CatWinners({ rows }: { rows: ShootWeeklyData['catWinners'] }) {
   // 키오스크 수 증가 대비: 컬럼 분할 렌더(첫 표에만 '전체' 포함)
   const idx = KIOSK_SHORT.map((_, i) => i);
@@ -108,8 +115,8 @@ function CatWinners({ rows }: { rows: ShootWeeklyData['catWinners'] }) {
             {rows.map((r) => (
               <tr key={r.cat}>
                 <td className={`${s.tdL} ${s.tdB}`}>{r.cat}</td>
-                {ci === 0 ? <td className={s.tdB}>{r.overall}</td> : null}
-                {chunk.map((i) => <td key={i}>{r.per[i]}</td>)}
+                {ci === 0 ? <td className={s.tdB}>{fmtWinner(r.overall)}</td> : null}
+                {chunk.map((i) => <td key={i}>{fmtWinner(r.per[i])}</td>)}
               </tr>
             ))}
           </tbody>
@@ -180,7 +187,7 @@ export function ShootingWeeklyView() {
           <thead>
             <tr>
               <th style={{ textAlign: 'left' }}>지점</th>
-              {d.daily.map((r) => <th key={r.d}>{r.d.split(' ')[0]}</th>)}
+              {d.daily.map((r) => <th key={r.d}>{fmtMD(r.d)}</th>)}
               <th>합계</th>
             </tr>
           </thead>
@@ -334,31 +341,34 @@ export function ShootingMonthlyView() {
       </Section>
 
       <Section title='인기 의상 월별 통계' sub='올해 1월~12월 · 당월 비중 (7~12월은 UI 확인용 예시 수치)'>
-        <table className={`${s.table} ${s.tableCompact}`}>
-          <thead>
-            <tr>
-              <th>의상</th>
-              {MONTH_LABELS.map((m) => <th key={m}>{m}</th>)}
-              <th>합계</th><th>당월 비중</th>
-            </tr>
-          </thead>
-          <tbody>
-            {d.outfitMonthly.map((o) => (
-              <tr key={o.name}>
-                <td className={s.tdL}>{o.name}{o.code ? <span className={s.code}>{o.code}</span> : null}</td>
-                {o.months.map((v, i) => <td key={i} className={i === 5 ? s.tdB : ''}>{v.toLocaleString()}</td>)}
-                <td className={s.tdB}>{o.total.toLocaleString()}</td>
-                <td>{o.share}</td>
-              </tr>
-            ))}
-            <tr className={s.sumRow}>
-              <td className={s.tdL}>전체 합계</td>
-              {d.outfitMonthlySum.months.map((v, i) => <td key={i}>{v.toLocaleString()}</td>)}
-              <td>{d.outfitMonthlySum.total.toLocaleString()}</td>
-              <td>{d.outfitMonthlySum.share}</td>
-            </tr>
-          </tbody>
-        </table>
+        {chunkKioskCols(MONTH_LABELS.map((_, i) => i), 8, 8).map((chunk, ci, arr) => {
+          const isLast = ci === arr.length - 1;
+          return (
+            <table key={ci} className={s.table} style={ci > 0 ? { marginTop: 10 } : undefined}>
+              <thead>
+                <tr>
+                  <th style={{ textAlign: 'left' }}>의상</th>
+                  {chunk.map((i) => <th key={i}>{MONTH_LABELS[i]}</th>)}
+                  {isLast ? <><th>합계</th><th>당월 비중</th></> : null}
+                </tr>
+              </thead>
+              <tbody>
+                {d.outfitMonthly.map((o) => (
+                  <tr key={o.name}>
+                    <td className={s.tdL}>{o.name}{o.code ? <span className={s.code}>{o.code}</span> : null}</td>
+                    {chunk.map((i) => <td key={i} className={i === 5 ? s.tdB : ''}>{o.months[i].toLocaleString()}</td>)}
+                    {isLast ? <><td className={s.tdB}>{o.total.toLocaleString()}</td><td>{o.share}</td></> : null}
+                  </tr>
+                ))}
+                <tr className={s.sumRow}>
+                  <td className={s.tdL}>전체 합계</td>
+                  {chunk.map((i) => <td key={i}>{d.outfitMonthlySum.months[i].toLocaleString()}</td>)}
+                  {isLast ? <><td>{d.outfitMonthlySum.total.toLocaleString()}</td><td>{d.outfitMonthlySum.share}</td></> : null}
+                </tr>
+              </tbody>
+            </table>
+          );
+        })}
         <p className={s.note}>※ 당월 비중 = 표시 기간(1~12월) 촬영 중 당월(6월)이 차지하는 비율.</p>
       </Section>
 

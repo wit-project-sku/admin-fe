@@ -6,6 +6,7 @@ import s from './StatReports.module.css';
 import { AiPanel, CompareBarChart, Diff, HBarChart, KpiRow, Section } from './StatReportParts';
 import {
   BUTTON_AVG_SEC,
+  fmtMD,
   KIOSK_SHORT,
   buttonMonthly,
   buttonWeekly,
@@ -111,7 +112,7 @@ export function ButtonReportView({ variant }: { variant: 'weekly' | 'monthly' })
           <thead>
             <tr>
               <th style={{ textAlign: 'left' }}>지점</th>
-              {d.daily.map((r) => <th key={r.d}>{r.d.split(' ')[0]}</th>)}
+              {d.daily.map((r) => <th key={r.d}>{variant === 'weekly' ? fmtMD(r.d) : r.d.split(' ')[0]}</th>)}
               <th>합계</th>
             </tr>
           </thead>

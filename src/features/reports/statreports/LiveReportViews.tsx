@@ -3,7 +3,7 @@
 // 버튼 일별 지점 분해)은 SampleTag 를 붙여 표본임을 명시한다(P2/P3 개발 목록).
 import s from './StatReports.module.css';
 import { AiPanel, CompareBarChart, Diff, HBarChart, KpiRow, Section } from './StatReportParts';
-import { statsSinceLabel, type KpiItem } from './statReportsMockData';
+import { fmtMD, statsSinceLabel, type KpiItem } from './statReportsMockData';
 import {
   diffBadge,
   fmtDurationSec,
@@ -197,7 +197,7 @@ export function ShootingWeeklyLiveView() {
             <thead>
               <tr>
                 <th style={{ textAlign: 'left' }}>지점</th>
-                {rows.map((row) => <th key={String(row.date)}>{String(row.date).slice(5)}</th>)}
+                {rows.map((row) => <th key={String(row.date)}>{fmtMD(String(row.date))}</th>)}
                 <th>합계</th>
               </tr>
             </thead>
@@ -470,7 +470,7 @@ export function ButtonLiveView({ variant }: { variant: 'weekly' | 'monthly' }) {
             <tbody>
               {block.chartData.map((p) => (
                 <tr key={p.label}>
-                  <td>{p.label}</td>
+                  <td>{fmtMD(p.label)}</td>
                   <td className={s.tdB}>{p.clicks.toLocaleString()}회</td>
                   <td>{fmtDurationSec(p.duration)}</td>
                 </tr>

@@ -19,6 +19,15 @@ export function statsSinceLabel(since: string = STATS_SINCE): string {
   return `통계 집계 개시 ${st.getFullYear()}. ${st.getMonth() + 1}. ${st.getDate()}. · ${parts} 경과`;
 }
 
+/** 표 안 날짜 표기 = mm.dd (예: 2026-07-13 · 7/13 (월) → 07.13) */
+export function fmtMD(v: string): string {
+  const iso = v.match(/\d{4}-(\d{2})-(\d{2})/);
+  if (iso) return `${iso[1]}.${iso[2]}`;
+  const md = v.match(/(\d{1,2})[-/](\d{1,2})/);
+  if (md) return `${md[1].padStart(2, '0')}.${md[2].padStart(2, '0')}`;
+  return v;
+}
+
 export const KIOSK_NAMES = ['북인사광장', '인사동쉼터', '남인사광장', '오색시장', '화성휴게소'] as const;
 export const KIOSK_SHORT = ['북인사', '쉼터', '남인사', '오색', '화성'] as const;
 
