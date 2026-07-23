@@ -34,9 +34,19 @@ function LoadingCard({ text }: { text: string }) {
   return <div className={s.kioskBlock} style={{ textAlign: 'center', color: 'var(--text-muted)' }}>{text}</div>;
 }
 
+/** 빈 데이터 표시 — 집계 자체가 없는 구간을 명확히 알린다 */
+export function EmptyNote({ title, hint }: { title?: string; hint?: string }) {
+  return (
+    <div className={s.emptyBox}>
+      <div className={s.emptyBoxTitle}>📭 {title ?? '아직 집계된 데이터가 없습니다'}</div>
+      <div className={s.emptyBoxHint}>{hint ?? '해당 기간에 수집된 데이터가 없어 표시할 내용이 없습니다.'}</div>
+    </div>
+  );
+}
+
 /* ── 의상 TOP 10 (실물 사진) ── */
 function LiveOutfitGallery({ cards }: { cards: LiveOutfitCard[] }) {
-  if (cards.length === 0) return <LoadingCard text='기간 내 의상 촬영 데이터가 없습니다.' />;
+  if (cards.length === 0) return <EmptyNote title='기간 내 의상 촬영 데이터가 없습니다' hint='의상 촬영이 집계되면 실물 사진과 함께 표시됩니다.' />;
   return (
     <>
       <div className={s.gal}>
@@ -49,7 +59,6 @@ function LiveOutfitGallery({ cards }: { cards: LiveOutfitCard[] }) {
               <div className={s.gcardImg} style={{ background: 'linear-gradient(135deg, #e2e8f0, #f1f5f9)' }}>👘</div>
             )}
             <div className={s.gcardMeta}>
-              <span className={s.gcardCode}>{o.code}</span>
               <span className={s.gcardName}>{o.name}</span>
               <span className={s.gcardCat}>{o.cat ?? ' '}</span>
             </div>
@@ -130,6 +139,7 @@ export function ShootingWeeklyLiveView() {
         </div>
       </div>
       <KpiRow items={kpis} />
+      {total === 0 ? <div style={{ marginTop: 12 }}><EmptyNote title='이번 기간에는 촬영 데이터가 없습니다' hint='집계 기간 내 촬영이 발생하면 그래프·상세 표가 채워집니다.' /></div> : null}
 
       <Section title='주간 추이' sub='일별 총 촬영 · 전주 대비 비교(점선)'>
         <div className={s.row2}>
@@ -179,26 +189,34 @@ export function ShootingWeeklyLiveView() {
         </table>
       </Section>
 
-      <Section title='일별 상세'>
-        <table className={s.table}>
-          <thead>
-            <tr><th>일자</th>{kioskNames.map((k) => <th key={k}>{k}</th>)}<th>합계</th></tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => (
-              <tr key={String(row.date)}>
-                <td>{String(row.date)}</td>
-                {kioskNames.map((k) => <td key={k}>{Number(row[k] ?? 0).toLocaleString()}</td>)}
-                <td className={s.tdB}>{Number(row.total ?? 0).toLocaleString()}</td>
+      <Section title='일별 상세' sub='키오스크 세로 × 일자 가로'>
+        {rows.length === 0 ? (
+          <EmptyNote />
+        ) : (
+          <table className={s.table}>
+            <thead>
+              <tr>
+                <th style={{ textAlign: 'left' }}>지점</th>
+                {rows.map((row) => <th key={String(row.date)}>{String(row.date).slice(5)}</th>)}
+                <th>합계</th>
               </tr>
-            ))}
-            <tr className={s.sumRow}>
-              <td>합계</td>
-              {kioskNames.map((k, i) => <td key={k}>{siteTotals[i].toLocaleString()}</td>)}
-              <td>{total.toLocaleString()}</td>
-            </tr>
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {kioskNames.map((k, i) => (
+                <tr key={k}>
+                  <td className={`${s.tdL} ${s.tdB}`}>{k}</td>
+                  {rows.map((row) => <td key={String(row.date)}>{Number(row[k] ?? 0).toLocaleString()}</td>)}
+                  <td className={s.tdB}>{siteTotals[i].toLocaleString()}</td>
+                </tr>
+              ))}
+              <tr className={s.sumRow}>
+                <td className={s.tdL}>합계</td>
+                {rows.map((row) => <td key={String(row.date)}>{Number(row.total ?? 0).toLocaleString()}</td>)}
+                <td>{total.toLocaleString()}</td>
+              </tr>
+            </tbody>
+          </table>
+        )}
       </Section>
 
       <Section title='이번 주 인기 의상 TOP 10' sub='실물 등록 사진 · 실데이터'>
@@ -264,6 +282,7 @@ export function ShootingMonthlyLiveView() {
         { label: '주말 비중', value: '—', hint: '요일 집계 개발 예정' },
         { label: '총 누적 촬영', value: `${cumTotal.toLocaleString()}건`, hint: statsSinceLabel(earliestMonthStart) },
       ]} />
+      {total === 0 ? <div style={{ marginTop: 12 }}><EmptyNote title='이번 달에는 촬영 데이터가 없습니다' hint='집계 기간 내 촬영이 발생하면 그래프·상세 표가 채워집니다.' /></div> : null}
 
       <Section title='월간 추이' sub='주차별 촬영(실데이터)'>
         <div className={s.row2}>
@@ -328,7 +347,9 @@ export function ButtonLiveView({ variant }: { variant: 'weekly' | 'monthly' }) {
   if (cur.isError) return <LoadingCard text='버튼 통계를 불러오지 못했습니다.' />;
 
   const block = cur.data;
-  if (!block || block.totalClicks === 0) return <LoadingCard text='기간 내 버튼 사용 데이터가 없습니다.' />;
+  if (!block || block.totalClicks === 0) {
+    return <EmptyNote title='기간 내 버튼 사용 데이터가 없습니다' hint='해당 기간에 홈 버튼 클릭이 집계되면 리포트가 채워집니다.' />;
+  }
 
   const prevBlock = prev.data ?? null;
   const cumBlock = cum.data ?? null;

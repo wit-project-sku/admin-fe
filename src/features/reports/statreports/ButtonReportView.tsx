@@ -149,22 +149,26 @@ export function ButtonReportView({ variant }: { variant: 'weekly' | 'monthly' })
         </p>
       </Section>
 
-      <Section title={d.dailyHead}>
+      <Section title={d.dailyHead} sub={`키오스크 세로 × ${variant === 'weekly' ? '일자' : '주차'} 가로`}>
         <table className={s.table}>
           <thead>
-            <tr><th>{variant === 'weekly' ? '일자' : '주차'}</th>{KIOSK_SHORT.map((k) => <th key={k}>{k}</th>)}<th>합계</th></tr>
+            <tr>
+              <th style={{ textAlign: 'left' }}>지점</th>
+              {d.daily.map((r) => <th key={r.d}>{r.d.split(' ')[0]}</th>)}
+              <th>합계</th>
+            </tr>
           </thead>
           <tbody>
-            {d.daily.map((r) => (
-              <tr key={r.d}>
-                <td>{r.d}</td>
-                {r.per.map((v, i) => <td key={i}>{v.toLocaleString()}</td>)}
-                <td className={s.tdB}>{r.sum.toLocaleString()}</td>
+            {KIOSK_SHORT.map((k, ki) => (
+              <tr key={k}>
+                <td className={`${s.tdL} ${s.tdB}`}>{k}</td>
+                {d.daily.map((r) => <td key={r.d}>{r.per[ki].toLocaleString()}</td>)}
+                <td className={s.tdB}>{d.dailySum.per[ki].toLocaleString()}</td>
               </tr>
             ))}
             <tr className={s.sumRow}>
-              <td>합계</td>
-              {d.dailySum.per.map((v, i) => <td key={i}>{v.toLocaleString()}</td>)}
+              <td className={s.tdL}>합계</td>
+              {d.daily.map((r) => <td key={r.d}>{r.sum.toLocaleString()}</td>)}
               <td>{d.dailySum.sum.toLocaleString()}</td>
             </tr>
           </tbody>

@@ -58,6 +58,8 @@ type ShootingDaily = { rows: Record<string, string | number>[]; kioskNames: stri
 async function fetchShootingDaily(start: string, end: string): Promise<ShootingDaily> {
   const res = await APIService.private.get('/admin/stats/daily', { params: { start, end } });
   const { rows, kioskNames } = buildShootingStatsTableModel(res, 'date');
+  // 서버는 최신순(DESC) — 리포트는 시간 오름차순으로 통일(그래프·일별 표)
+  rows.sort((a, b) => String(a.date).localeCompare(String(b.date)));
   return { rows, kioskNames };
 }
 

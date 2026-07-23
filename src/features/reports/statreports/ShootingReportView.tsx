@@ -4,6 +4,7 @@
 // → (주간) 키오스크별 전체 의상 통계 / (월간) 인기 의상 월별 통계
 import s from './StatReports.module.css';
 import { AiPanel, CompareBarChart, Diff, KpiRow, Section } from './StatReportParts';
+import { useOutfitTopLive, type LiveOutfitCard } from './useStatReportLive';
 import {
   KIOSK_SHORT,
   shootMonthly,
@@ -14,7 +15,18 @@ import {
 
 const MONTH_LABELS = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
 
-type OutfitCard = ShootWeeklyData['outfitTop10'][number];
+type OutfitCard = ShootWeeklyData['outfitTop10'][number] & { imageUrl?: string };
+
+/** 표본 모드에서도 실제 등록 의상(사진·이름·카테고리)을 입혀 실물감 유지 — 수치는 표본 유지 */
+function useRealisticCards(sample: OutfitCard[]): OutfitCard[] {
+  const today = new Date().toISOString().slice(0, 10);
+  const real = useOutfitTopLive('2025-01-01', today, true);
+  const rows: LiveOutfitCard[] = real.data ?? [];
+  return sample.map((c, i) => {
+    const r = rows[i];
+    return r ? { ...c, name: r.name, cat: r.cat ?? c.cat, code: r.code || c.code, imageUrl: r.imageUrl } : c;
+  });
+}
 
 /** 인기 의상 TOP 10 — 사진 갤러리(카테고리 텍스트 포함) + 수치 표 연속 배치 */
 function OutfitTop10({ cards, note }: { cards: OutfitCard[]; note: string }) {
@@ -22,11 +34,14 @@ function OutfitTop10({ cards, note }: { cards: OutfitCard[]; note: string }) {
     <>
       <div className={s.gal}>
         {cards.map((o) => (
-          <div key={o.code} className={s.gcard}>
+          <div key={`${o.rank}-${o.code}`} className={s.gcard}>
             <span className={s.gcardRank}>{o.rank}</span>
-            <div className={s.gcardImg} style={{ background: `linear-gradient(135deg, ${o.grad[0]}, ${o.grad[1]})` }}>👘</div>
+            {o.imageUrl ? (
+              <img src={o.imageUrl} alt={o.name} className={s.gcardImg} style={{ objectFit: 'cover', width: '100%' }} />
+            ) : (
+              <div className={s.gcardImg} style={{ background: `linear-gradient(135deg, ${o.grad[0]}, ${o.grad[1]})` }}>👘</div>
+            )}
             <div className={s.gcardMeta}>
-              <span className={s.gcardCode}>{o.code}</span>
               <span className={s.gcardName}>{o.name}</span>
               <span className={s.gcardCat}>{o.cat}</span>
             </div>
@@ -88,6 +103,7 @@ function CatWinners({ rows }: { rows: ShootWeeklyData['catWinners'] }) {
 
 export function ShootingWeeklyView() {
   const d: ShootWeeklyData = shootWeekly;
+  const cards = useRealisticCards(d.outfitTop10);
   return (
     <div className={s.report}>
       <div className={s.head}>
@@ -141,29 +157,39 @@ export function ShootingWeeklyView() {
         </table>
       </Section>
 
-      <Section title='일별 상세'>
+      <Section title='일별 상세' sub='키오스크 세로 × 일자 가로'>
         <table className={s.table}>
           <thead>
-            <tr><th>일자</th>{KIOSK_SHORT.map((k) => <th key={k}>{k}</th>)}<th>합계</th><th>오전/오후</th></tr>
+            <tr>
+              <th style={{ textAlign: 'left' }}>지점</th>
+              {d.daily.map((r) => <th key={r.d}>{r.d.split(' ')[0]}</th>)}
+              <th>합계</th>
+            </tr>
           </thead>
           <tbody>
-            {d.daily.map((r) => (
-              <tr key={r.d}>
-                <td>{r.d}</td>
-                {r.per.map((v, i) => <td key={i}>{v}</td>)}
-                <td className={s.tdB}>{r.sum}</td>
-                <td>{r.ampm}</td>
+            {KIOSK_SHORT.map((k, ki) => (
+              <tr key={k}>
+                <td className={`${s.tdL} ${s.tdB}`}>{k}</td>
+                {d.daily.map((r) => <td key={r.d}>{r.per[ki]}</td>)}
+                <td className={s.tdB}>{d.sites[ki].cur}</td>
               </tr>
             ))}
             <tr className={s.sumRow}>
-              <td>합계</td><td>58</td><td>34</td><td>41</td><td>28</td><td>53</td><td>214</td><td>73 / 141</td>
+              <td className={s.tdL}>합계</td>
+              {d.daily.map((r) => <td key={r.d}>{r.sum}</td>)}
+              <td>214</td>
+            </tr>
+            <tr>
+              <td className={`${s.tdL} ${s.tdB}`}>오전/오후</td>
+              {d.daily.map((r) => <td key={r.d}>{r.ampm}</td>)}
+              <td>73 / 141</td>
             </tr>
           </tbody>
         </table>
       </Section>
 
       <Section title='이번 주 인기 의상 TOP 10' sub='사진(카테고리 표기) + 수치 표 — 자동 생성 시 실물 사진으로 삽입'>
-        <OutfitTop10 cards={d.outfitTop10} note={d.outfitTop10Note} />
+        <OutfitTop10 cards={cards} note={d.outfitTop10Note} />
       </Section>
 
       <Section title='카테고리별 1위 의상' sub='전체 · 키오스크별'>
@@ -203,6 +229,7 @@ export function ShootingWeeklyView() {
 
 export function ShootingMonthlyView() {
   const d: ShootMonthlyData = shootMonthly;
+  const cards = useRealisticCards(d.outfitTop10);
   return (
     <div className={s.report}>
       <div className={s.head}>
@@ -270,7 +297,7 @@ export function ShootingMonthlyView() {
       </Section>
 
       <Section title='이번 달 인기 의상 TOP 10' sub='사진(카테고리 표기) + 수치 표 — 자동 생성 시 실물 사진으로 삽입'>
-        <OutfitTop10 cards={d.outfitTop10} note={d.outfitTop10Note} />
+        <OutfitTop10 cards={cards} note={d.outfitTop10Note} />
       </Section>
 
       <Section title='카테고리별 1위 의상' sub='전체 · 키오스크별 (6월 기준)'>
