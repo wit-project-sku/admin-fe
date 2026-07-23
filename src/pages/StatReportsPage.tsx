@@ -23,8 +23,17 @@ export default function StatReportsPage() {
     }
   };
 
-  const handlePdf = () => {
-    if (!exportReportPdf()) alert('리포트가 아직 로드되지 않았습니다. 잠시 후 다시 시도해주세요.');
+  const handlePdf = async () => {
+    if (isExporting) return;
+    setIsExporting(true);
+    try {
+      const ok = await exportReportPdf();
+      if (!ok) alert('리포트가 아직 로드되지 않았습니다. 잠시 후 다시 시도해주세요.');
+    } catch {
+      alert('PDF 생성에 실패했습니다. 잠시 후 다시 시도해주세요.');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (
@@ -43,8 +52,8 @@ export default function StatReportsPage() {
             </svg>
             {isExporting ? '생성 중…' : 'DOCX 다운로드 (편집용)'}
           </button>
-          <button type='button' className={s.btnGhost} onClick={handlePdf}>
-            PDF 다운로드
+          <button type='button' className={s.btnGhost} onClick={handlePdf} disabled={isExporting}>
+            {isExporting ? '생성 중…' : 'PDF 다운로드'}
           </button>
         </div>
       </div>

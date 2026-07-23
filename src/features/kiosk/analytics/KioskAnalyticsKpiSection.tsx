@@ -1,4 +1,5 @@
 import { formatDurationSeconds } from '../kioskFormatters';
+import { statsSinceLabel } from '@/utils/statsSince';
 import { formatReadableCount } from '@/utils/formatReadableCount';
 import styles from './KioskAnalyticsPage.module.css';
 
@@ -36,11 +37,13 @@ export function KioskAnalyticsKpiSection({
         <span className={styles.kpiLabel}>총 클릭</span>
         <Metric loading={isLoading} value={formatReadableCount(totalClicks)} />
         <span className={styles.kpiHint}>버튼 클릭 횟수 합계</span>
+        <span className={styles.kpiHint}>{statsSinceLabel()}</span>
       </div>
       <div className={styles.kpiCard}>
         <span className={styles.kpiLabel}>총 사용 시간</span>
         <Metric loading={isLoading} value={formatDurationSeconds(totalDurationSec)} />
         <span className={styles.kpiHint}>체류 시간 합계</span>
+        <span className={styles.kpiHint}>{statsSinceLabel()}</span>
       </div>
       <div className={styles.kpiCard}>
         <span className={styles.kpiLabel}>활동 지역 수</span>

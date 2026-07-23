@@ -11,6 +11,8 @@ export type DashboardStatCardProps = {
   trendDiff?: number;
   /** When true, renders the trend badge (including when diff is 0). */
   hasTrendBadge?: boolean;
+  /** 값 아래 보조 문구(예: 통계 집계 개시 경과) */
+  subHint?: string;
   onClick?: () => void;
 };
 
@@ -31,6 +33,7 @@ export function DashboardStatCard({
   icon,
   trendDiff,
   hasTrendBadge = false,
+  subHint,
   onClick,
 }: DashboardStatCardProps) {
   const showTrend = hasTrendBadge;
@@ -61,6 +64,9 @@ export function DashboardStatCard({
           </span>
         ) : null}
       </div>
+      {subHint ? (
+        <p style={{ margin: '4px 0 0', fontSize: 11, color: 'var(--text-muted)' }}>{subHint}</p>
+      ) : null}
     </div>
   );
 }
