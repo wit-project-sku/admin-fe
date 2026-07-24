@@ -158,6 +158,102 @@ export function useButtonsLive(start: string, end: string, prevStart: string, pr
   return { cur, prev, cum };
 }
 
+/* ── 리포트용 신규 집계 API (P2 서버 구현) ── */
+
+/** BaseResponse 언래핑 — APIService 가 벗기는 경우/안 벗기는 경우 모두 방어 */
+function unwrap<T>(res: unknown): T {
+  const r = (res ?? {}) as Record<string, unknown>;
+  return (r.data ?? r) as T;
+}
+
+export type HourlyData = { hourly: { hour: number; count: number }[]; amCount: number; pmCount: number };
+
+/** 시간대별 촬영 분포 + 오전/오후 */
+export function useShotsHourly(start: string, end: string, enabled: boolean, kioskId?: number) {
+  return useQuery({
+    queryKey: ['stat-report-hourly', start, end, kioskId ?? ''],
+    queryFn: async () => {
+      const res = await APIService.private.get('/admin/stats/shots/hourly', {
+        params: { start, end, ...(kioskId ? { kioskId } : {}) },
+      });
+      return unwrap<HourlyData>(res);
+    },
+    enabled,
+    staleTime: 60_000,
+  });
+}
+
+export type WeekdayRow = { weekday: string; total: number; avg: number };
+
+/** 요일별 일평균 촬영 */
+export function useShotsWeekday(start: string, end: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ['stat-report-weekday', start, end],
+    queryFn: async () => {
+      const res = await APIService.private.get('/admin/stats/shots/weekday', { params: { start, end } });
+      return unwrap<WeekdayRow[]>(res) ?? [];
+    },
+    enabled,
+    staleTime: 60_000,
+  });
+}
+
+export type CategoryTop = {
+  category: string;
+  overall: { name: string; code: string; count: number } | null;
+  byKiosk: { kioskId: number; kioskName: string; name: string; code: string; count: number }[];
+};
+
+/** 카테고리별 1위 의상 (전체·키오스크별) */
+export function useOutfitCategoryTop(start: string, end: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ['stat-report-cat-top', start, end],
+    queryFn: async () => {
+      const res = await APIService.private.get('/admin/stats/outfit-category-top', { params: { start, end } });
+      return unwrap<CategoryTop[]>(res) ?? [];
+    },
+    enabled,
+    staleTime: 60_000,
+  });
+}
+
+export type OutfitByKioskData = {
+  kiosks: { id: number; name: string }[];
+  outfits: { name: string; code: string; category: string; perKiosk: number[]; total: number }[];
+  colTotals: number[];
+};
+
+/** 의상 × 키오스크 촬영 매트릭스 */
+export function useOutfitByKiosk(start: string, end: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ['stat-report-outfit-kiosk', start, end],
+    queryFn: async () => {
+      const res = await APIService.private.get('/admin/stats/outfit-by-kiosk', { params: { start, end } });
+      return unwrap<OutfitByKioskData>(res);
+    },
+    enabled,
+    staleTime: 60_000,
+  });
+}
+
+export type OutfitMonthlyData = {
+  year: number;
+  outfits: { name: string; code: string; category: string; months: number[]; total: number }[];
+};
+
+/** 의상 × 월(1~12) 매트릭스 */
+export function useOutfitMonthly(year: number, enabled: boolean) {
+  return useQuery({
+    queryKey: ['stat-report-outfit-monthly', year],
+    queryFn: async () => {
+      const res = await APIService.private.get('/admin/stats/outfit-monthly', { params: { year } });
+      return unwrap<OutfitMonthlyData>(res);
+    },
+    enabled,
+    staleTime: 60_000,
+  });
+}
+
 /* ── 공통 포맷터 ── */
 export function fmtDurationSec(sec: number): string {
   const s = Math.max(0, Math.floor(sec));

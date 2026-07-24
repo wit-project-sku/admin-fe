@@ -1,8 +1,9 @@
 // 실데이터 리포트 뷰 — useStatReportLive 훅으로 서버 집계를 조합해 렌더.
-// 서버 API가 아직 없는 섹션(오전/오후·시간대별·AI 분석·카테고리별 1위·의상 매트릭스·
-// 버튼 일별 지점 분해)은 SampleTag 를 붙여 표본임을 명시한다(P2/P3 개발 목록).
+// P2 서버 API 연동 완료: 시간대·오전/오후·요일·카테고리별 1위·의상 매트릭스·월별 통계.
+// (AI 종합 분석만 P3 — 서버 자동 작성, 외부 API 연동 여지 있음)
 import s from './StatReports.module.css';
 import { CompareBarChart, Diff, EditableAiCard, HBarChart, KpiRow, Section } from './StatReportParts';
+import { chunkKioskCols } from './ShootingReportView';
 import { fmtMD, type KpiItem } from './statReportsMockData';
 import { NewOutfitsSection } from './NewOutfitsSection';
 import {
@@ -11,23 +12,146 @@ import {
   lastMonthRanges,
   lastWeekRanges,
   useButtonsLive,
+  useOutfitByKiosk,
+  useOutfitCategoryTop,
+  useOutfitMonthly,
   useOutfitTopLive,
   useShootingDailyLive,
   useShootingMonthlyLive,
+  useShotsHourly,
+  useShotsWeekday,
+  type CategoryTop,
   type LiveOutfitCard,
+  type OutfitByKioskData,
+  type OutfitMonthlyData,
 } from './useStatReportLive';
 
-/** 표본 표시 태그 — 서버 집계 개발 전 임시 데이터 */
-function SampleTag() {
+const MONTH_LABELS = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
+
+/** "code · category" → "카테고리 1위 셀" 표기 통일 */
+function winnerCell(w: { name: string; code: string; count: number } | null): string {
+  return w ? `${w.name} / ${w.count}건` : '—';
+}
+
+/** 카테고리별 1위 표 (전체 · 키오스크별) — 실데이터 */
+function LiveCatWinners({ rows }: { rows: CategoryTop[] }) {
+  if (rows.length === 0) return <EmptyNote title='기간 내 카테고리 촬영 데이터가 없습니다' />;
+  // 키오스크 열 = 전체 카테고리에 등장하는 키오스크 합집합(순서 안정)
+  const kioskMap = new Map<number, string>();
+  for (const r of rows) for (const k of r.byKiosk) if (!kioskMap.has(k.kioskId)) kioskMap.set(k.kioskId, k.kioskName);
+  const kiosks = [...kioskMap.entries()].map(([id, name]) => ({ id, name }));
+  const idxChunks = chunkKioskCols(kiosks.map((_, i) => i));
   return (
-    <span
-      style={{
-        display: 'inline-block', padding: '2px 8px', borderRadius: 999, fontSize: 10.5, fontWeight: 700,
-        background: 'var(--amber-bg)', color: 'var(--amber-text)', verticalAlign: 'middle',
-      }}
-    >
-      표본 데이터 · 서버 집계 개발 예정
-    </span>
+    <>
+      {idxChunks.map((chunk, ci) => (
+        <table key={ci} className={s.table} style={ci > 0 ? { marginTop: 10 } : undefined}>
+          <thead>
+            <tr>
+              <th style={{ textAlign: 'left' }}>카테고리</th>
+              {ci === 0 ? <th>전체</th> : null}
+              {chunk.map((i) => <th key={kiosks[i].id}>{kiosks[i].name}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => {
+              const byId = new Map(r.byKiosk.map((k) => [k.kioskId, k]));
+              return (
+                <tr key={r.category}>
+                  <td className={`${s.tdL} ${s.tdB}`}>{r.category}</td>
+                  {ci === 0 ? <td className={s.tdB}>{winnerCell(r.overall)}</td> : null}
+                  {chunk.map((i) => <td key={kiosks[i].id}>{winnerCell(byId.get(kiosks[i].id) ?? null)}</td>)}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      ))}
+    </>
+  );
+}
+
+/** 키오스크별 전체 의상 매트릭스 표 — 실데이터 */
+function LiveOutfitByKiosk({ data }: { data?: OutfitByKioskData }) {
+  if (!data || data.outfits.length === 0) return <EmptyNote title='기간 내 의상 촬영 데이터가 없습니다' />;
+  const idxChunks = chunkKioskCols(data.kiosks.map((_, i) => i));
+  return (
+    <>
+      {idxChunks.map((chunk, ci, arr) => {
+        const isLast = ci === arr.length - 1;
+        return (
+          <table key={ci} className={s.table} style={ci > 0 ? { marginTop: 10 } : undefined}>
+            <thead>
+              <tr>
+                <th style={{ textAlign: 'left' }}>의상</th>
+                {ci === 0 ? <th>카테고리</th> : null}
+                {chunk.map((i) => <th key={data.kiosks[i].id}>{data.kiosks[i].name}</th>)}
+                {isLast ? <th>합계</th> : null}
+              </tr>
+            </thead>
+            <tbody>
+              {data.outfits.map((o) => (
+                <tr key={o.code}>
+                  <td className={s.tdL}>{o.name}<span className={s.code}>{o.code}</span></td>
+                  {ci === 0 ? <td>{o.category}</td> : null}
+                  {chunk.map((i) => {
+                    const v = o.perKiosk[i] ?? 0;
+                    const isTop = v > 0 && v === Math.max(...data.outfits.map((x) => x.perKiosk[i] ?? 0));
+                    return <td key={data.kiosks[i].id} className={isTop ? s.tdB : ''}>{v}</td>;
+                  })}
+                  {isLast ? <td className={s.tdB}>{o.total}</td> : null}
+                </tr>
+              ))}
+              <tr className={s.sumRow}>
+                <td className={s.tdL}>합계</td>
+                {ci === 0 ? <td>—</td> : null}
+                {chunk.map((i) => <td key={data.kiosks[i].id}>{data.colTotals[i] ?? 0}</td>)}
+                {isLast ? <td>{data.colTotals.reduce((a, b) => a + b, 0)}</td> : null}
+              </tr>
+            </tbody>
+          </table>
+        );
+      })}
+    </>
+  );
+}
+
+/** 의상 월별 통계 표 (월 4~8컬럼 분할) — 실데이터 */
+function LiveOutfitMonthly({ data }: { data?: OutfitMonthlyData }) {
+  if (!data || data.outfits.length === 0) return <EmptyNote title='해당 연도 의상 촬영 데이터가 없습니다' />;
+  const colSums = MONTH_LABELS.map((_, m) => data.outfits.reduce((a, o) => a + (o.months[m] ?? 0), 0));
+  const grand = colSums.reduce((a, b) => a + b, 0);
+  const monthChunks = chunkKioskCols(MONTH_LABELS.map((_, i) => i), 8, 8);
+  return (
+    <>
+      {monthChunks.map((chunk, ci, arr) => {
+        const isLast = ci === arr.length - 1;
+        return (
+          <table key={ci} className={s.table} style={ci > 0 ? { marginTop: 10 } : undefined}>
+            <thead>
+              <tr>
+                <th style={{ textAlign: 'left' }}>의상</th>
+                {chunk.map((i) => <th key={i}>{MONTH_LABELS[i]}</th>)}
+                {isLast ? <th>합계</th> : null}
+              </tr>
+            </thead>
+            <tbody>
+              {data.outfits.map((o) => (
+                <tr key={o.code}>
+                  <td className={s.tdL}>{o.name}<span className={s.code}>{o.code}</span></td>
+                  {chunk.map((i) => <td key={i}>{(o.months[i] ?? 0).toLocaleString()}</td>)}
+                  {isLast ? <td className={s.tdB}>{o.total.toLocaleString()}</td> : null}
+                </tr>
+              ))}
+              <tr className={s.sumRow}>
+                <td className={s.tdL}>전체 합계</td>
+                {chunk.map((i) => <td key={i}>{colSums[i].toLocaleString()}</td>)}
+                {isLast ? <td>{grand.toLocaleString()}</td> : null}
+              </tr>
+            </tbody>
+          </table>
+        );
+      })}
+    </>
   );
 }
 
@@ -97,6 +221,9 @@ export function ShootingWeeklyLiveView() {
   const prev = useShootingDailyLive(r.prevStart, r.prevEnd, true);
   const monthly = useShootingMonthlyLive(true);
   const outfits = useOutfitTopLive(r.start, r.end, true);
+  const hourly = useShotsHourly(r.start, r.end, true);
+  const catTop = useOutfitCategoryTop(r.start, r.end, true);
+  const outfitMatrix = useOutfitByKiosk(r.start, r.end, true);
 
   if (cur.isPending) return <LoadingCard text='실데이터를 불러오는 중…' />;
   if (cur.isError) return <LoadingCard text='촬영 통계를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.' />;
@@ -112,11 +239,20 @@ export function ShootingWeeklyLiveView() {
   const siteTotals = kioskNames.map((k) => rows.reduce((a, row) => a + Number(row[k] ?? 0), 0));
   const sitePrev = kioskNames.map((k) => (prev.data?.rows ?? []).reduce((a, row) => a + Number(row[k] ?? 0), 0));
 
+  const am = hourly.data?.amCount ?? 0;
+  const pm = hourly.data?.pmCount ?? 0;
+  const amPmTotal = am + pm;
+  const peakHour = (hourly.data?.hourly ?? []).reduce((best, h) => (h.count > best.count ? h : best), { hour: -1, count: -1 });
+
   const kpis: KpiItem[] = [
     { label: '총 촬영', value: `${total.toLocaleString()}건`, diff: badge?.text, dir: badge?.dir },
     { label: '일평균', value: `${(total / 7).toFixed(1)}건` },
     { label: '주말 비중', value: total > 0 ? `${Math.round((weekend / total) * 100)}%` : '—', hint: `토·일 ${weekend.toLocaleString()}건` },
-    { label: '오전 / 오후', value: '—', hint: '서버 집계 개발 예정' },
+    {
+      label: '오전 / 오후',
+      value: amPmTotal > 0 ? `${Math.round((am / amPmTotal) * 100)}/${Math.round((pm / amPmTotal) * 100)}%` : '—',
+      hint: peakHour.hour >= 0 ? `피크 ${peakHour.hour}시` : undefined,
+    },
     { label: '총 누적 촬영', value: `${cumTotal.toLocaleString()}건` },
   ];
 
@@ -144,12 +280,12 @@ export function ShootingWeeklyLiveView() {
       <Section title='주간 추이' sub='일별 총 촬영 · 전주 대비 비교(점선)'>
         <div className={s.row2}>
           <CompareBarChart title='일별 총 촬영 — 금주(막대) vs 전주(점선)' data={weekdayTrend} curName={`금주 ${total.toLocaleString()}건`} prevName={`전주 ${prevTotal.toLocaleString()}건`} />
-          <div className={s.chartCard}>
-            <h4 className={s.chartTitle}>시간대별 촬영 분포 <SampleTag /></h4>
-            <p className={s.note} style={{ padding: '30px 8px' }}>
-              시간대별(오전/오후) 분포는 촬영 원본(shot_at) 시간 집계 API 개발 후 제공됩니다.
-            </p>
-          </div>
+          <CompareBarChart
+            title={`시간대별 촬영 분포 · 오전 ${am} / 오후 ${pm}`}
+            data={(hourly.data?.hourly ?? []).filter((h) => h.count > 0 || (h.hour >= 8 && h.hour <= 20)).map((h) => ({ label: `${h.hour}`, cur: h.count }))}
+            curName='촬영 건수'
+            color='#f59e0b'
+          />
         </div>
       </Section>
 
@@ -224,8 +360,18 @@ export function ShootingWeeklyLiveView() {
       <Section title='이번 주 인기 의상 TOP 10' sub='실물 등록 사진 · 실데이터'>
         {outfits.isPending ? <LoadingCard text='의상 랭킹을 불러오는 중…' /> : <LiveOutfitGallery cards={outfits.data ?? []} />}
       </Section>
+      </div>
 
-      <p className={s.footer}>집계 기준: AR 촬영 완료 건 · 실데이터(서버 집계) · 카테고리별 1위/키오스크별 전체 의상 매트릭스는 서버 집계 API 개발 후 제공</p>
+      <div data-report-page>
+      <Section title='카테고리별 1위 의상' sub='전체 · 키오스크별 · 실데이터'>
+        {catTop.isPending ? <LoadingCard text='불러오는 중…' /> : <LiveCatWinners rows={catTop.data ?? []} />}
+      </Section>
+
+      <Section title='키오스크별 전체 의상 통계' sub='전체 의상 × 키오스크 촬영 건수 · 굵게 = 각 키오스크 1위'>
+        {outfitMatrix.isPending ? <LoadingCard text='불러오는 중…' /> : <LiveOutfitByKiosk data={outfitMatrix.data} />}
+      </Section>
+
+      <p className={s.footer}>집계 기준: AR 촬영 완료 건 · 실데이터(서버 집계)</p>
       </div>
     </div>
   );
@@ -237,6 +383,11 @@ export function ShootingMonthlyLiveView() {
   const cur = useShootingDailyLive(r.start, r.end, true);
   const monthly = useShootingMonthlyLive(true);
   const outfits = useOutfitTopLive(r.start, r.end, true);
+  const hourly = useShotsHourly(r.start, r.end, true);
+  const weekday = useShotsWeekday(r.start, r.end, true);
+  const catTop = useOutfitCategoryTop(r.start, r.end, true);
+  const year = Number(r.start.slice(0, 4));
+  const outfitMonthlyMatrix = useOutfitMonthly(year, true);
 
   if (cur.isPending || monthly.isPending) return <LoadingCard text='실데이터를 불러오는 중…' />;
   if (cur.isError) return <LoadingCard text='촬영 통계를 불러오지 못했습니다.' />;
@@ -265,6 +416,13 @@ export function ShootingMonthlyLiveView() {
   const siteTotals = kioskNames.map((k) => rows.reduce((a, row) => a + Number(row[k] ?? 0), 0));
   const sitePrev = kioskNames.map((k) => Number(prevRow?.[k] ?? 0));
 
+  const am = hourly.data?.amCount ?? 0;
+  const pm = hourly.data?.pmCount ?? 0;
+  const amPmTotal = am + pm;
+  const peakHour = (hourly.data?.hourly ?? []).reduce((best, h) => (h.count > best.count ? h : best), { hour: -1, count: -1 });
+  const weekdayRows = weekday.data ?? [];
+  const weekendTotal = weekdayRows.filter((w) => w.weekday === '토' || w.weekday === '일').reduce((a, w) => a + w.total, 0);
+
   return (
     <div className={s.report} data-report-root data-report-title='월간 촬영 통계 리포트'>
       <div data-report-page>
@@ -280,19 +438,29 @@ export function ShootingMonthlyLiveView() {
       <KpiRow items={[
         { label: '월 총 촬영', value: `${total.toLocaleString()}건`, diff: badge?.text, dir: badge?.dir },
         { label: '일평균', value: `${(total / days).toFixed(1)}건` },
-        { label: '오전 / 오후', value: '—', hint: '서버 집계 개발 예정' },
-        { label: '주말 비중', value: '—', hint: '요일 집계 개발 예정' },
+        {
+          label: '오전 / 오후',
+          value: amPmTotal > 0 ? `${Math.round((am / amPmTotal) * 100)}/${Math.round((pm / amPmTotal) * 100)}%` : '—',
+          hint: peakHour.hour >= 0 ? `피크 ${peakHour.hour}시` : undefined,
+        },
+        {
+          label: '주말 비중',
+          value: total > 0 ? `${Math.round((weekendTotal / total) * 100)}%` : '—',
+          hint: `주말 ${weekendTotal.toLocaleString()}건`,
+        },
         { label: '총 누적 촬영', value: `${cumTotal.toLocaleString()}건` },
       ]} />
       {total === 0 ? <div style={{ marginTop: 12 }}><EmptyNote title='이번 달에는 촬영 데이터가 없습니다' hint='집계 기간 내 촬영이 발생하면 그래프·상세 표가 채워집니다.' /></div> : null}
 
-      <Section title='월간 추이' sub='주차별 촬영(실데이터)'>
+      <Section title='월간 추이' sub='주차별 촬영 · 요일별 일평균(실데이터)'>
         <div className={s.row2}>
           <CompareBarChart title={`주차별 촬영 (${r.label})`} data={weeks} curName={`월 합계 ${total.toLocaleString()}건`} />
-          <div className={s.chartCard}>
-            <h4 className={s.chartTitle}>요일별 일평균 <SampleTag /></h4>
-            <p className={s.note} style={{ padding: '30px 8px' }}>요일별 평균 집계 API 개발 후 제공됩니다.</p>
-          </div>
+          <CompareBarChart
+            title='요일별 일평균 촬영'
+            data={weekdayRows.map((w) => ({ label: w.weekday, cur: Math.round(w.avg * 10) / 10 }))}
+            curName='일평균(건)'
+            color='#f59e0b'
+          />
         </div>
       </Section>
 
@@ -337,8 +505,18 @@ export function ShootingMonthlyLiveView() {
       <Section title='이번 달 인기 의상 TOP 10' sub='실물 등록 사진 · 실데이터'>
         {outfits.isPending ? <LoadingCard text='의상 랭킹을 불러오는 중…' /> : <LiveOutfitGallery cards={outfits.data ?? []} />}
       </Section>
+      </div>
 
-      <p className={s.footer}>집계 기준: AR 촬영 완료 건 · 실데이터(서버 집계) · 카테고리별 1위/의상 월별 매트릭스는 서버 집계 API 개발 후 제공</p>
+      <div data-report-page>
+      <Section title='카테고리별 1위 의상' sub={`전체 · 키오스크별 (${r.label} 기준) · 실데이터`}>
+        {catTop.isPending ? <LoadingCard text='불러오는 중…' /> : <LiveCatWinners rows={catTop.data ?? []} />}
+      </Section>
+
+      <Section title='인기 의상 월별 통계' sub={`${year}년 1~12월 · 실데이터`}>
+        {outfitMonthlyMatrix.isPending ? <LoadingCard text='불러오는 중…' /> : <LiveOutfitMonthly data={outfitMonthlyMatrix.data} />}
+      </Section>
+
+      <p className={s.footer}>집계 기준: AR 촬영 완료 건 · 실데이터(서버 집계)</p>
       </div>
     </div>
   );
