@@ -156,10 +156,22 @@ export function AiPanel({ tag, overall, sites }: { tag: string; overall: string[
   );
 }
 
-/** 라이브 뷰용 AI 카드 — 서버/Gemini 생성 전 안내 + 수기 작성·수정 가능 */
-export function EditableAiCard({ tag, placeholder }: { tag: string; placeholder: string }) {
+/** 라이브 뷰용 AI 카드 — 실데이터로 자동 작성된 분석(overall·sites)을 렌더 + 다운로드 전 수동 수정.
+ *  분석문은 규칙 기반 자동 생성(무과금). 추후 서버/외부 API 결과로 교체 시 overall/sites 만 갈아끼우면 됨. */
+export function EditableAiCard({
+  tag,
+  overall,
+  sites,
+  note,
+}: {
+  tag: string;
+  overall: string[][];
+  sites: string[][];
+  note?: string;
+}) {
   const [editing, setEditing] = useState(false);
   const bodyRef = useRef<HTMLDivElement>(null);
+  const empty = overall.length === 0 && sites.length === 0;
   return (
     <div className={s.ai}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
@@ -174,8 +186,34 @@ export function EditableAiCard({ tag, placeholder }: { tag: string; placeholder:
         suppressContentEditableWarning
         style={editing ? { outline: '1.5px dashed var(--accent)', borderRadius: 8, padding: 6, marginTop: 4 } : undefined}
       >
-        <p className={s.note} style={{ marginTop: 8 }}>{placeholder}</p>
+        {empty ? (
+          <p className={s.note} style={{ marginTop: 8 }}>기간 내 데이터가 없어 분석할 내용이 없습니다.</p>
+        ) : (
+          <>
+            {overall.length > 0 ? (
+              <>
+                <p className={s.aiHead}>① 전체 분석</p>
+                <ul className={s.aiList}>
+                  {overall.map(([head, body]) => (
+                    <li key={head}><b>{head}</b>{body}</li>
+                  ))}
+                </ul>
+              </>
+            ) : null}
+            {sites.length > 0 ? (
+              <>
+                <p className={s.aiHead}>② 키오스크별 분석</p>
+                <ul className={s.aiList}>
+                  {sites.map(([head, body]) => (
+                    <li key={head}><b>{head}</b> — {body}</li>
+                  ))}
+                </ul>
+              </>
+            ) : null}
+          </>
+        )}
       </div>
+      {note ? <p className={s.note} style={{ marginTop: 6 }} data-export-ignore>{note}</p> : null}
     </div>
   );
 }

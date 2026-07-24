@@ -1,8 +1,9 @@
 // 실데이터 리포트 뷰 — useStatReportLive 훅으로 서버 집계를 조합해 렌더.
 // P2 서버 API 연동 완료: 시간대·오전/오후·요일·카테고리별 1위·의상 매트릭스·월별 통계.
-// (AI 종합 분석만 P3 — 서버 자동 작성, 외부 API 연동 여지 있음)
+// AI 종합 분석은 실데이터 규칙 기반 자동 작성(aiAnalysis.ts, 무과금) — 외부 API 교체 여지 유지.
 import s from './StatReports.module.css';
 import { CompareBarChart, Diff, EditableAiCard, HBarChart, KpiRow, Section } from './StatReportParts';
+import { buildButtonAi, buildShootingAi } from './aiAnalysis';
 import { chunkKioskCols } from './ShootingReportView';
 import { fmtMD, type KpiItem } from './statReportsMockData';
 import { NewOutfitsSection } from './NewOutfitsSection';
@@ -26,6 +27,7 @@ import {
   type OutfitMonthlyData,
 } from './useStatReportLive';
 
+const AI_NOTE = "※ 실데이터 기반 자동 작성(무과금). '내용 수정'으로 다운로드 전 직접 가필할 수 있습니다.";
 const MONTH_LABELS = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
 
 /** "code · category" → "카테고리 1위 셀" 표기 통일 */
@@ -262,6 +264,19 @@ export function ShootingWeeklyLiveView({ anchor }: { anchor?: string }) {
     prev: Number(prev.data?.rows?.[i]?.total ?? 0) || undefined,
   }));
 
+  const topOutfitCard = (outfits.data ?? [])[0];
+  const ai = buildShootingAi({
+    periodLabel: '전주',
+    total,
+    prevTotal,
+    am,
+    pm,
+    peakHour: peakHour.hour,
+    weekendRatio: total > 0 ? weekend / total : null,
+    sites: kioskNames.map((k, i) => ({ name: k, cur: siteTotals[i], prev: sitePrev[i] })),
+    topOutfit: topOutfitCard ? { name: topOutfitCard.name, count: topOutfitCard.cnt } : null,
+  });
+
   return (
     <div className={s.report} data-report-root data-report-title='주간 촬영 통계 리포트'>
       <div data-report-page>
@@ -289,8 +304,8 @@ export function ShootingWeeklyLiveView({ anchor }: { anchor?: string }) {
         </div>
       </Section>
 
-      <Section title='AI 종합 분석'>
-        <EditableAiCard tag='AI INSIGHT' placeholder='AI 자동 분석은 P3(리포트 자동 발행) 단계에서 제공됩니다 — 발행 시점의 실데이터로 전체/키오스크별 분석을 자동 작성.' />
+      <Section title='AI 종합 분석' sub='실데이터 자동 작성 · 수정 가능'>
+        <EditableAiCard tag='AI WEEKLY INSIGHT' overall={ai.overall} sites={ai.sites} note={AI_NOTE} />
       </Section>
 
       <NewOutfitsSection periodLabel='이번 주' start={r.start} end={r.end} mode='live' />
@@ -423,6 +438,19 @@ export function ShootingMonthlyLiveView({ ym }: { ym?: string }) {
   const weekdayRows = weekday.data ?? [];
   const weekendTotal = weekdayRows.filter((w) => w.weekday === '토' || w.weekday === '일').reduce((a, w) => a + w.total, 0);
 
+  const topOutfitCard = (outfits.data ?? [])[0];
+  const ai = buildShootingAi({
+    periodLabel: '전월',
+    total,
+    prevTotal,
+    am,
+    pm,
+    peakHour: peakHour.hour,
+    weekendRatio: total > 0 ? weekendTotal / total : null,
+    sites: kioskNames.map((k, i) => ({ name: k, cur: siteTotals[i], prev: sitePrev[i] })),
+    topOutfit: topOutfitCard ? { name: topOutfitCard.name, count: topOutfitCard.cnt } : null,
+  });
+
   return (
     <div className={s.report} data-report-root data-report-title='월간 촬영 통계 리포트'>
       <div data-report-page>
@@ -464,8 +492,8 @@ export function ShootingMonthlyLiveView({ ym }: { ym?: string }) {
         </div>
       </Section>
 
-      <Section title='AI 종합 분석'>
-        <EditableAiCard tag='AI INSIGHT' placeholder='AI 자동 분석은 P3(리포트 자동 발행) 단계에서 제공됩니다.' />
+      <Section title='AI 종합 분석' sub='실데이터 자동 작성 · 수정 가능'>
+        <EditableAiCard tag='AI MONTHLY INSIGHT' overall={ai.overall} sites={ai.sites} note={AI_NOTE} />
       </Section>
 
       <NewOutfitsSection periodLabel='이번 달' start={r.start} end={r.end} mode='live' />
@@ -568,6 +596,36 @@ export function ButtonLiveView({ variant, anchor, ym }: { variant: 'weekly' | 'm
       .sort((a, b) => a[1] - b[1])
       .map(([name]) => [name, byKiosk.get(name) ?? { rows: [], clicks: 0, duration: 0 }]);
 
+  // 아이콘별 전체 집계(클릭 1위·평균 체류 최장) — buttonDetails 합산
+  const byButton = new Map<string, { clicks: number; duration: number }>();
+  for (const row of block.buttonDetails) {
+    const cu = byButton.get(row.buttonName) ?? { clicks: 0, duration: 0 };
+    cu.clicks += row.totalClicks;
+    cu.duration += row.totalDuration;
+    byButton.set(row.buttonName, cu);
+  }
+  const buttonList = [...byButton.entries()];
+  const topButton = buttonList.reduce<{ name: string; clicks: number } | null>(
+    (best, [name, v]) => (best && best.clicks >= v.clicks ? best : { name, clicks: v.clicks }), null);
+  const longestButton = buttonList.reduce<{ name: string; avgSec: number } | null>((best, [name, v]) => {
+    const avg = v.clicks > 0 ? v.duration / v.clicks : 0;
+    return best && best.avgSec >= avg ? best : { name, avgSec: avg };
+  }, null);
+
+  const ai = buildButtonAi({
+    periodLabel: prevLabel,
+    totalClicks: block.totalClicks,
+    prevClicks: prevBlock?.totalClicks ?? 0,
+    avgDurationSec: block.avgDuration,
+    topButton,
+    longestButton,
+    kiosks: kiosks.map(([k, v]) => ({
+      name: k,
+      clicks: v.clicks,
+      prevClicks: prevByKiosk.get(k) ?? 0,
+      topButton: [...v.rows].sort((a, b) => b.totalClicks - a.totalClicks)[0]?.buttonName,
+    })),
+  });
 
   return (
     <div className={s.report} data-report-root data-report-title={`${variant === 'weekly' ? '주간' : '월간'} 버튼 사용 통계 리포트`}>
@@ -606,8 +664,8 @@ export function ButtonLiveView({ variant, anchor, ym }: { variant: 'weekly' | 'm
         </div>
       </Section>
 
-      <Section title='AI 종합 분석'>
-        <EditableAiCard tag='AI INSIGHT' placeholder='AI 자동 분석은 P3(리포트 자동 발행) 단계에서 제공됩니다.' />
+      <Section title='AI 종합 분석' sub='실데이터 자동 작성 · 수정 가능'>
+        <EditableAiCard tag={variant === 'weekly' ? 'AI WEEKLY INSIGHT' : 'AI MONTHLY INSIGHT'} overall={ai.overall} sites={ai.sites} note={AI_NOTE} />
       </Section>
 
       </div>
