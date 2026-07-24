@@ -9,8 +9,8 @@ import { NewOutfitsSection } from './NewOutfitsSection';
 import {
   diffBadge,
   fmtDurationSec,
-  lastMonthRanges,
-  lastWeekRanges,
+  monthRangesOf,
+  weekRangesOf,
   useButtonsLive,
   useOutfitByKiosk,
   useOutfitCategoryTop,
@@ -215,8 +215,8 @@ function LiveOutfitGallery({ cards }: { cards: LiveOutfitCard[] }) {
 }
 
 /* ── 촬영 리포트 (주간) ── */
-export function ShootingWeeklyLiveView() {
-  const r = lastWeekRanges();
+export function ShootingWeeklyLiveView({ anchor }: { anchor?: string }) {
+  const r = weekRangesOf(anchor);
   const cur = useShootingDailyLive(r.start, r.end, true);
   const prev = useShootingDailyLive(r.prevStart, r.prevEnd, true);
   const monthly = useShootingMonthlyLive(true);
@@ -378,8 +378,8 @@ export function ShootingWeeklyLiveView() {
 }
 
 /* ── 촬영 리포트 (월간) ── */
-export function ShootingMonthlyLiveView() {
-  const r = lastMonthRanges();
+export function ShootingMonthlyLiveView({ ym }: { ym?: string }) {
+  const r = monthRangesOf(ym);
   const cur = useShootingDailyLive(r.start, r.end, true);
   const monthly = useShootingMonthlyLive(true);
   const outfits = useOutfitTopLive(r.start, r.end, true);
@@ -523,8 +523,8 @@ export function ShootingMonthlyLiveView() {
 }
 
 /* ── 버튼 리포트 (주간/월간) ── */
-export function ButtonLiveView({ variant }: { variant: 'weekly' | 'monthly' }) {
-  const r = variant === 'weekly' ? lastWeekRanges() : lastMonthRanges();
+export function ButtonLiveView({ variant, anchor, ym }: { variant: 'weekly' | 'monthly'; anchor?: string; ym?: string }) {
+  const r = variant === 'weekly' ? weekRangesOf(anchor) : monthRangesOf(ym);
   const prevLabel = variant === 'weekly' ? '전주' : '전월';
   const { cur, prev, cum } = useButtonsLive(r.start, r.end, r.prevStart, r.prevEnd, true);
 

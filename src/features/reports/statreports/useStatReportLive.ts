@@ -20,16 +20,24 @@ function fmt(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-/** 지난주 월~일 + 그 전주 */
-export function lastWeekRanges() {
-  const now = new Date();
-  const dow = (now.getDay() + 6) % 7; // 월=0
-  const thisMonday = new Date(now);
-  thisMonday.setDate(now.getDate() - dow);
-  const start = new Date(thisMonday);
-  start.setDate(thisMonday.getDate() - 7);
-  const end = new Date(thisMonday);
-  end.setDate(thisMonday.getDate() - 1);
+export type WeekRanges = { start: string; end: string; prevStart: string; prevEnd: string };
+export type MonthRanges = WeekRanges & { label: string };
+
+/** anchor 날짜(YYYY-MM-DD)가 속한 주(월~일) + 그 전주. anchor 없으면 지난 완결 주. */
+export function weekRangesOf(anchor?: string): WeekRanges {
+  let base: Date;
+  if (anchor && /^\d{4}-\d{2}-\d{2}$/.test(anchor)) {
+    base = new Date(`${anchor}T00:00:00`);
+  } else {
+    base = new Date();
+    base.setDate(base.getDate() - 7); // 지난주 기준
+  }
+  const dow = (base.getDay() + 6) % 7; // 월=0
+  const monday = new Date(base);
+  monday.setDate(base.getDate() - dow);
+  const start = monday;
+  const end = new Date(monday);
+  end.setDate(monday.getDate() + 6);
   const prevStart = new Date(start);
   prevStart.setDate(start.getDate() - 7);
   const prevEnd = new Date(start);
@@ -37,17 +45,37 @@ export function lastWeekRanges() {
   return { start: fmt(start), end: fmt(end), prevStart: fmt(prevStart), prevEnd: fmt(prevEnd) };
 }
 
-/** 지난달 1일~말일 + 그 전달 */
-export function lastMonthRanges() {
-  const now = new Date();
-  const first = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const last = new Date(now.getFullYear(), now.getMonth(), 0);
-  const prevFirst = new Date(now.getFullYear(), now.getMonth() - 2, 1);
-  const prevLast = new Date(now.getFullYear(), now.getMonth() - 1, 0);
+/** yearMonth(YYYY-MM)의 1일~말일 + 그 전달. yearMonth 없으면 지난달. */
+export function monthRangesOf(yearMonth?: string): MonthRanges {
+  let y: number;
+  let m: number; // 1~12
+  if (yearMonth && /^\d{4}-\d{2}$/.test(yearMonth)) {
+    y = Number(yearMonth.slice(0, 4));
+    m = Number(yearMonth.slice(5, 7));
+  } else {
+    const n = new Date();
+    const f = new Date(n.getFullYear(), n.getMonth() - 1, 1);
+    y = f.getFullYear();
+    m = f.getMonth() + 1;
+  }
+  const first = new Date(y, m - 1, 1);
+  const last = new Date(y, m, 0);
+  const prevFirst = new Date(y, m - 2, 1);
+  const prevLast = new Date(y, m - 1, 0);
   return {
     start: fmt(first), end: fmt(last), prevStart: fmt(prevFirst), prevEnd: fmt(prevLast),
-    label: `${first.getFullYear()}년 ${first.getMonth() + 1}월`,
+    label: `${y}년 ${m}월`,
   };
+}
+
+/** 지난주 월~일 + 그 전주 (하위호환) */
+export function lastWeekRanges(): WeekRanges {
+  return weekRangesOf();
+}
+
+/** 지난달 1일~말일 + 그 전달 (하위호환) */
+export function lastMonthRanges(): MonthRanges {
+  return monthRangesOf();
 }
 
 const SERVICE_START = '2024-11-01';
