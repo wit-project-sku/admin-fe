@@ -139,7 +139,7 @@ export function ShootingWeeklyView() {
             <h2 className={s.headTitle}>{d.title}</h2>
             <p className={s.headSub}>{d.sub}</p>
           </div>
-          <div className={s.headMeta}><b>주간 촬영 통계 리포트</b>1 / 3 page</div>
+          <div className={s.headMeta}><b>주간 촬영 통계 리포트</b></div>
         </div>
       </div>
       <KpiRow items={d.kpis} />
@@ -232,7 +232,9 @@ export function ShootingWeeklyView() {
       <Section title='카테고리별 1위 의상' sub='전체 · 키오스크별'>
         <CatWinners rows={d.catWinners} />
       </Section>
+      </div>
 
+      <div data-report-page>
       <Section title='키오스크별 전체 의상 통계' sub='전체 의상 × 키오스크 촬영 건수 — 굵게 = 각 키오스크 1위 · 키오스크 증가 시 표 분할'>
         {chunkKioskCols(KIOSK_SHORT.map((_, i) => i)).map((chunk, ci, arr) => {
           const isLast = ci === arr.length - 1;
@@ -288,7 +290,7 @@ export function ShootingMonthlyView() {
             <h2 className={s.headTitle}>{d.title}</h2>
             <p className={s.headSub}>{d.sub}</p>
           </div>
-          <div className={s.headMeta}><b>월간 촬영 통계 리포트</b>1 / 3 page</div>
+          <div className={s.headMeta}><b>월간 촬영 통계 리포트</b></div>
         </div>
       </div>
       <KpiRow items={d.kpis} />
@@ -363,7 +365,9 @@ export function ShootingMonthlyView() {
       <Section title='카테고리별 1위 의상' sub='전체 · 키오스크별 (6월 기준)'>
         <CatWinners rows={d.catWinners} />
       </Section>
+      </div>
 
+      <div data-report-page>
       <Section title='인기 의상 월별 통계' sub='올해 1월~12월 · 당월 비중 (7~12월은 UI 확인용 예시 수치)'>
         {chunkKioskCols(MONTH_LABELS.map((_, i) => i), 8, 8).map((chunk, ci, arr) => {
           const isLast = ci === arr.length - 1;

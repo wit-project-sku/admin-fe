@@ -51,14 +51,18 @@ export async function exportReportPdf(): Promise<boolean> {
     if (canvas.width === 0 || canvas.height === 0) throw new Error('캡처 크기가 0입니다(창이 표시된 상태에서 다시 시도)');
     captured.push({ dataUrl: canvas.toDataURL('image/png'), ratio: canvas.height / canvas.width });
   }
-  // 2패스: 모든 페이지에 동일 폭 적용(가장 긴 페이지 기준 축소율) — 페이지별 좌우 여백 통일
-  const maxRatio = Math.max(...captured.map((c) => c.ratio));
-  const scale = Math.min(1, CONTENT_H / (CONTENT_W * maxRatio));
-  const wMm = CONTENT_W * scale;
-  const x = MARGIN + (CONTENT_W - wMm) / 2;
+  // 2패스: 페이지별 독립 맞춤 — 기본은 A4 콘텐츠 폭 꽉(좌우 여백 = MARGIN 통일),
+  // 세로가 A4를 넘는 긴 페이지만 그 페이지 한정으로 세로 기준 축소(전체가 함께 작아지지 않게).
   captured.forEach((c, i) => {
     if (i > 0) doc.addPage();
-    doc.addImage(c.dataUrl, 'PNG', x, MARGIN, wMm, wMm * c.ratio);
+    let wMm = CONTENT_W;
+    let hMm = wMm * c.ratio;
+    if (hMm > CONTENT_H) {
+      hMm = CONTENT_H;
+      wMm = hMm / c.ratio;
+    }
+    const x = MARGIN + (CONTENT_W - wMm) / 2;
+    doc.addImage(c.dataUrl, 'PNG', x, MARGIN, wMm, hMm);
   });
 
   doc.save(`${title}_${todayStamp()}.pdf`);

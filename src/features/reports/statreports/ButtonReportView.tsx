@@ -34,7 +34,7 @@ export function ButtonReportView({ variant }: { variant: 'weekly' | 'monthly' })
             <h2 className={s.headTitle}>{d.title}</h2>
             <p className={s.headSub}>{d.sub}</p>
           </div>
-          <div className={s.headMeta}><b>{variant === 'weekly' ? '주간' : '월간'} 버튼 사용 통계 리포트</b>1 / 2 page</div>
+          <div className={s.headMeta}><b>{variant === 'weekly' ? '주간' : '월간'} 버튼 사용 통계 리포트</b></div>
         </div>
       </div>
       <KpiRow items={d.kpis} />

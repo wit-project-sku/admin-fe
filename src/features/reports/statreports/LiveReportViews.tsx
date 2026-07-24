@@ -117,9 +117,18 @@ function LiveOutfitByKiosk({ data }: { data?: OutfitByKioskData }) {
   );
 }
 
-/** 의상 월별 통계 표 (월 4~8컬럼 분할) — 실데이터 */
-function LiveOutfitMonthly({ data }: { data?: OutfitMonthlyData }) {
-  if (!data || data.outfits.length === 0) return <EmptyNote title='해당 연도 의상 촬영 데이터가 없습니다' />;
+/** 의상 월별 통계 — 월 구간별로 페이지 분리(각 표가 A4 한 장에 정상 크기로 들어가도록) */
+function LiveOutfitMonthly({ data, year, footer }: { data?: OutfitMonthlyData; year: number; footer?: React.ReactNode }) {
+  if (!data || data.outfits.length === 0) {
+    return (
+      <div data-report-page>
+        <Section title='인기 의상 월별 통계' sub={`${year}년 · 실데이터`}>
+          <EmptyNote title='해당 연도 의상 촬영 데이터가 없습니다' />
+        </Section>
+        {footer}
+      </div>
+    );
+  }
   const colSums = MONTH_LABELS.map((_, m) => data.outfits.reduce((a, o) => a + (o.months[m] ?? 0), 0));
   const grand = colSums.reduce((a, b) => a + b, 0);
   const monthChunks = chunkKioskCols(MONTH_LABELS.map((_, i) => i), 8, 8);
@@ -127,30 +136,36 @@ function LiveOutfitMonthly({ data }: { data?: OutfitMonthlyData }) {
     <>
       {monthChunks.map((chunk, ci, arr) => {
         const isLast = ci === arr.length - 1;
+        const rangeLabel = `${MONTH_LABELS[chunk[0]]}~${MONTH_LABELS[chunk[chunk.length - 1]]}`;
         return (
-          <table key={ci} className={s.table} style={ci > 0 ? { marginTop: 10 } : undefined}>
-            <thead>
-              <tr>
-                <th style={{ textAlign: 'left' }}>의상</th>
-                {chunk.map((i) => <th key={i}>{MONTH_LABELS[i]}</th>)}
-                {isLast ? <th>합계</th> : null}
-              </tr>
-            </thead>
-            <tbody>
-              {data.outfits.map((o) => (
-                <tr key={o.code}>
-                  <td className={s.tdL}>{o.name}<span className={s.code}>{o.code}</span></td>
-                  {chunk.map((i) => <td key={i}>{(o.months[i] ?? 0).toLocaleString()}</td>)}
-                  {isLast ? <td className={s.tdB}>{o.total.toLocaleString()}</td> : null}
-                </tr>
-              ))}
-              <tr className={s.sumRow}>
-                <td className={s.tdL}>전체 합계</td>
-                {chunk.map((i) => <td key={i}>{colSums[i].toLocaleString()}</td>)}
-                {isLast ? <td>{grand.toLocaleString()}</td> : null}
-              </tr>
-            </tbody>
-          </table>
+          <div data-report-page key={ci}>
+            <Section title={`인기 의상 월별 통계 (${rangeLabel})`} sub={`${year}년 · 실데이터`}>
+              <table className={s.table}>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: 'left' }}>의상</th>
+                    {chunk.map((i) => <th key={i}>{MONTH_LABELS[i]}</th>)}
+                    {isLast ? <th>합계</th> : null}
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.outfits.map((o) => (
+                    <tr key={o.code}>
+                      <td className={s.tdL}>{o.name}<span className={s.code}>{o.code}</span></td>
+                      {chunk.map((i) => <td key={i}>{(o.months[i] ?? 0).toLocaleString()}</td>)}
+                      {isLast ? <td className={s.tdB}>{o.total.toLocaleString()}</td> : null}
+                    </tr>
+                  ))}
+                  <tr className={s.sumRow}>
+                    <td className={s.tdL}>전체 합계</td>
+                    {chunk.map((i) => <td key={i}>{colSums[i].toLocaleString()}</td>)}
+                    {isLast ? <td>{grand.toLocaleString()}</td> : null}
+                  </tr>
+                </tbody>
+              </table>
+            </Section>
+            {isLast ? footer : null}
+          </div>
         );
       })}
     </>
@@ -286,7 +301,7 @@ export function ShootingWeeklyLiveView({ anchor }: { anchor?: string }) {
             <h2 className={s.headTitle}>주간 촬영 통계 리포트</h2>
             <p className={s.headSub}>대상 기간: {r.start} ~ {r.end} · {kioskNames.length}개 지점 · 실데이터</p>
           </div>
-          <div className={s.headMeta}><b>주간 촬영 통계 리포트</b>1 / 3 page</div>
+          <div className={s.headMeta}><b>주간 촬영 통계 리포트</b></div>
         </div>
       </div>
       <KpiRow items={kpis} />
@@ -381,7 +396,9 @@ export function ShootingWeeklyLiveView({ anchor }: { anchor?: string }) {
       <Section title='카테고리별 1위 의상' sub='전체 · 키오스크별 · 실데이터'>
         {catTop.isPending ? <LoadingCard text='불러오는 중…' /> : <LiveCatWinners rows={catTop.data ?? []} />}
       </Section>
+      </div>
 
+      <div data-report-page>
       <Section title='키오스크별 전체 의상 통계' sub='전체 의상 × 키오스크 촬영 건수 · 굵게 = 각 키오스크 1위'>
         {outfitMatrix.isPending ? <LoadingCard text='불러오는 중…' /> : <LiveOutfitByKiosk data={outfitMatrix.data} />}
       </Section>
@@ -460,7 +477,7 @@ export function ShootingMonthlyLiveView({ ym }: { ym?: string }) {
             <h2 className={s.headTitle}>월간 촬영 통계 리포트</h2>
             <p className={s.headSub}>대상: {r.label} ({r.start} ~ {r.end}) · {kioskNames.length}개 지점 · 실데이터</p>
           </div>
-          <div className={s.headMeta}><b>월간 촬영 통계 리포트</b>1 / 3 page</div>
+          <div className={s.headMeta}><b>월간 촬영 통계 리포트</b></div>
         </div>
       </div>
       <KpiRow items={[
@@ -539,13 +556,19 @@ export function ShootingMonthlyLiveView({ ym }: { ym?: string }) {
       <Section title='카테고리별 1위 의상' sub={`전체 · 키오스크별 (${r.label} 기준) · 실데이터`}>
         {catTop.isPending ? <LoadingCard text='불러오는 중…' /> : <LiveCatWinners rows={catTop.data ?? []} />}
       </Section>
-
-      <Section title='인기 의상 월별 통계' sub={`${year}년 1~12월 · 실데이터`}>
-        {outfitMonthlyMatrix.isPending ? <LoadingCard text='불러오는 중…' /> : <LiveOutfitMonthly data={outfitMonthlyMatrix.data} />}
-      </Section>
-
-      <p className={s.footer}>집계 기준: AR 촬영 완료 건 · 실데이터(서버 집계)</p>
       </div>
+
+      {outfitMonthlyMatrix.isPending ? (
+        <div data-report-page>
+          <Section title='인기 의상 월별 통계' sub={`${year}년 · 실데이터`}><LoadingCard text='불러오는 중…' /></Section>
+        </div>
+      ) : (
+        <LiveOutfitMonthly
+          data={outfitMonthlyMatrix.data}
+          year={year}
+          footer={<p className={s.footer}>집계 기준: AR 촬영 완료 건 · 실데이터(서버 집계)</p>}
+        />
+      )}
     </div>
   );
 }
@@ -636,7 +659,7 @@ export function ButtonLiveView({ variant, anchor, ym }: { variant: 'weekly' | 'm
             <h2 className={s.headTitle}>{variant === 'weekly' ? '주간' : '월간'} 버튼 사용 통계 리포트</h2>
             <p className={s.headSub}>대상 기간: {r.start} ~ {r.end} · {kiosks.length}개 지점 · 실데이터</p>
           </div>
-          <div className={s.headMeta}><b>{variant === 'weekly' ? '주간' : '월간'} 버튼 사용 통계 리포트</b>1 / 2 page</div>
+          <div className={s.headMeta}><b>{variant === 'weekly' ? '주간' : '월간'} 버튼 사용 통계 리포트</b></div>
         </div>
       </div>
       <KpiRow items={[
