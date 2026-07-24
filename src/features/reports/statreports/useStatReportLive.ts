@@ -209,6 +209,50 @@ export function useButtonsLive(start: string, end: string, prevStart: string, pr
   return { cur, prev, cum };
 }
 
+/** 리포트용 홈 버튼 카탈로그 — 클릭 0인 버튼도 빈 막대/0행으로 채우기 위해
+ *  키오스크별 등록 버튼 전체(placement=MAIN/FIXED)를 조회한다.
+ *  응답은 kioskId=null·kioskName만 오므로 kioskLabel(=뒤)로 키를 만든다. 테스트 단말(모니터)은 제외. */
+export type ReportKioskButton = { buttonType: string; buttonName: string; line: number; position: number };
+export function useReportKioskButtons(enabled: boolean) {
+  return useQuery({
+    queryKey: ['stat-report-kiosk-buttons'],
+    queryFn: async () => {
+      const byKiosk: Record<string, ReportKioskButton[]> = {};
+      for (let pageNum = 1; pageNum <= 50; pageNum += 1) {
+        const res = await APIService.private.get('/admin/kiosks/buttons', {
+          params: { pageNum, pageSize: 200 },
+        });
+        const page = unwrap<{ content?: unknown[]; last?: boolean; totalPages?: number }>(res);
+        const content = (page.content ?? []) as Array<{
+          kioskName?: string;
+          buttonType?: string;
+          buttonName?: string;
+          placement?: string;
+          line?: number;
+          position?: number;
+        }>;
+        if (content.length === 0) break;
+        for (const b of content) {
+          // 홈 화면에 표시되는 버튼만(MAIN 그리드 + FIXED 고정). OFF_MAIN(미표시)은 제외.
+          if (b.placement !== 'MAIN' && b.placement !== 'FIXED') continue;
+          const label = kioskLabel(b.kioskName ?? '');
+          if (!label || label.includes('모니터')) continue; // 테스트 단말 제외
+          (byKiosk[label] ??= []).push({
+            buttonType: b.buttonType ?? '',
+            buttonName: b.buttonName ?? '',
+            line: b.line ?? 99,
+            position: b.position ?? 99,
+          });
+        }
+        if (page.last || (page.totalPages && pageNum >= page.totalPages)) break;
+      }
+      return byKiosk;
+    },
+    enabled,
+    staleTime: 10 * 60_000,
+  });
+}
+
 /* ── 리포트용 신규 집계 API (P2 서버 구현) ── */
 
 /** BaseResponse 언래핑 — APIService 가 벗기는 경우/안 벗기는 경우 모두 방어 */

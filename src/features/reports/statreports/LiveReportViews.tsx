@@ -13,6 +13,7 @@ import {
   monthRangesOf,
   weekRangesOf,
   useButtonsLive,
+  useReportKioskButtons,
   useOutfitByKiosk,
   useOutfitCategoryTop,
   useOutfitMonthly,
@@ -578,6 +579,7 @@ export function ButtonLiveView({ variant, anchor, ym }: { variant: 'weekly' | 'm
   const r = variant === 'weekly' ? weekRangesOf(anchor) : monthRangesOf(ym);
   const prevLabel = variant === 'weekly' ? '전주' : '전월';
   const { cur, prev, cum } = useButtonsLive(r.start, r.end, r.prevStart, r.prevEnd, true);
+  const catalog = useReportKioskButtons(true); // 홈 버튼 전체(클릭 0 포함)
 
   if (cur.isPending) return <LoadingCard text='실데이터를 불러오는 중…' />;
   if (cur.isError) return <LoadingCard text='버튼 통계를 불러오지 못했습니다.' />;
@@ -622,10 +624,10 @@ export function ButtonLiveView({ variant, anchor, ym }: { variant: 'weekly' | 'm
   // 아이콘별 전체 집계(클릭 1위·평균 체류 최장) — buttonDetails 합산
   const byButton = new Map<string, { clicks: number; duration: number }>();
   for (const row of block.buttonDetails) {
-    const cu = byButton.get(row.buttonName) ?? { clicks: 0, duration: 0 };
+    const cu = byButton.get(row.buttonType) ?? { clicks: 0, duration: 0 };
     cu.clicks += row.totalClicks;
     cu.duration += row.totalDuration;
-    byButton.set(row.buttonName, cu);
+    byButton.set(row.buttonType, cu);
   }
   const buttonList = [...byButton.entries()];
   const topButton = buttonList.reduce<{ name: string; clicks: number } | null>(
@@ -646,7 +648,7 @@ export function ButtonLiveView({ variant, anchor, ym }: { variant: 'weekly' | 'm
       name: k,
       clicks: v.clicks,
       prevClicks: prevByKiosk.get(k) ?? 0,
-      topButton: [...v.rows].sort((a, b) => b.totalClicks - a.totalClicks)[0]?.buttonName,
+      topButton: [...v.rows].sort((a, b) => b.totalClicks - a.totalClicks)[0]?.buttonType,
     })),
   });
 
@@ -695,7 +697,19 @@ export function ButtonLiveView({ variant, anchor, ym }: { variant: 'weekly' | 'm
 
       {kiosks.map(([k, v], ki) => {
             const pb = diffBadge(v.clicks, prevByKiosk.get(k) ?? 0, '회', '');
-            const rows = [...v.rows].sort((a, b) => b.totalClicks - a.totalClicks);
+            // 클릭된 버튼 + 홈 버튼 카탈로그(클릭 0 포함) 병합 — 미사용 버튼도 빈 막대/0행으로 표시
+            const kid = v.rows[0]?.kioskId ?? kioskOrder.get(k) ?? 0;
+            const seen = new Set<string>();
+            const merged = v.rows.map((rw) => {
+              seen.add(rw.buttonType);
+              return { key: rw.buttonType, label: rw.buttonType, clicks: rw.totalClicks, duration: rw.totalDuration, avg: rw.avgDuration, line: 0, position: 0 };
+            });
+            for (const hb of catalog.data?.[k] ?? []) {
+              if (seen.has(hb.buttonType)) continue;
+              seen.add(hb.buttonType);
+              merged.push({ key: hb.buttonType, label: hb.buttonType, clicks: 0, duration: 0, avg: 0, line: hb.line, position: hb.position });
+            }
+            const rows = merged.sort((a, b) => b.clicks - a.clicks || a.line - b.line || a.position - b.position);
             return (
               <div data-report-page key={k}>
                 {ki === 0 ? (
@@ -715,8 +729,8 @@ export function ButtonLiveView({ variant, anchor, ym }: { variant: 'weekly' | 'm
                   <EmptyNote title='기간 내 사용 데이터가 없습니다' hint='해당 키오스크에서 버튼 클릭이 집계되면 그래프와 표가 채워집니다.' />
                 ) : (
                 <div className={s.row2}>
-                  <HBarChart title='버튼별 클릭(회)' data={rows.map((r) => ({ label: r.buttonName, value: r.totalClicks }))} unit='회' />
-                  <HBarChart title='버튼별 사용 시간(분)' data={rows.map((r) => ({ label: r.buttonName, value: Math.round(r.totalDuration / 60) }))} unit='분' color='#f59e0b' />
+                  <HBarChart title='버튼별 클릭(회)' data={rows.map((r) => ({ label: r.label, value: r.clicks }))} unit='회' />
+                  <HBarChart title='버튼별 사용 시간(분)' data={rows.map((r) => ({ label: r.label, value: Math.round(r.duration / 60) }))} unit='분' color='#f59e0b' />
                 </div>
                 )}
                 {rows.length === 0 ? null : (
@@ -726,11 +740,11 @@ export function ButtonLiveView({ variant, anchor, ym }: { variant: 'weekly' | 'm
                   </thead>
                   <tbody>
                     {rows.map((row, i) => (
-                      <tr key={`${row.kioskId}-${row.buttonType}-${row.position}`}>
-                        <td className={`${s.tdL} ${i === 0 ? s.tdB : ''}`}>{row.buttonName}</td>
-                        <td className={i === 0 ? s.tdB : ''}>{row.totalClicks.toLocaleString()}회</td>
-                        <td>{fmtDurationSec(row.totalDuration)}</td>
-                        <td>{Math.round(row.avgDuration)}초</td>
+                      <tr key={`${kid}-${row.key}`}>
+                        <td className={`${s.tdL} ${i === 0 ? s.tdB : ''}`}>{row.label}</td>
+                        <td className={i === 0 ? s.tdB : ''}>{row.clicks.toLocaleString()}회</td>
+                        <td>{fmtDurationSec(row.duration)}</td>
+                        <td>{Math.round(row.avg)}초</td>
                       </tr>
                     ))}
                     <tr className={s.sumRow}>
