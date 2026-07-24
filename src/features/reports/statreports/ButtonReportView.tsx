@@ -83,7 +83,7 @@ export function ButtonReportView({ variant }: { variant: 'weekly' | 'monthly' })
                 </p>
                 <div className={s.row2}>
                   <HBarChart title='버튼별 클릭(회)' data={k.buttons.map(([name, v]) => ({ label: name, value: v }))} unit='회' />
-                  <HBarChart title='버튼별 사용 시간(분)' data={k.buttons.map(([name, v]) => ({ label: name, value: Math.round((v * BUTTON_AVG_SEC[name]) / 60) }))} unit='분' color='#f59e0b' />
+                  <HBarChart title='버튼별 사용 시간(분)' data={k.buttons.map(([name, v]) => ({ label: name, value: Math.round((v * (BUTTON_AVG_SEC[name] ?? 0)) / 60) }))} unit='분' color='#f59e0b' />
                 </div>
                 <table className={s.table} style={{ marginTop: 10 }}>
                   <thead>
@@ -94,8 +94,8 @@ export function ButtonReportView({ variant }: { variant: 'weekly' | 'monthly' })
                       <tr key={name}>
                         <td className={`${s.tdL} ${i === 0 ? s.tdB : ''}`}>{name}</td>
                         <td className={i === 0 ? s.tdB : ''}>{clicks.toLocaleString()}회</td>
-                        <td>{fmtDur(clicks * BUTTON_AVG_SEC[name])}</td>
-                        <td>{BUTTON_AVG_SEC[name]}초</td>
+                        <td>{fmtDur(clicks * (BUTTON_AVG_SEC[name] ?? 0))}</td>
+                        <td>{clicks > 0 ? (BUTTON_AVG_SEC[name] ?? 0) : 0}초</td>
                       </tr>
                     ))}
                     <tr className={s.sumRow}>
