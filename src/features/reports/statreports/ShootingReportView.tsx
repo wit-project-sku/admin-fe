@@ -49,7 +49,7 @@ function OutfitTop10({ cards, note }: { cards: OutfitCard[]; note: string }) {
           <div key={`${o.rank}-${o.code}`} className={s.gcard}>
             <span className={s.gcardRank}>{o.rank}</span>
             {o.imageUrl ? (
-              <img src={o.imageUrl} alt={o.name} className={s.gcardImg} style={{ objectFit: 'cover', width: '100%' }} />
+              <img src={o.imageUrl} alt={o.name} className={s.gcardImg} style={{ objectFit: 'contain', width: '100%' }} />
             ) : (
               <div className={s.gcardImg} style={{ background: `linear-gradient(135deg, ${o.grad[0]}, ${o.grad[1]})` }}>👘</div>
             )}

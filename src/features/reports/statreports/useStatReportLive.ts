@@ -2,8 +2,8 @@
 //   촬영: GET /admin/stats/daily (일×지점) · GET /admin/stats/monthly (월×지점)
 //   의상: GET /admin/stats/outfit-ranking (실물 사진 imageUrl 포함)
 //   버튼: GET /admin/stats/buttons/summary (지점·버튼별 클릭/사용시간/평균체류)
-// 서버 집계가 없는 항목(오전/오후·시간대별·AI 분석·카테고리별 1위·의상 매트릭스)은
-// 표본 태그와 함께 표시한다(→ P2/P3 백엔드 개발 목록).
+// 키오스크 표시명은 kioskLabel(=뒤)로 변환. 테스트 단말은 서버 집계에서 제외됨.
+
 import { useQuery } from '@tanstack/react-query';
 import { APIService } from '@/utils/axios';
 import { buildShootingStatsTableModel } from '../shootingStatsMappers';
@@ -18,6 +18,12 @@ function fmt(d: Date): string {
   const m = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
   return `${y}-${m}-${day}`;
+}
+
+/** 키오스크 표시명 — "#W001-인사동=북인사광장" → "북인사광장" ('=' 뒤만). */
+export function kioskLabel(name: string): string {
+  const i = name.lastIndexOf('=');
+  return i >= 0 ? name.slice(i + 1).trim() : name;
 }
 
 export type WeekRanges = { start: string; end: string; prevStart: string; prevEnd: string };
@@ -88,7 +94,13 @@ async function fetchShootingDaily(start: string, end: string): Promise<ShootingD
   const { rows, kioskNames } = buildShootingStatsTableModel(res, 'date');
   // 서버는 최신순(DESC) — 리포트는 시간 오름차순으로 통일(그래프·일별 표)
   rows.sort((a, b) => String(a.date).localeCompare(String(b.date)));
-  return { rows, kioskNames };
+  // 키오스크 표시명(=뒤)으로 변환 — rows 키도 함께 리매핑해 정합 유지
+  const labeled = rows.map((row) => {
+    const r: Record<string, string | number> = { date: row.date, total: row.total };
+    for (const n of kioskNames) r[kioskLabel(n)] = row[n];
+    return r;
+  });
+  return { rows: labeled, kioskNames: kioskNames.map(kioskLabel) };
 }
 
 export function useShootingDailyLive(start: string, end: string, enabled: boolean) {
@@ -108,7 +120,13 @@ export function useShootingMonthlyLive(enabled: boolean) {
       const res = await APIService.private.get('/admin/stats/monthly', {
         params: { pageNum: 1, pageSize: 60, sort: 'DESC' },
       });
-      return buildShootingStatsTableModel(res, 'month');
+      const { rows, kioskNames, totalPages, totalElements } = buildShootingStatsTableModel(res, 'month');
+      const labeled = rows.map((row) => {
+        const r: Record<string, string | number> = { month: row.month, total: row.total };
+        for (const n of kioskNames) r[kioskLabel(n)] = row[n];
+        return r;
+      });
+      return { rows: labeled, kioskNames: kioskNames.map(kioskLabel), totalPages, totalElements };
     },
     enabled,
     staleTime: 60_000,
@@ -161,7 +179,12 @@ async function fetchButtonsBlock(startDate: string, endDate: string): Promise<Ki
   });
   const block = (res as unknown as KioskButtonStatsSummaryResponse)?.data?.content?.[0]
     ?? (res as unknown as { content?: KioskButtonStatsSummaryBlock[] })?.content?.[0];
-  return block ?? null;
+  if (!block) return null;
+  // 키오스크 표시명(=뒤) 변환
+  return {
+    ...block,
+    buttonDetails: block.buttonDetails.map((d) => ({ ...d, representativeKioskName: kioskLabel(d.representativeKioskName) })),
+  };
 }
 
 export function useButtonsLive(start: string, end: string, prevStart: string, prevEnd: string, enabled: boolean) {
@@ -238,7 +261,8 @@ export function useOutfitCategoryTop(start: string, end: string, enabled: boolea
     queryKey: ['stat-report-cat-top', start, end],
     queryFn: async () => {
       const res = await APIService.private.get('/admin/stats/outfit-category-top', { params: { start, end } });
-      return unwrap<CategoryTop[]>(res) ?? [];
+      const rows = unwrap<CategoryTop[]>(res) ?? [];
+      return rows.map((r) => ({ ...r, byKiosk: r.byKiosk.map((k) => ({ ...k, kioskName: kioskLabel(k.kioskName) })) }));
     },
     enabled,
     staleTime: 60_000,
@@ -257,7 +281,8 @@ export function useOutfitByKiosk(start: string, end: string, enabled: boolean) {
     queryKey: ['stat-report-outfit-kiosk', start, end],
     queryFn: async () => {
       const res = await APIService.private.get('/admin/stats/outfit-by-kiosk', { params: { start, end } });
-      return unwrap<OutfitByKioskData>(res);
+      const data = unwrap<OutfitByKioskData>(res);
+      return data ? { ...data, kiosks: data.kiosks.map((k) => ({ ...k, name: kioskLabel(k.name) })) } : data;
     },
     enabled,
     staleTime: 60_000,

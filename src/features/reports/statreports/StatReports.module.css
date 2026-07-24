@@ -321,13 +321,16 @@
   color: #0f172a;
 }
 
+/* 의상 사진 — 세로형(한복)이 많아 3:4 박스 + contain(전체 표시, 잘림 없음) */
 .gcardImg {
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 3 / 4;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 26px;
   color: rgba(255, 255, 255, 0.92);
+  background: var(--bg-muted);
+  object-fit: contain;
 }
 
 .gcardMeta {
