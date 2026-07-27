@@ -13,9 +13,9 @@ type ReportKind = 'shoot-weekly' | 'shoot-monthly' | 'button-weekly' | 'button-m
 
 const KINDS: { id: ReportKind; badge: string; green?: boolean; title: string; desc: string }[] = [
   { id: 'shoot-weekly', badge: '주간', title: '주간 촬영 통계 리포트', desc: '전주 대비 · 지점별(전체·오전/오후·요일별) 상세' },
-  { id: 'shoot-monthly', badge: '월간 · 매월 1일', green: true, title: '월간 촬영 통계 리포트', desc: '전월 대비 · 지점별(전체·오전/오후) 상세' },
+  { id: 'shoot-monthly', badge: '월간', green: true, title: '월간 촬영 통계 리포트', desc: '전월 대비 · 지점별(전체·오전/오후) 상세' },
   { id: 'button-weekly', badge: '주간', title: '주간 버튼 사용 리포트', desc: '클릭·사용 시간 — 전체/키오스크별 아이콘 집계' },
-  { id: 'button-monthly', badge: '월간 · 매월 1일', green: true, title: '월간 버튼 사용 리포트', desc: '전월 대비 · 키오스크별 아이콘별 상세' },
+  { id: 'button-monthly', badge: '월간', green: true, title: '월간 버튼 사용 리포트', desc: '전월 대비 · 키오스크별 아이콘별 상세' },
 ];
 
 /** YYYY-MM-DD (로컬) */

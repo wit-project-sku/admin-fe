@@ -54,7 +54,7 @@ export function NewOutfitCards({ list }: { list: NewOutfit[] }) {
       {list.map((o) => (
         <div key={o.id} className={s.gcard} data-no-rank>
           {o.imageUrl ? (
-            <img src={o.imageUrl} alt={o.name} className={s.gcardImg} style={{ objectFit: 'cover', width: '100%' }} />
+            <img src={o.imageUrl} alt={o.name} className={s.gcardImg} style={{ objectFit: 'contain', width: '100%' }} />
           ) : (
             <div className={s.gcardImg} style={{ background: 'linear-gradient(135deg, #e2e8f0, #f1f5f9)' }}>👘</div>
           )}
@@ -103,7 +103,7 @@ export function NewOutfitsSection({
       ) : !live.data?.hasDateField ? (
         <EmptyNote title='의상 등록일 정보가 없습니다' hint='의상 목록 API에 등록일(createdAt) 필드 추가가 필요합니다(백엔드 개발 항목).' />
       ) : (live.data?.list.length ?? 0) === 0 ? (
-        <EmptyNote title='기간 내 새로 등록된 의상이 없습니다' />
+        <EmptyNote title='기간 내 새로 등록된 의상이 없습니다' hint={null} />
       ) : (
         <NewOutfitCards list={live.data.list} />
       )}

@@ -178,11 +178,13 @@ function LoadingCard({ text }: { text: string }) {
 }
 
 /** 빈 데이터 표시 — 집계 자체가 없는 구간을 명확히 알린다 */
-export function EmptyNote({ title, hint }: { title?: string; hint?: string }) {
+export function EmptyNote({ title, hint }: { title?: string; hint?: string | null }) {
+  // hint === null 이면 서브텍스트를 아예 표시하지 않음. undefined면 기본 문구.
+  const sub = hint === undefined ? '해당 기간에 수집된 데이터가 없어 표시할 내용이 없습니다.' : hint;
   return (
     <div className={s.emptyBox}>
       <div className={s.emptyBoxTitle}>📭 {title ?? '아직 집계된 데이터가 없습니다'}</div>
-      <div className={s.emptyBoxHint}>{hint ?? '해당 기간에 수집된 데이터가 없어 표시할 내용이 없습니다.'}</div>
+      {sub ? <div className={s.emptyBoxHint}>{sub}</div> : null}
     </div>
   );
 }
