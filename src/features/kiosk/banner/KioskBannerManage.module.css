@@ -1,11 +1,18 @@
-/* 키오스크 배너 관리 — 상점 이미지 관리와 동일한 톤(카드 + 썸네일 그리드). */
+/* 키오스크 배너 관리 — 상점 이미지 관리와 동일한 톤(카드 + 목록형 썸네일). */
 
+.wrap {
+  padding: 4px 2px 2px;
+}
+
+/* ── 상단 툴바 ── */
 .toolbar {
   display: flex;
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
-  margin-bottom: 16px;
+  padding-bottom: 18px;
+  margin-bottom: 22px;
+  border-bottom: 1px solid var(--border-subtle, #eef2f7);
 }
 
 .selectLabel {
@@ -16,7 +23,7 @@
 
 .select {
   min-width: 260px;
-  padding: 8px 12px;
+  padding: 9px 12px;
   font-size: 13px;
   border: 1px solid var(--border, #e2e8f0);
   border-radius: 8px;
@@ -35,43 +42,76 @@
   font-weight: 700;
 }
 
-/* 배너는 가로로 매우 긴 이미지(2160×573 ≈ 3.77:1)라 실제 비율로 보여준다. */
+/* ── 배너 목록 ── */
 .grid {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
 .item {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 10px 12px;
+  gap: 16px;
+  padding: 14px 16px;
   border: 1px solid var(--border, #e2e8f0);
-  border-radius: 10px;
+  border-radius: 12px;
   background: #fff;
+  cursor: grab;
+  transition: border-color 0.15s, box-shadow 0.15s, opacity 0.15s;
+}
+
+.item:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+
+/* 드래그 중인 항목 */
+.dragging {
+  opacity: 0.4;
+  cursor: grabbing;
+}
+
+/* 드롭 위치 표시 */
+.dropBefore {
+  box-shadow: inset 0 3px 0 0 #2563eb;
+  border-color: #93c5fd;
+}
+
+.dropAfter {
+  box-shadow: inset 0 -3px 0 0 #2563eb;
+  border-color: #93c5fd;
+}
+
+.handle {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #94a3b8;
+  user-select: none;
 }
 
 .order {
-  flex: none;
-  width: 30px;
-  height: 30px;
+  width: 26px;
+  height: 26px;
   display: grid;
   place-items: center;
   border-radius: 999px;
   background: #f1f5f9;
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 800;
   color: #475569;
 }
 
+/* 배너는 가로로 매우 긴 이미지(2160×573 ≈ 3.77:1)라 실제 비율로 보여준다. */
 .thumbWrap {
   flex: 1;
   min-width: 0;
   aspect-ratio: 2160 / 573;
   background: #f8fafc;
   border: 1px solid var(--border-subtle, #eef2f7);
-  border-radius: 6px;
+  border-radius: 8px;
   overflow: hidden;
 }
 
@@ -80,19 +120,20 @@
   height: 100%;
   object-fit: contain;
   display: block;
+  pointer-events: none;
 }
 
 .actions {
   flex: none;
   display: flex;
-  gap: 6px;
+  gap: 7px;
 }
 
 .iconBtn {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   border: 1px solid var(--border, #e2e8f0);
-  border-radius: 7px;
+  border-radius: 8px;
   background: #fff;
   color: #475569;
   font-size: 13px;
@@ -104,7 +145,7 @@
 }
 
 .iconBtn:disabled {
-  opacity: 0.35;
+  opacity: 0.32;
   cursor: not-allowed;
 }
 
@@ -117,28 +158,38 @@
   background: #fef2f2;
 }
 
-/* 업로드 영역 */
+/* ── 업로드 영역 ── */
 .uploadArea {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 22px;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 32px 22px;
   border: 1.5px dashed var(--border, #cbd5e1);
-  border-radius: 10px;
+  border-radius: 12px;
   background: #fbfdff;
   color: #64748b;
   font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
 }
 
-.uploadArea:hover {
+.uploadArea:hover:not(.uploadDisabled) {
   border-color: #94a3b8;
   background: #f8fafc;
 }
 
+.uploadSub {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #94a3b8;
+}
+
 .uploadDisabled {
-  opacity: 0.5;
+  opacity: 0.55;
   cursor: not-allowed;
 }
 
@@ -147,27 +198,31 @@
 }
 
 .empty {
-  padding: 34px 12px;
+  padding: 46px 12px;
   text-align: center;
   color: var(--text-muted, #64748b);
   font-size: 13px;
+  border: 1px solid var(--border-subtle, #eef2f7);
+  border-radius: 12px;
+  background: #fcfdfe;
 }
 
+/* ── 하단 안내 ── */
 .hint {
-  margin-top: 12px;
-  padding: 10px 12px;
-  border-radius: 8px;
+  margin-top: 22px;
+  padding: 14px 16px;
+  border-radius: 10px;
   background: #f8fafc;
   border: 1px solid var(--border-subtle, #eef2f7);
   font-size: 12px;
-  line-height: 1.7;
+  line-height: 1.85;
   color: #475569;
 }
 
 .notice {
-  margin-bottom: 12px;
-  padding: 9px 12px;
-  border-radius: 8px;
+  margin-bottom: 16px;
+  padding: 11px 14px;
+  border-radius: 9px;
   font-size: 12.5px;
   font-weight: 600;
 }
