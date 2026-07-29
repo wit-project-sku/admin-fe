@@ -1,18 +1,20 @@
 /* 키오스크 배너 관리 — 상점 이미지 관리와 동일한 톤(카드 + 목록형 썸네일). */
 
-.wrap {
-  padding: 4px 2px 2px;
-}
+/* .card 는 패딩이 없는 순수 컨테이너라, 헤더(.cardHead 와 동일 규격)와 본문 여백을 여기서 준다. */
 
-/* ── 상단 툴바 ── */
+/* ── 상단 툴바 = 카드 헤더 규격(16px 20px + 하단 구분선) ── */
 .toolbar {
   display: flex;
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
-  padding-bottom: 18px;
-  margin-bottom: 22px;
+  padding: 16px 20px;
   border-bottom: 1px solid var(--border-subtle, #eef2f7);
+}
+
+/* ── 본문 ── */
+.body {
+  padding: 20px;
 }
 
 .selectLabel {
@@ -209,7 +211,7 @@
 
 /* ── 하단 안내 ── */
 .hint {
-  margin-top: 22px;
+  margin-top: 20px;
   padding: 14px 16px;
   border-radius: 10px;
   background: #f8fafc;

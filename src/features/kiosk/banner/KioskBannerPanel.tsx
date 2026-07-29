@@ -102,14 +102,10 @@ export function KioskBannerPanel() {
   };
 
   return (
-    <div className={s.wrap}>
+    <div>
       <div className={s.toolbar}>
         <span className={s.selectLabel}>키오스크</span>
-        <select
-          className={s.select}
-          value={kioskId ?? ''}
-          onChange={(e) => setKioskId(Number(e.target.value) || null)}
-        >
+        <select className={s.select} value={kioskId ?? ''} onChange={(e) => setKioskId(Number(e.target.value) || null)}>
           {kiosks.map((k) => (
             <option key={k.id} value={k.id}>
               {k.name}
@@ -117,116 +113,115 @@ export function KioskBannerPanel() {
           ))}
         </select>
         <span className={`${s.count} ${isFull ? s.countFull : ''}`}>
-          {banners.length} / {MAX_KIOSK_BANNERS}장
-          {isFull ? ' — 더 등록하려면 기존 배너를 삭제하세요' : ''}
+          {banners.length} / {MAX_KIOSK_BANNERS}장{isFull ? ' — 더 등록하려면 기존 배너를 삭제하세요' : ''}
         </span>
       </div>
 
-      {notice ? (
-        <div className={`${s.notice} ${notice.ok ? s.noticeOk : s.noticeErr}`}>{notice.text}</div>
-      ) : null}
+      <div className={s.body}>
+        {notice ? <div className={`${s.notice} ${notice.ok ? s.noticeOk : s.noticeErr}`}>{notice.text}</div> : null}
 
-      {isPending ? (
-        <div className={s.empty}>배너를 불러오는 중…</div>
-      ) : isError ? (
-        <div className={s.empty}>배너를 불러오지 못했습니다.</div>
-      ) : (
-        <div className={s.grid}>
-          {banners.map((b, i) => {
-            const dropCls =
-              overIdx === i && dragIdx != null && dragIdx !== i
-                ? dragIdx < i
-                  ? s.dropAfter
-                  : s.dropBefore
-                : '';
-            return (
-              <div
-                key={b.id}
-                className={`${s.item} ${dragIdx === i ? s.dragging : ''} ${dropCls}`}
-                draggable
-                onDragStart={(e) => {
-                  dragFrom.current = i;
-                  setDragIdx(i);
-                  e.dataTransfer.effectAllowed = 'move';
-                }}
-                onDragOver={(e) => {
-                  e.preventDefault(); // 이걸 해야 drop 이 발생한다
-                  e.dataTransfer.dropEffect = 'move';
-                  if (overIdx !== i) setOverIdx(i);
-                }}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  const from = dragFrom.current;
-                  clearDrag();
-                  if (from != null) void applyOrder(from, i);
-                }}
-                onDragEnd={clearDrag}
-              >
-                <span className={s.handle} title="드래그해서 순서 변경">
-                  ⠿<span className={s.order}>{i + 1}</span>
-                </span>
-                <div className={s.thumbWrap}>
-                  <img className={s.thumb} src={b.imageUrl} alt={`배너 ${i + 1}`} draggable={false} />
+        {isPending ? (
+          <div className={s.empty}>배너를 불러오는 중…</div>
+        ) : isError ? (
+          <div className={s.empty}>배너를 불러오지 못했습니다.</div>
+        ) : (
+          <div className={s.grid}>
+            {banners.map((b, i) => {
+              const dropCls =
+                overIdx === i && dragIdx != null && dragIdx !== i ? (dragIdx < i ? s.dropAfter : s.dropBefore) : '';
+              return (
+                <div
+                  key={b.id}
+                  className={`${s.item} ${dragIdx === i ? s.dragging : ''} ${dropCls}`}
+                  draggable
+                  onDragStart={(e) => {
+                    dragFrom.current = i;
+                    setDragIdx(i);
+                    e.dataTransfer.effectAllowed = 'move';
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault(); // 이걸 해야 drop 이 발생한다
+                    e.dataTransfer.dropEffect = 'move';
+                    if (overIdx !== i) setOverIdx(i);
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const from = dragFrom.current;
+                    clearDrag();
+                    if (from != null) void applyOrder(from, i);
+                  }}
+                  onDragEnd={clearDrag}
+                >
+                  <span className={s.handle} title='드래그해서 순서 변경'>
+                    ⠿<span className={s.order}>{i + 1}</span>
+                  </span>
+                  <div className={s.thumbWrap}>
+                    <img className={s.thumb} src={b.imageUrl} alt={`배너 ${i + 1}`} draggable={false} />
+                  </div>
+                  <div className={s.actions}>
+                    <button
+                      type='button'
+                      className={s.iconBtn}
+                      onClick={() => applyOrder(i, i - 1)}
+                      disabled={i === 0}
+                      title='위로'
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type='button'
+                      className={s.iconBtn}
+                      onClick={() => applyOrder(i, i + 1)}
+                      disabled={i === banners.length - 1}
+                      title='아래로'
+                    >
+                      ↓
+                    </button>
+                    <button
+                      type='button'
+                      className={`${s.iconBtn} ${s.deleteBtn}`}
+                      onClick={() => onDelete(b.id)}
+                      title='삭제'
+                    >
+                      ✕
+                    </button>
+                  </div>
                 </div>
-                <div className={s.actions}>
-                  <button
-                    type="button"
-                    className={s.iconBtn}
-                    onClick={() => applyOrder(i, i - 1)}
-                    disabled={i === 0}
-                    title="위로"
-                  >
-                    ↑
-                  </button>
-                  <button
-                    type="button"
-                    className={s.iconBtn}
-                    onClick={() => applyOrder(i, i + 1)}
-                    disabled={i === banners.length - 1}
-                    title="아래로"
-                  >
-                    ↓
-                  </button>
-                  <button
-                    type="button"
-                    className={`${s.iconBtn} ${s.deleteBtn}`}
-                    onClick={() => onDelete(b.id)}
-                    title="삭제"
-                  >
-                    ✕
-                  </button>
-                </div>
-              </div>
-            );
-          })}
+              );
+            })}
 
-          {banners.length === 0 ? (
-            <div className={s.empty}>등록된 배너가 없습니다. 아래에서 이미지를 추가하세요.</div>
-          ) : null}
-
-          <label className={`${s.uploadArea} ${isFull || adding ? s.uploadDisabled : ''}`}>
-            {adding ? '업로드 중…' : isFull ? `최대 ${MAX_KIOSK_BANNERS}장까지 등록할 수 있습니다` : '+ 배너 이미지 추가'}
-            {!adding && !isFull ? (
-              <span className={s.uploadSub}>여러 장을 한 번에 선택할 수 있습니다 (남은 자리 {remaining}장)</span>
+            {banners.length === 0 ? (
+              <div className={s.empty}>등록된 배너가 없습니다. 아래에서 이미지를 추가하세요.</div>
             ) : null}
-            <input
-              ref={fileRef}
-              type="file"
-              className={s.fileInput}
-              accept="image/*"
-              multiple
-              onChange={onUpload}
-              disabled={isFull || adding || kioskId == null}
-            />
-          </label>
-        </div>
-      )}
 
-      <div className={s.hint}>
-        · 배너는 <b>키오스크마다 독립</b>입니다. 같은 이미지를 다른 지점에도 쓰려면 그 키오스크를 선택해 다시 등록하세요
-        (한쪽을 지워도 다른 지점에는 영향이 없습니다).
-        <br />· 권장 규격 <b>2160 × 573px</b>(키오스크 하단 배너 영역).
-        <br />· 표시 순서는 위 목록 순서와 같으며, <b>항목을 드래그</b>하거나 ↑↓ 로 바꿀 수 있습니다.
+            <label className={`${s.uploadArea} ${isFull || adding ? s.uploadDisabled : ''}`}>
+              {adding
+                ? '업로드 중…'
+                : isFull
+                  ? `최대 ${MAX_KIOSK_BANNERS}장까지 등록할 수 있습니다`
+                  : '+ 배너 이미지 추가'}
+              {!adding && !isFull ? (
+                <span className={s.uploadSub}>여러 장을 한 번에 선택할 수 있습니다 (남은 자리 {remaining}장)</span>
+              ) : null}
+              <input
+                ref={fileRef}
+                type='file'
+                className={s.fileInput}
+                accept='image/*'
+                multiple
+                onChange={onUpload}
+                disabled={isFull || adding || kioskId == null}
+              />
+            </label>
+          </div>
+        )}
+
+        <div className={s.hint}>
+          · 배너는 <b>키오스크마다 독립</b>입니다. 같은 이미지를 다른 지점에도 쓰려면 그 키오스크를 선택해 다시
+          등록하세요 (한쪽을 지워도 다른 지점에는 영향이 없습니다).
+          <br />· 권장 규격 <b>2160 × 573px</b>(키오스크 하단 배너 영역).
+          <br />· 표시 순서는 위 목록 순서와 같으며, <b>항목을 드래그</b>하거나 ↑↓ 로 바꿀 수 있습니다.
+        </div>
       </div>
     </div>
   );
