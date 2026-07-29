@@ -165,6 +165,17 @@ const KIOSK_CONTENT_GROUP: NavGroupDef = {
         </svg>
       ),
     },
+    {
+      label: '배너 등록 관리',
+      path: '/admin/kiosk-banners',
+      icon: (
+        <svg width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
+          <rect x='3' y='4' width='18' height='7' rx='1' />
+          <rect x='3' y='15' width='18' height='5' rx='1' />
+          <path d='M7 7.5h4' />
+        </svg>
+      ),
+    },
   ],
 };
 

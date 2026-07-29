@@ -11,6 +11,7 @@ const DashboardPage = lazy(() => import('@pages/DashboardPage'));
 const WithMarketDashboardPage = lazy(() => import('@pages/WithMarketDashboardPage'));
 const ProductManagePage = lazy(() => import('@pages/ProductManagePage'));
 const ShopsManagePage = lazy(() => import('@pages/ShopsManagePage'));
+const KioskBannerManagePage = lazy(() => import('@pages/KioskBannerManagePage'));
 const DonationManagePage = lazy(() => import('@pages/DonationManagePage'));
 const DonationDashboardPage = lazy(() => import('@pages/DonationDashboardPage'));
 const PaymentManagePage = lazy(() => import('@pages/PaymentManagePage'));
@@ -119,6 +120,7 @@ export default function AppRouter() {
             <Route path="dashboard" element={<RoleAwareDashboard />} />
             <Route path="products" element={<ProductManagePage />} />
             <Route path="shops" element={<ShopsManagePage />} />
+            <Route path="kiosk-banners" element={<KioskBannerManagePage />} />
             <Route path="donations" element={<Navigate to="/admin/donations/dashboard" replace />} />
             <Route path="donations/dashboard" element={<DonationDashboardPage />} />
             <Route path="donations/ngo" element={<DonationManagePage lockedMode="NGO" />} />
