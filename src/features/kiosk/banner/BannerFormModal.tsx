@@ -1,4 +1,6 @@
-// 배너 등록/수정 모달. 등록은 이미지 여러 장 + 같은 대상·기간, 수정은 대상·기간만(이미지는 별도 교체).
+// 배너 등록/수정 모달.
+//  · 등록: 이미지 여러 장 + 같은 대상·기간 → 장수만큼 배너 생성
+//  · 수정: 이미지·대상·기간을 한 화면에서 고치고 한 번에 저장(의상/기부 정보 수정과 동일한 방식)
 import { useEffect, useRef, useState } from 'react';
 
 import type { BannerDto, BannerTargetType } from '@/hooks/kiosk-api/bannerTypes';
@@ -12,10 +14,11 @@ const MB = 1024 * 1024;
 
 type Props = {
   kiosks: ParsedKiosk[];
-  /** 있으면 수정 모드(이미지 선택 없음) */
+  /** 있으면 수정 모드 */
   editing?: BannerDto | null;
   submitting: boolean;
   onClose: () => void;
+  /** 수정 모드에서 images 는 0장(유지) 또는 1장(교체) */
   onSubmit: (payload: BannerTargetPayload, images: File[]) => void;
 };
 
@@ -35,6 +38,15 @@ export function BannerFormModal({ kiosks, editing, submitting, onClose, onSubmit
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
+  // 수정 모드에서 고른 새 이미지 미리보기(revoke 까지 책임진다).
+  const [replaceUrl, setReplaceUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (!isEdit || files.length === 0) return setReplaceUrl(null);
+    const url = URL.createObjectURL(files[0]);
+    setReplaceUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [isEdit, files]);
+
   const pick = (e: React.ChangeEvent<HTMLInputElement>) => {
     const picked = Array.from(e.target.files ?? []);
     if (fileRef.current) fileRef.current.value = '';
@@ -44,7 +56,8 @@ export function BannerFormModal({ kiosks, editing, submitting, onClose, onSubmit
       return;
     }
     setError(null);
-    setFiles((prev) => [...prev, ...picked]);
+    // 수정은 1장만 교체한다 — 마지막에 고른 것으로 덮어쓴다.
+    setFiles(isEdit ? picked.slice(-1) : (prev) => [...prev, ...picked]);
   };
 
   const submit = () => {
@@ -69,7 +82,7 @@ export function BannerFormModal({ kiosks, editing, submitting, onClose, onSubmit
     <div className={s.dim} onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className={s.modal}>
         <div className={s.modalHead}>
-          <span>{isEdit ? '노출 대상·기간 수정' : '배너 등록'}</span>
+          <span>{isEdit ? '배너 정보 수정' : '배너 등록'}</span>
           <button type="button" className={s.ghostBtn} onClick={onClose}>
             닫기
           </button>
@@ -78,47 +91,82 @@ export function BannerFormModal({ kiosks, editing, submitting, onClose, onSubmit
         <div className={s.modalBody}>
           {error ? <div className={`${s.notice} ${s.noticeErr}`}>{error}</div> : null}
 
-          {isEdit ? (
-            <div className={s.warn}>
-              이미지는 그대로 두고 <b>노출 대상과 기간만</b> 바꿉니다. 이미지를 바꾸려면 목록에서 <b>이미지 교체</b>를
-              쓰세요.
-            </div>
-          ) : (
-            <div className={s.field}>
-              <span className={s.fieldLabel}>배너 이미지</span>
-              <label className={s.uploadArea}>
-                + 이미지 추가
-                <span className={s.uploadSub}>여러 장 선택 가능 · 권장 2160 × 573px · 장당 최대 20MB</span>
-                <input
-                  ref={fileRef}
-                  type="file"
-                  className={s.fileInput}
-                  accept="image/*"
-                  multiple
-                  onChange={pick}
-                />
-              </label>
-              {files.length > 0 ? (
-                <div className={s.pickedList}>
-                  {files.map((f, i) => (
-                    <div className={s.pickedItem} key={`${f.name}-${i}`}>
-                      <img className={s.pickedThumb} src={URL.createObjectURL(f)} alt="" />
-                      <span style={{ flex: 1 }}>{f.name}</span>
-                      <span className={s.checkCode}>{(f.size / MB).toFixed(1)}MB</span>
-                      <button
-                        type="button"
-                        className={s.iconBtn}
-                        onClick={() => setFiles(files.filter((_, x) => x !== i))}
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ))}
-                  <span className={s.uploadSub}>{files.length}장 → 각각 배너로 등록됩니다</span>
+          <div className={s.field}>
+            <span className={s.fieldLabel}>배너 이미지</span>
+
+            {isEdit ? (
+              <>
+                <div className={s.detailImgWrap}>
+                  <img
+                    className={s.detailImg}
+                    src={replaceUrl ?? editing!.imageUrl}
+                    alt="배너 이미지"
+                  />
                 </div>
-              ) : null}
-            </div>
-          )}
+                <div className={s.modalActions}>
+                  <label className={s.iconBtn} style={{ lineHeight: '30px' }}>
+                    이미지 변경
+                    <input
+                      ref={fileRef}
+                      type="file"
+                      className={s.fileInput}
+                      accept="image/*"
+                      onChange={pick}
+                    />
+                  </label>
+                  {files.length > 0 ? (
+                    <button type="button" className={s.iconBtn} onClick={() => setFiles([])}>
+                      되돌리기
+                    </button>
+                  ) : null}
+                  <span className={s.uploadSub} style={{ alignSelf: 'center' }}>
+                    {files.length > 0
+                      ? `새 이미지: ${files[0].name} · 저장 시 교체됩니다`
+                      : '바꾸지 않으면 기존 이미지가 유지됩니다'}
+                  </span>
+                </div>
+                {files.length > 0 ? (
+                  <div className={s.warn}>
+                    이미지를 교체하면 이 배너가 걸린 <b>{editing!.kioskCount}개 키오스크에 즉시 반영</b>됩니다.
+                  </div>
+                ) : null}
+              </>
+            ) : (
+              <>
+                <label className={s.uploadArea}>
+                  + 이미지 추가
+                  <span className={s.uploadSub}>여러 장 선택 가능 · 권장 2160 × 573px · 장당 최대 20MB</span>
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    className={s.fileInput}
+                    accept="image/*"
+                    multiple
+                    onChange={pick}
+                  />
+                </label>
+                {files.length > 0 ? (
+                  <div className={s.pickedList}>
+                    {files.map((f, i) => (
+                      <div className={s.pickedItem} key={`${f.name}-${i}`}>
+                        <img className={s.pickedThumb} src={URL.createObjectURL(f)} alt="" />
+                        <span style={{ flex: 1 }}>{f.name}</span>
+                        <span className={s.checkCode}>{(f.size / MB).toFixed(1)}MB</span>
+                        <button
+                          type="button"
+                          className={s.iconBtn}
+                          onClick={() => setFiles(files.filter((_, x) => x !== i))}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                    <span className={s.uploadSub}>{files.length}장 → 각각 배너로 등록됩니다</span>
+                  </div>
+                ) : null}
+              </>
+            )}
+          </div>
 
           <div className={s.field}>
             <span className={s.fieldLabel}>노출 대상</span>
@@ -157,7 +205,7 @@ export function BannerFormModal({ kiosks, editing, submitting, onClose, onSubmit
             취소
           </button>
           <button type="button" className={s.primaryBtn} onClick={submit} disabled={submitting}>
-            {submitting ? '저장 중…' : isEdit ? '수정' : '등록'}
+            {submitting ? '저장 중…' : isEdit ? '수정 완료' : '등록'}
           </button>
         </div>
       </div>

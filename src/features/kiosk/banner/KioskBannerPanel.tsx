@@ -1,9 +1,9 @@
 // 키오스크 중심(보조 화면) — "이 키오스크에 지금 뭐가 뜨는지" 확인하고 순서를 바꾼다.
 // 등록·이미지 교체는 배너 중심 화면에서만 한다(두 곳에서 CRUD 하면 어디서 지운 건지 헷갈린다).
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 
+import ImageZoom from '@components/common/ImageZoom';
 import { useGetKiosks } from '@/hooks/useGetKiosks';
 import { useKioskBanners, kioskBannersKey } from '@/hooks/kiosk-api/useKioskBanners';
 import { useReorderKioskBanners } from '@/hooks/kiosk-api/useReorderKioskBanners';
@@ -105,7 +105,7 @@ export function KioskBannerPanel() {
           <div className={s.empty}>배너를 불러오지 못했습니다.</div>
         ) : banners.length === 0 ? (
           <div className={s.empty}>
-            이 키오스크에 노출되는 배너가 없습니다. <Link to="/admin/banners">배너 등록 관리</Link>에서 추가하세요.
+            이 키오스크에 노출되는 배너가 없습니다. <b>배너 목록</b> 탭에서 추가하세요.
           </div>
         ) : (
           <div className={s.list}>
@@ -143,7 +143,13 @@ export function KioskBannerPanel() {
                     ⠿<span className={s.order}>{i + 1}</span>
                   </span>
                   <div className={`${s.thumbWrap} ${s.wide}`}>
-                    <img className={s.thumb} src={b.imageUrl} alt={`배너 ${i + 1}`} draggable={false} />
+                    {/* 클릭하면 원본 확대 — img 는 pointer-events:none 이라 행 드래그는 그대로 */}
+                    <ImageZoom
+                      src={b.imageUrl}
+                      alt={`배너 ${i + 1}`}
+                      title={`배너 #${b.bannerId}`}
+                      className={s.thumb}
+                    />
                   </div>
                   <div className={s.meta} style={{ flex: 'none', width: 150 }}>
                     <div className={s.metaRow}>
@@ -185,8 +191,7 @@ export function KioskBannerPanel() {
         )}
 
         <div className={s.hint}>
-          · 이 화면은 <b>이 키오스크에 뜨는 배너를 확인하고 순서를 바꾸는</b> 곳입니다. 등록·이미지 교체·삭제는{' '}
-          <Link to="/admin/banners">배너 등록 관리</Link>에서 합니다.
+          · 이 화면은 <b>이 키오스크에 뜨는 배너를 확인하고 순서를 바꾸는</b> 곳입니다. 등록·이미지 교체·삭제는 <b>배너 목록</b> 탭에서 합니다.
           <br />· <b>순서는 키오스크마다 독립</b>입니다. 여기서 바꿔도 다른 키오스크 순서는 그대로입니다.
           <br />· <b>내리기</b>는 이 키오스크에서만 제외하는 것이며, 배너 자체와 다른 키오스크 노출은 유지됩니다.
           <br />· 노출 기간이 지난 배너도 목록에는 보이지만 <b>키오스크 화면에는 표시되지 않습니다</b>.

@@ -31,27 +31,30 @@ export const useCreateBanners = () => {
   return { createBannersAsync, isPending };
 };
 
-/** PUT `/admin/banners/{id}` — 노출 대상·기간만 수정(이미지 유지). */
+/**
+ * PUT `/admin/banners/{id}` — 이미지·노출 대상·기간을 한 번에 수정.
+ * image 를 넘기지 않으면 기존 이미지를 그대로 둔다(부분 저장으로 인한 중간 상태가 생기지 않도록 단일 요청).
+ */
 export const useUpdateBanner = () => {
   const { mutateAsync: updateBannerAsync, isPending } = useMutation({
-    mutationFn: async ({ bannerId, payload }: { bannerId: number; payload: BannerTargetPayload }) =>
-      await APIService.private.put(`/admin/banners/${bannerId}`, payload),
-  });
-  return { updateBannerAsync, isPending };
-};
-
-/** PUT `/admin/banners/{id}/image` — 이미지 교체(노출 중인 모든 키오스크에 반영). */
-export const useReplaceBannerImage = () => {
-  const { mutateAsync: replaceImageAsync, isPending } = useMutation({
-    mutationFn: async ({ bannerId, image }: { bannerId: number; image: File }) => {
+    mutationFn: async ({
+      bannerId,
+      payload,
+      image,
+    }: {
+      bannerId: number;
+      payload: BannerTargetPayload;
+      image?: File | null;
+    }) => {
       const fd = new FormData();
-      fd.append('image', image);
-      return await APIService.private.put(`/admin/banners/${bannerId}/image`, fd, {
+      fd.append('data', jsonPart(payload));
+      if (image) fd.append('image', image);
+      return await APIService.private.put(`/admin/banners/${bannerId}`, fd, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
     },
   });
-  return { replaceImageAsync, isPending };
+  return { updateBannerAsync, isPending };
 };
 
 /** DELETE `/admin/banners/{id}` — 소재와 모든 배정을 함께 삭제. */
