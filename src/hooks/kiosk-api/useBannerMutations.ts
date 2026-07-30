@@ -57,13 +57,18 @@ export const useUpdateBanner = () => {
   return { updateBannerAsync, isPending };
 };
 
-/** DELETE `/admin/banners/{id}` — 소재와 모든 배정을 함께 삭제. */
-export const useDeleteBanner = () => {
-  const { mutateAsync: deleteBannerAsync, isPending } = useMutation({
-    mutationFn: async (bannerId: number) =>
-      await APIService.private.delete(`/admin/banners/${bannerId}`),
+/**
+ * DELETE `/admin/banners?ids=1,2,3` — 선택한 배너를 한 번에 삭제(단건도 동일 경로).
+ * 서버가 영향받은 키오스크의 노출 순서를 키오스크당 한 번만 다시 채우므로, 건별 호출보다 안전하고 빠르다.
+ */
+export const useDeleteBanners = () => {
+  const { mutateAsync: deleteBannersAsync, isPending } = useMutation({
+    mutationFn: async (bannerIds: number[]) =>
+      await APIService.private.delete('/admin/banners', {
+        params: { ids: bannerIds.join(',') },
+      }),
   });
-  return { deleteBannerAsync, isPending };
+  return { deleteBannersAsync, isPending };
 };
 
 /** DELETE `/admin/kiosks/{kioskId}/banners/{bannerId}` — 이 키오스크에서만 내리기. */
