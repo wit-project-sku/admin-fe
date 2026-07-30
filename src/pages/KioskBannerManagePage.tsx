@@ -7,11 +7,12 @@ export default function KioskBannerManagePage() {
     <div>
       <div className={shared.pageHeader}>
         <div>
-          <h1 className={shared.pageTitle}>배너 등록 관리</h1>
-          <p className={shared.pageSubtitle}>키오스크 하단에 노출되는 프로모션 배너를 키오스크별로 등록·삭제합니다.</p>
+          <h1 className={shared.pageTitle}>키오스크별 배너 노출</h1>
+          <p className={shared.pageSubtitle}>
+            키오스크마다 지금 노출 중인 배너를 확인하고 순서를 조정합니다.
+          </p>
         </div>
       </div>
-
       <div className={shared.card}>
         <KioskBannerPanel />
       </div>
