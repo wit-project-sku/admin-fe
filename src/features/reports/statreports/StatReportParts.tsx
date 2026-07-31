@@ -7,7 +7,6 @@ import {
   CartesianGrid,
   ComposedChart,
   LabelList,
-  Legend,
   Line,
   ResponsiveContainer,
   Tooltip,
@@ -232,7 +231,8 @@ export function SplitTable({
 }: {
   head: string[];
   rows: (string | number)[][];
-  sum?: (string | number)[];
+  /** 2단으로 나뉘어 열 위치로는 의미를 알 수 없으므로 항목명을 함께 받는다. */
+  sum?: { label: string; value: string }[];
   boldFirstRow?: boolean;
 }) {
   const half = Math.ceil(rows.length / 2);
@@ -265,41 +265,65 @@ export function SplitTable({
         </table>
       ))}
       {sum ? (
-        <table className={`${s.table} ${s.tableSplitSum}`}>
-          <tbody>
-            <tr className={s.sumRow}>
-              {sum.map((cell, x) => (
-                <td key={x} className={x === 0 ? s.tdL : ''}>
-                  {cell}
-                </td>
-              ))}
-            </tr>
-          </tbody>
-        </table>
+        <div className={s.sumStrip}>
+          {sum.map((it) => (
+            <span className={s.sumItem} key={it.label}>
+              <span className={s.sumLabel}>{it.label}</span>
+              <b>{it.value}</b>
+            </span>
+          ))}
+        </div>
       ) : null}
     </div>
   );
 }
 
+/** 최대값에 맞춰 시간 축 단위를 고른다 — 초 → 분 → 시간. */
+function pickDurationUnit(maxSec: number): { unit: string; div: number } {
+  if (maxSec < 120) return { unit: '초', div: 1 };
+  if (maxSec < 7200) return { unit: '분', div: 60 };
+  return { unit: '시간', div: 3600 };
+}
+
+/** 툴팁용 사람이 읽는 표기 — 초/분/시간을 섞어 쓴다. */
+function humanDuration(sec: number): string {
+  const v = Math.max(0, Math.round(sec));
+  if (v < 60) return `${v}초`;
+  const h = Math.floor(v / 3600);
+  const m = Math.floor((v % 3600) / 60);
+  return h > 0 ? `${h}시간 ${m}분` : `${m}분`;
+}
+
 /**
- * 버튼별 사용 현황 — 클릭(막대, 좌축) + 평균 체류(선, 우축).
+ * 버튼별 사용 현황 — 클릭(막대, 좌축) + 사용 시간(선, 우축).
  *
  * <p>가로 막대(layout='vertical')는 높이가 버튼 개수에 비례해 A4 한 장을 넘겼다. 세로 막대는 개수와 무관하게
  * 높이가 고정이라 지점당 1페이지가 유지된다.
  *
- * <p>두 번째 계열을 '사용 시간'이 아니라 '평균 체류'로 둔 이유: 사용 시간 = 클릭 × 평균 체류라 클릭 막대와
- * 거의 같은 모양이 나와 정보가 중복된다. 사용 시간은 아래 표에 그대로 있다.
+ * <p>축이 둘이라 범례만으로는 어느 눈금이 무엇인지 알기 어렵다 → 범례 대신 <b>각 축 바로 위에 계열 색과 같은 색의
+ * 라벨</b>을 둔다. 시간 축 단위(초/분/시간)는 최대값에 맞춰 자동으로 고른다.
  */
 export function ButtonUsageChart({
   data,
 }: {
-  data: { label: string; clicks: number; avgSec: number }[];
+  data: { label: string; clicks: number; durationSec: number }[];
 }) {
+  const { unit, div } = pickDurationUnit(Math.max(0, ...data.map((d) => d.durationSec)));
+  const rows = data.map((d) => ({
+    label: d.label,
+    clicks: d.clicks,
+    duration: Math.round((d.durationSec / div) * 10) / 10,
+    durationSec: d.durationSec,
+  }));
   return (
     <div className={s.chartCard}>
-      <h4 className={s.chartTitle}>버튼별 클릭(회) · 평균 체류(초)</h4>
-      <ResponsiveContainer width='100%' height={300}>
-        <ComposedChart data={data} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+      <h4 className={s.chartTitle}>버튼별 클릭 · 사용 시간</h4>
+      <div className={s.axisLegend}>
+        <span className={s.axisLeft}>◼ 클릭(회)</span>
+        <span className={s.axisRight}>사용 시간({unit}) ―</span>
+      </div>
+      <ResponsiveContainer width='100%' height={292}>
+        <ComposedChart data={rows} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
           <CartesianGrid strokeDasharray='3 3' stroke='var(--border-subtle)' vertical={false} />
           <XAxis
             dataKey='label'
@@ -313,31 +337,31 @@ export function ButtonUsageChart({
           />
           <YAxis
             yAxisId='l'
-            tick={{ fontSize: 10, fill: 'var(--text-muted)' }}
+            tick={{ fontSize: 10, fill: '#2563eb' }}
             axisLine={false}
             tickLine={false}
           />
           <YAxis
             yAxisId='r'
             orientation='right'
-            tick={{ fontSize: 10, fill: 'var(--text-muted)' }}
+            tick={{ fontSize: 10, fill: '#b45309' }}
             axisLine={false}
             tickLine={false}
           />
           <Tooltip
             {...TOOLTIP_STYLE}
-            formatter={(v: number, n: string) => [
-              n === '평균 체류' ? `${v.toLocaleString()}초` : `${v.toLocaleString()}회`,
-              n,
-            ]}
+            formatter={(v: number, n: string, item: { payload?: { durationSec?: number } }) =>
+              n === '사용 시간'
+                ? [humanDuration(item?.payload?.durationSec ?? 0), n]
+                : [`${v.toLocaleString()}회`, n]
+            }
           />
-          <Legend verticalAlign='top' align='right' height={22} wrapperStyle={{ fontSize: 11 }} />
           <Bar yAxisId='l' name='클릭' dataKey='clicks' fill='#2563eb' radius={[3, 3, 0, 0]} maxBarSize={14} />
           <Line
             yAxisId='r'
-            name='평균 체류'
+            name='사용 시간'
             type='monotone'
-            dataKey='avgSec'
+            dataKey='duration'
             stroke='#f59e0b'
             strokeWidth={2}
             dot={{ r: 2 }}

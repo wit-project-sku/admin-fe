@@ -85,7 +85,7 @@ export function ButtonReportView({ variant }: { variant: 'weekly' | 'monthly' })
                   data={k.buttons.map(([name, v]) => ({
                     label: name,
                     clicks: v,
-                    avgSec: v > 0 ? (BUTTON_AVG_SEC[name] ?? 0) : 0,
+                    durationSec: v * (BUTTON_AVG_SEC[name] ?? 0),
                   }))}
                 />
                 <SplitTable
@@ -96,7 +96,11 @@ export function ButtonReportView({ variant }: { variant: 'weekly' | 'monthly' })
                     fmtDur(clicks * (BUTTON_AVG_SEC[name] ?? 0)),
                     `${clicks > 0 ? (BUTTON_AVG_SEC[name] ?? 0) : 0}초`,
                   ])}
-                  sum={['소계', `${kClicks.toLocaleString()}회`, fmtDur(kUsage), `${Math.floor(kUsage / kClicks)}초`]}
+                  sum={[
+                    { label: '총 클릭수', value: `${kClicks.toLocaleString()}회` },
+                    { label: '총 사용시간', value: fmtDur(kUsage) },
+                    { label: '평균 체류', value: `${Math.floor(kUsage / kClicks)}초` },
+                  ]}
                 />
                 </div>
                 {ki === d.perKiosk.length - 1 ? (

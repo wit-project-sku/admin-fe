@@ -738,8 +738,46 @@
   align-items: start;
 }
 
-.tableSplitSum {
+/* ── 이중 축 라벨 — 범례 대신 각 축 위에 계열 색으로 ── */
+.axisLegend {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0 2px 2px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.axisLeft {
+  color: #2563eb;
+}
+
+.axisRight {
+  color: #b45309;
+}
+
+/* ── 2단 표 소계 — 값만 있으면 어느 열인지 모른다 → 항목명 병기 ── */
+.sumStrip {
   grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 22px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #0f172a;
+  color: #ffffff;
+  font-size: 12px;
+}
+
+.sumItem {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.sumLabel {
+  color: #cbd5e1;
+  font-weight: 600;
 }
 
 /* 지점 블록 안에서만 표를 조밀하게 — 다른 리포트의 표는 그대로 둔다 */

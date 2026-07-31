@@ -731,7 +731,7 @@ export function ButtonLiveView({ variant, anchor, ym }: { variant: 'weekly' | 'm
                   <EmptyNote title='기간 내 사용 데이터가 없습니다' hint='해당 키오스크에서 버튼 클릭이 집계되면 그래프와 표가 채워집니다.' />
                 ) : (
                 <ButtonUsageChart
-                  data={rows.map((r) => ({ label: r.label, clicks: r.clicks, avgSec: Math.round(r.avg) }))}
+                  data={rows.map((r) => ({ label: r.label, clicks: r.clicks, durationSec: r.duration }))}
                 />
                 )}
                 {rows.length === 0 ? null : (
@@ -744,10 +744,12 @@ export function ButtonLiveView({ variant, anchor, ym }: { variant: 'weekly' | 'm
                       `${Math.round(row.avg)}초`,
                     ])}
                     sum={[
-                      '소계',
-                      `${v.clicks.toLocaleString()}회`,
-                      fmtDurationSec(v.duration),
-                      `${v.clicks > 0 ? Math.round(v.duration / v.clicks) : 0}초`,
+                      { label: '총 클릭수', value: `${v.clicks.toLocaleString()}회` },
+                      { label: '총 사용시간', value: fmtDurationSec(v.duration) },
+                      {
+                        label: '평균 체류',
+                        value: `${v.clicks > 0 ? Math.round(v.duration / v.clicks) : 0}초`,
+                      },
                     ]}
                   />
                 )}
