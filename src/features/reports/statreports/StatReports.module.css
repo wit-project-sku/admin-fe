@@ -797,3 +797,49 @@
 .kioskBlock .tdL {
   padding-left: 8px !important;
 }
+
+
+/* ── PDF 생성 중 화면 차단 ── */
+.exportBlocker {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: grid;
+  place-items: center;
+  background: rgba(15, 23, 42, 0.55);
+  cursor: progress;
+}
+
+.exportBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 26px 34px;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.25);
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.exportHint {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.exportSpinner {
+  width: 26px;
+  height: 26px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: exportSpin 0.8s linear infinite;
+}
+
+@keyframes exportSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}

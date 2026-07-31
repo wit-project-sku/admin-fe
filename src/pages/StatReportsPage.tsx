@@ -7,6 +7,12 @@ import s from '../features/reports/statreports/StatReports.module.css';
 import { exportReportDoc, exportReportPdf } from '../features/reports/statreports/reportExport';
 import { StatReportsTabPanel } from '../features/reports/statreports/StatReportsTabPanel';
 
+/**
+ * DOCX 내보내기 노출 여부. 현재 DOM→docx 변환 결과가 화면과 차이가 커서 숨긴다(클라이언트 요청).
+ * 정식 발행(서버 템플릿)이 준비되면 다시 켜거나 이 경로를 대체한다. 코드는 그대로 둔다.
+ */
+const SHOW_DOCX_EXPORT = false;
+
 export default function StatReportsPage() {
   const [isExporting, setIsExporting] = useState(false);
 
@@ -44,20 +50,33 @@ export default function StatReportsPage() {
           <p className={shared.pageSubtitle}>Weekly · Monthly Report</p>
         </div>
         <div className={s.pageActions}>
-          <button type='button' className={s.btnPrimary} onClick={handleDoc} disabled={isExporting}>
-            <svg width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
-              <path d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4' />
-              <polyline points='7 10 12 15 17 10' />
-              <line x1='12' y1='15' x2='12' y2='3' />
-            </svg>
-            {isExporting ? '생성 중…' : 'DOCX 다운로드 (편집용)'}
-          </button>
-          <button type='button' className={s.btnGhost} onClick={handlePdf} disabled={isExporting}>
+          {SHOW_DOCX_EXPORT ? (
+            <button type='button' className={s.btnPrimary} onClick={handleDoc} disabled={isExporting}>
+              <svg width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
+                <path d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4' />
+                <polyline points='7 10 12 15 17 10' />
+                <line x1='12' y1='15' x2='12' y2='3' />
+              </svg>
+              {isExporting ? '생성 중…' : 'DOCX 다운로드 (편집용)'}
+            </button>
+          ) : null}
+          <button type='button' className={s.btnPrimary} onClick={handlePdf} disabled={isExporting}>
             {isExporting ? '생성 중…' : 'PDF 다운로드'}
           </button>
         </div>
       </div>
       <StatReportsTabPanel />
+
+      {/* 생성 중에는 화면 전체를 덮어 클릭·스크롤을 막는다 — 캡처 도중 DOM 이 바뀌면 결과물이 깨진다. */}
+      {isExporting ? (
+        <div className={s.exportBlocker} role='alert' aria-busy='true'>
+          <div className={s.exportBox}>
+            <span className={s.exportSpinner} aria-hidden='true' />
+            <b>PDF 생성 중…</b>
+            <span className={s.exportHint}>페이지 수에 따라 수십 초가 걸릴 수 있습니다. 창을 닫지 마세요.</span>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

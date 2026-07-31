@@ -8,7 +8,22 @@ import { Section } from './StatReportParts';
 import { EmptyNote } from './LiveReportViews';
 import { fmtMD } from './statReportsMockData';
 
-type NewOutfit = { id: string; name: string; cat?: string; imageUrl?: string; createdYmd: string };
+type OutfitKind = 'NORMAL' | 'PREMIUM' | 'SCHOOL_UNIFORM';
+type NewOutfit = {
+  id: string;
+  name: string;
+  cat?: string;
+  kind?: OutfitKind;
+  imageUrl?: string;
+  createdYmd: string;
+};
+
+/** 유형은 서버에서 필터하지 않는다(일반·프리미엄·교복 전부). 어떤 유형이 들어왔는지 카드에서 바로 보이게 한다. */
+const KIND_LABEL: Record<OutfitKind, string> = {
+  NORMAL: '일반',
+  PREMIUM: '프리미엄',
+  SCHOOL_UNIFORM: '교복',
+};
 
 function readOutfits(raw: unknown): { rows: NewOutfit[]; hasDateField: boolean } {
   const root = (raw ?? {}) as Record<string, unknown>;
@@ -23,6 +38,10 @@ function readOutfits(raw: unknown): { rows: NewOutfit[]; hasDateField: boolean }
       id: String(o.id ?? o.outfitCode ?? i),
       name: String(o.name ?? o.displayName ?? o.outfitCode ?? '-'),
       cat: o.categoryName != null ? String(o.categoryName) : catObj?.name != null ? String(catObj.name) : undefined,
+      kind:
+        o.type === 'PREMIUM' || o.type === 'SCHOOL_UNIFORM' || o.type === 'NORMAL'
+          ? (o.type as OutfitKind)
+          : undefined,
       imageUrl: typeof o.imageUrl === 'string' ? o.imageUrl : typeof o.image_url === 'string' ? o.image_url : undefined,
       createdYmd: created != null ? String(created).slice(0, 10) : '',
     };
@@ -44,8 +63,9 @@ export function useNewOutfits(start: string, end: string) {
 
 /** 표본 모드용 고정 데이터 */
 export const SAMPLE_NEW_OUTFITS: NewOutfit[] = [
-  { id: 'n1', name: '연노랑 두루마기', cat: '남성 한복', createdYmd: '2026-07-15' },
-  { id: 'n2', name: '청록 당의', cat: '궁중 의상', createdYmd: '2026-07-17' },
+  { id: 'n1', name: '연노랑 두루마기', cat: '남성 한복', kind: 'NORMAL', createdYmd: '2026-07-15' },
+  { id: 'n2', name: '청록 당의', cat: '궁중 의상', kind: 'PREMIUM', createdYmd: '2026-07-17' },
+  { id: 'n3', name: '한성여고 하복', cat: '한성여자고등학교', kind: 'SCHOOL_UNIFORM', createdYmd: '2026-07-18' },
 ];
 
 export function NewOutfitCards({ list }: { list: NewOutfit[] }) {

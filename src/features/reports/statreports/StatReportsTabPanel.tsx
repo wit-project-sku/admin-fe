@@ -7,7 +7,7 @@ import s from './StatReports.module.css';
 import { ButtonReportView } from './ButtonReportView';
 import { ButtonLiveView, ShootingMonthlyLiveView, ShootingWeeklyLiveView } from './LiveReportViews';
 import { ShootingMonthlyView, ShootingWeeklyView } from './ShootingReportView';
-import { weekRangesOf } from './useStatReportLive';
+import { monthRangesOf, weekRangesOf } from './useStatReportLive';
 
 type ReportKind = 'shoot-weekly' | 'shoot-monthly' | 'button-weekly' | 'button-monthly';
 
@@ -28,12 +28,18 @@ function thisMonthYm(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
 
+/** 기본 대상 기간 = 지난 완결 주/달(집계 시작일 기준). 모듈 로드 시 한 번만 계산한다. */
+const DEFAULT_ANCHOR = weekRangesOf().start;
+const DEFAULT_YM = monthRangesOf().start.slice(0, 7);
+
 export function StatReportsTabPanel() {
   const [kind, setKind] = useState<ReportKind>('shoot-weekly');
   const [mode, setMode] = useState<'live' | 'sample'>('live');
-  // 기간 선택 — 주간(anchor 날짜)·월간(YYYY-MM). 빈 값이면 지난 완결 주/달.
-  const [anchor, setAnchor] = useState<string>('');
-  const [ym, setYm] = useState<string>('');
+  // 기간 선택 — 주간(anchor 날짜)·월간(YYYY-MM).
+  // 기본값을 비워 두면 입력칸이 mm/dd/yyyy 로 보여 어느 기간을 보고 있는지 알 수 없다
+  // → 실제로 집계되는 기간(지난 완결 주/달)의 시작일을 그대로 채워 둔다.
+  const [anchor, setAnchor] = useState<string>(() => DEFAULT_ANCHOR);
+  const [ym, setYm] = useState<string>(() => DEFAULT_YM);
 
   const isWeekly = kind === 'shoot-weekly' || kind === 'button-weekly';
   const wk = weekRangesOf(anchor); // 선택 주 라벨 표시용
@@ -95,8 +101,8 @@ export function StatReportsTabPanel() {
           <button
             type='button'
             className={s.periodReset}
-            onClick={() => { setAnchor(''); setYm(''); }}
-            disabled={isWeekly ? !anchor : !ym}
+            onClick={() => { setAnchor(DEFAULT_ANCHOR); setYm(DEFAULT_YM); }}
+            disabled={isWeekly ? anchor === DEFAULT_ANCHOR : ym === DEFAULT_YM}
           >
             지난 {isWeekly ? '주' : '달'}로
           </button>
