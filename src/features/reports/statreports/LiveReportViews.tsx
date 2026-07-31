@@ -700,7 +700,6 @@ export function ButtonLiveView({
   return (
     <div className={s.report} data-report-root data-report-title={`${variant === 'weekly' ? '주간' : '월간'} 버튼 사용 통계 리포트`}>
       {effKiosk === 'ALL' ? (
-      <>
       <div data-report-page>
       <div className={s.head}>
         <div className={s.headRow}>
@@ -744,16 +743,13 @@ export function ButtonLiveView({
         />
       </Section>
 
-      </div>
-
-      {/* AI 분석은 지점당 1줄씩 늘어난다 — 요약 페이지에 같이 두면 지점이 늘 때마다 첫 장이 넘친다.
-          지점 수와 무관하게 첫 장을 고정하려고 별도 페이지로 뺀다(넘치면 다음 장으로 이어짐). */}
-      <div data-report-page>
+      {/* 지점이 늘면 AI 지점 코멘트가 지점당 1줄씩 쌓여 첫 장을 밀어낸다.
+          넘치면 축소가 아니라 다음 장으로 이어지므로 우선은 그래프와 같은 장에 둔다. */}
       <Section title='AI 종합 분석' sub='실데이터 자동 작성 · 수정 가능'>
         <EditableAiCard tag={variant === 'weekly' ? 'AI WEEKLY INSIGHT' : 'AI MONTHLY INSIGHT'} overall={ai.overall} sites={ai.sites} note={AI_NOTE} />
       </Section>
+
       </div>
-      </>
       ) : null}
 
       {shown.map(([k, v], ki) => {
