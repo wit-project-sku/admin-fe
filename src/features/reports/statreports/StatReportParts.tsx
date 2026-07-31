@@ -303,12 +303,17 @@ function humanDuration(sec: number): string {
  * <p>축이 둘이라 범례만으로는 어느 눈금이 무엇인지 알기 어렵다 → 범례 대신 <b>각 축 바로 위에 계열 색과 같은 색의
  * 라벨</b>을 둔다. 시간 축 단위(초/분/시간)는 최대값에 맞춰 자동으로 고른다.
  */
+export type UsageMetric = 'ALL' | 'CLICKS' | 'DURATION';
+
 export function ButtonUsageChart({
   data,
   title = '버튼별 클릭 · 사용 시간',
+  metric = 'ALL',
 }: {
   data: { label: string; clicks: number; durationSec: number }[];
   title?: string;
+  /** 표시할 계열 — 전체(막대+선) / 클릭만 / 사용 시간만. */
+  metric?: UsageMetric;
 }) {
   const { unit, div } = pickDurationUnit(Math.max(0, ...data.map((d) => d.durationSec)));
   const rows = data.map((d) => ({
@@ -317,12 +322,22 @@ export function ButtonUsageChart({
     duration: Math.round((d.durationSec / div) * 10) / 10,
     durationSec: d.durationSec,
   }));
+  const showClicks = metric !== 'DURATION';
+  const showDuration = metric !== 'CLICKS';
+  // 한 계열만 볼 때는 선 대신 막대로 그린다(순위 비교가 목적이라 막대가 읽기 쉽다).
+  const durationAsBar = metric === 'DURATION';
   return (
     <div className={s.chartCard}>
       <h4 className={s.chartTitle}>{title}</h4>
       <div className={s.axisLegend}>
-        <span className={s.axisLeft}>◼ 클릭(회)</span>
-        <span className={s.axisRight}>사용 시간({unit}) ―</span>
+        {showClicks ? <span className={s.axisLeft}>◼ 클릭(회)</span> : <span />}
+        {showDuration ? (
+          <span className={s.axisRight}>
+            {durationAsBar ? '◼ ' : ''}사용 시간({unit}){durationAsBar ? '' : ' ―'}
+          </span>
+        ) : (
+          <span />
+        )}
       </div>
       <ResponsiveContainer width='100%' height={292}>
         <ComposedChart data={rows} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
@@ -337,19 +352,23 @@ export function ButtonUsageChart({
             axisLine={false}
             tickLine={false}
           />
-          <YAxis
-            yAxisId='l'
-            tick={{ fontSize: 10, fill: '#2563eb' }}
-            axisLine={false}
-            tickLine={false}
-          />
-          <YAxis
-            yAxisId='r'
-            orientation='right'
-            tick={{ fontSize: 10, fill: '#b45309' }}
-            axisLine={false}
-            tickLine={false}
-          />
+          {showClicks ? (
+            <YAxis
+              yAxisId='l'
+              tick={{ fontSize: 10, fill: '#2563eb' }}
+              axisLine={false}
+              tickLine={false}
+            />
+          ) : null}
+          {showDuration ? (
+            <YAxis
+              yAxisId='r'
+              orientation={durationAsBar ? 'left' : 'right'}
+              tick={{ fontSize: 10, fill: '#b45309' }}
+              axisLine={false}
+              tickLine={false}
+            />
+          ) : null}
           <Tooltip
             {...TOOLTIP_STYLE}
             formatter={(v: number, n: string, item: { payload?: { durationSec?: number } }) =>
@@ -358,16 +377,40 @@ export function ButtonUsageChart({
                 : [`${v.toLocaleString()}회`, n]
             }
           />
-          <Bar yAxisId='l' name='클릭' dataKey='clicks' fill='#2563eb' radius={[3, 3, 0, 0]} maxBarSize={14} />
-          <Line
-            yAxisId='r'
-            name='사용 시간'
-            type='monotone'
-            dataKey='duration'
-            stroke='#f59e0b'
-            strokeWidth={2}
-            dot={{ r: 2 }}
-          />
+          {showClicks ? (
+            <Bar
+              yAxisId='l'
+              name='클릭'
+              dataKey='clicks'
+              fill='#2563eb'
+              radius={[3, 3, 0, 0]}
+              maxBarSize={14}
+              isAnimationActive={false}
+            />
+          ) : null}
+          {showDuration && durationAsBar ? (
+            <Bar
+              yAxisId='r'
+              name='사용 시간'
+              dataKey='duration'
+              fill='#f59e0b'
+              radius={[3, 3, 0, 0]}
+              maxBarSize={14}
+              isAnimationActive={false}
+            />
+          ) : null}
+          {showDuration && !durationAsBar ? (
+            <Line
+              yAxisId='r'
+              name='사용 시간'
+              type='monotone'
+              dataKey='duration'
+              stroke='#f59e0b'
+              strokeWidth={2}
+              dot={{ r: 2 }}
+              isAnimationActive={false}
+            />
+          ) : null}
         </ComposedChart>
       </ResponsiveContainer>
     </div>

@@ -32,7 +32,7 @@ function thisMonthYm(): string {
 const DEFAULT_ANCHOR = weekRangesOf().start;
 const DEFAULT_YM = monthRangesOf().start.slice(0, 7);
 
-export function StatReportsTabPanel() {
+export function StatReportsTabPanel({ exportMode = false }: { exportMode?: boolean }) {
   const [kind, setKind] = useState<ReportKind>('shoot-weekly');
   const [mode, setMode] = useState<'live' | 'sample'>('live');
   // 기간 선택 — 주간(anchor 날짜)·월간(YYYY-MM).
@@ -113,8 +113,8 @@ export function StatReportsTabPanel() {
         {mode === 'live' ? (
           kind === 'shoot-weekly' ? <ShootingWeeklyLiveView anchor={anchor || undefined} />
           : kind === 'shoot-monthly' ? <ShootingMonthlyLiveView ym={ym || undefined} />
-          : kind === 'button-weekly' ? <ButtonLiveView variant='weekly' anchor={anchor || undefined} />
-          : <ButtonLiveView variant='monthly' ym={ym || undefined} />
+          : kind === 'button-weekly' ? <ButtonLiveView variant='weekly' anchor={anchor || undefined} exportMode={exportMode} />
+          : <ButtonLiveView variant='monthly' ym={ym || undefined} exportMode={exportMode} />
         ) : (
           kind === 'shoot-weekly' ? <ShootingWeeklyView />
           : kind === 'shoot-monthly' ? <ShootingMonthlyView />

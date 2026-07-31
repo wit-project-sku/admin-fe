@@ -1,8 +1,9 @@
 // 실데이터 리포트 뷰 — useStatReportLive 훅으로 서버 집계를 조합해 렌더.
 // P2 서버 API 연동 완료: 시간대·오전/오후·요일·카테고리별 1위·의상 매트릭스·월별 통계.
 // AI 종합 분석은 실데이터 규칙 기반 자동 작성(aiAnalysis.ts, 무과금) — 외부 API 교체 여지 유지.
+import { useState } from 'react';
 import s from './StatReports.module.css';
-import { ButtonUsageChart, CompareBarChart, Diff, EditableAiCard, KpiRow, Section, SplitTable } from './StatReportParts';
+import { ButtonUsageChart, CompareBarChart, Diff, EditableAiCard, KpiRow, Section, SplitTable, type UsageMetric } from './StatReportParts';
 import { buildButtonAi, buildShootingAi } from './aiAnalysis';
 import { chunkKioskCols } from './ShootingReportView';
 import { fmtMD, type KpiItem } from './statReportsMockData';
@@ -577,11 +578,27 @@ export function ShootingMonthlyLiveView({ ym }: { ym?: string }) {
 }
 
 /* ── 버튼 리포트 (주간/월간) ── */
-export function ButtonLiveView({ variant, anchor, ym }: { variant: 'weekly' | 'monthly'; anchor?: string; ym?: string }) {
+export function ButtonLiveView({
+  variant,
+  anchor,
+  ym,
+  exportMode = false,
+}: {
+  variant: 'weekly' | 'monthly';
+  anchor?: string;
+  ym?: string;
+  /** PDF 생성 중 — 화면 필터를 무시하고 항상 전체 리포트를 렌더한다. */
+  exportMode?: boolean;
+}) {
   const r = variant === 'weekly' ? weekRangesOf(anchor) : monthRangesOf(ym);
   const prevLabel = variant === 'weekly' ? '전주' : '전월';
   const { cur, prev, cum } = useButtonsLive(r.start, r.end, r.prevStart, r.prevEnd, true);
   const catalog = useReportKioskButtons(true); // 홈 버튼 전체(클릭 0 포함)
+  // 화면 조회용 필터 — 문서(PDF)에는 반영하지 않는다(클라이언트 확정).
+  const [kioskSel, setKioskSel] = useState<'ALL' | number>('ALL');
+  const [metric, setMetric] = useState<UsageMetric>('ALL');
+  const effKiosk = exportMode ? 'ALL' : kioskSel;
+  const effMetric: UsageMetric = exportMode ? 'ALL' : metric;
 
   if (cur.isPending) return <LoadingCard text='실데이터를 불러오는 중…' />;
   if (cur.isError) return <LoadingCard text='버튼 통계를 불러오지 못했습니다.' />;
@@ -654,8 +671,33 @@ export function ButtonLiveView({ variant, anchor, ym }: { variant: 'weekly' | 'm
     })),
   });
 
+  // 선택 지점만 추림. 전체면 그대로. (PDF 는 exportMode 로 항상 전체)
+  const shown = effKiosk === 'ALL' ? kiosks : kiosks.filter(([k]) => kioskOrder.get(k) === effKiosk);
+
   return (
+    <>
+      {/* 리포트 루트 밖 → PDF 캡처 대상이 아니다. 화면 조회 전용 필터. */}
+      <div className={s.filterBar}>
+        <span className={s.filterLabel}>지점</span>
+        <select
+          className={s.filterSelect}
+          value={effKiosk === 'ALL' ? 'ALL' : String(effKiosk)}
+          onChange={(e) => setKioskSel(e.target.value === 'ALL' ? 'ALL' : Number(e.target.value))}
+        >
+          <option value='ALL'>전체 (전체 통계 리포트)</option>
+          {kiosks.map(([k]) => (
+            <option key={k} value={String(kioskOrder.get(k) ?? 0)}>
+              {k}
+            </option>
+          ))}
+        </select>
+        <span className={s.filterHint}>
+          지점을 고르면 해당 지점 상세만 봅니다. <b>PDF 다운로드는 항상 전체 리포트</b>입니다.
+        </span>
+      </div>
+
     <div className={s.report} data-report-root data-report-title={`${variant === 'weekly' ? '주간' : '월간'} 버튼 사용 통계 리포트`}>
+      {effKiosk === 'ALL' ? (
       <div data-report-page>
       <div className={s.head}>
         <div className={s.headRow}>
@@ -679,8 +721,22 @@ export function ButtonLiveView({ variant, anchor, ym }: { variant: 'weekly' | 'm
         title='키오스크별 사용 집계'
         sub={`클릭 합계 ${block.totalClicks.toLocaleString()}회 · 사용 시간 합계 ${fmtDurationSec(block.totalDuration)}`}
       >
+        {/* 화면 조회 전용 — PDF 에는 항상 전체 계열이 들어간다. */}
+        <div className={s.chartFilter} data-export-ignore>
+          <span className={s.filterLabel}>표시 데이터</span>
+          <select
+            className={s.filterSelect}
+            value={effMetric}
+            onChange={(e) => setMetric(e.target.value as UsageMetric)}
+          >
+            <option value='ALL'>전체</option>
+            <option value='CLICKS'>클릭수</option>
+            <option value='DURATION'>사용시간</option>
+          </select>
+        </div>
         <ButtonUsageChart
           title='키오스크별 클릭 · 사용 시간'
+          metric={effMetric}
           data={kiosks.map(([k, v]) => ({ label: k, clicks: v.clicks, durationSec: v.duration }))}
         />
       </Section>
@@ -690,8 +746,9 @@ export function ButtonLiveView({ variant, anchor, ym }: { variant: 'weekly' | 'm
       </Section>
 
       </div>
+      ) : null}
 
-      {kiosks.map(([k, v], ki) => {
+      {shown.map(([k, v], ki) => {
             const pb = diffBadge(v.clicks, prevByKiosk.get(k) ?? 0, '회', '');
             // 클릭된 버튼 + 홈 버튼 카탈로그(클릭 0 포함) 병합 — 미사용 버튼도 빈 막대/0행으로 표시
             const seen = new Set<string>();
@@ -747,7 +804,7 @@ export function ButtonLiveView({ variant, anchor, ym }: { variant: 'weekly' | 'm
                   />
                 )}
                 </div>
-                {ki === kiosks.length - 1 ? (
+                {ki === shown.length - 1 ? (
                   <>
                     <p className={s.note}>※ 클릭 = 홈 화면 버튼 터치 1회 · 사용 시간 = 버튼 진입 후 다른 메뉴 이동/홈 복귀까지 체류 시간 합계 · 평균 체류 = 사용 시간 ÷ 클릭 수 (관리자 웹 '키오스크 분석'과 동일 지표).</p>
                     <p className={s.footer}>집계 기준: 홈 버튼 클릭 이벤트 · 실데이터(서버 집계)</p>
@@ -758,5 +815,6 @@ export function ButtonLiveView({ variant, anchor, ym }: { variant: 'weekly' | 'm
           })}
 
     </div>
+    </>
   );
 }

@@ -13,18 +13,31 @@ import { StatReportsTabPanel } from '../features/reports/statreports/StatReports
  */
 const SHOW_DOCX_EXPORT = false;
 
+/** 렌더가 화면에 반영될 때까지 기다린다 — 전체 리포트로 바꾼 직후 캡처하면 이전 DOM 이 찍힌다. */
+function afterRender(): Promise<void> {
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(() => window.setTimeout(resolve, 250)));
+  });
+}
+
 export default function StatReportsPage() {
   const [isExporting, setIsExporting] = useState(false);
+  // 화면에서 지점·계열을 걸러 보고 있어도 문서는 항상 전체 리포트여야 한다(클라이언트 확정).
+  // 내보내기 동안만 전체로 렌더하고 끝나면 원래 보던 상태로 돌아간다.
+  const [exportMode, setExportMode] = useState(false);
 
   const handleDoc = async () => {
     if (isExporting) return;
     setIsExporting(true);
+    setExportMode(true);
     try {
+      await afterRender();
       const ok = await exportReportDoc();
       if (!ok) alert('리포트가 아직 로드되지 않았습니다. 잠시 후 다시 시도해주세요.');
     } catch {
       alert('DOCX 생성에 실패했습니다. 잠시 후 다시 시도해주세요.');
     } finally {
+      setExportMode(false);
       setIsExporting(false);
     }
   };
@@ -32,12 +45,15 @@ export default function StatReportsPage() {
   const handlePdf = async () => {
     if (isExporting) return;
     setIsExporting(true);
+    setExportMode(true);
     try {
+      await afterRender();
       const ok = await exportReportPdf();
       if (!ok) alert('리포트가 아직 로드되지 않았습니다. 잠시 후 다시 시도해주세요.');
     } catch {
       alert('PDF 생성에 실패했습니다. 잠시 후 다시 시도해주세요.');
     } finally {
+      setExportMode(false);
       setIsExporting(false);
     }
   };
@@ -65,7 +81,7 @@ export default function StatReportsPage() {
           </button>
         </div>
       </div>
-      <StatReportsTabPanel />
+      <StatReportsTabPanel exportMode={exportMode} />
 
       {/* 생성 중에는 화면 전체를 덮어 클릭·스크롤을 막는다 — 캡처 도중 DOM 이 바뀌면 결과물이 깨진다. */}
       {isExporting ? (
