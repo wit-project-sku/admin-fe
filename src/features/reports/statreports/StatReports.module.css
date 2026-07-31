@@ -882,3 +882,11 @@
   font-size: 11.5px;
   color: var(--text-muted, #64748b);
 }
+
+
+/* 신규 등록 의상 카드 — 순위 배지가 없는 카드(data-no-rank)만 이미지 박스를 낮춘다.
+   3/4 는 세로로 길어 카드가 늘어져 보였다. object-fit:contain 이라 이미지 비율은 그대로 유지된다.
+   인기 의상 TOP 10 은 기존 3/4 를 유지. */
+.gcard[data-no-rank] .gcardImg {
+  aspect-ratio: 1 / 1;
+}
