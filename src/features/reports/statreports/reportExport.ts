@@ -19,7 +19,50 @@ function todayStamp(): string {
   return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
 }
 
-/* ═══════════ PDF — 그룹별 캡처, A4 1그룹 1페이지 ═══════════ */
+/* ═══════════ PDF — 그룹별 캡처, 모든 페이지 동일 배율 ═══════════ */
+
+/**
+ * 캔버스에서 자를 위치를 찾는다. hi 에서 lo 쪽으로 올라가며 '가로 한 줄이 거의 흰색'인 지점을 고른다
+ * — 표의 행이나 막대 중간이 잘리는 것을 피하기 위함. 못 찾으면 hi(꽉 채우기)를 그대로 쓴다.
+ */
+function findBreakY(canvas: HTMLCanvasElement, lo: number, hi: number): number {
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  if (!ctx || hi <= lo) return hi;
+  try {
+    const band = ctx.getImageData(0, lo, canvas.width, hi - lo).data;
+    const w = canvas.width;
+    for (let y = hi - lo - 1; y >= 0; y--) {
+      let dirty = 0;
+      // 가로로 4px 씩 건너뛰며 검사(정확도보다 속도 — 경계 후보만 찾으면 된다)
+      for (let x = 0; x < w; x += 4) {
+        const i = (y * w + x) * 4;
+        if (band[i] < 247 || band[i + 1] < 247 || band[i + 2] < 247) {
+          dirty++;
+          if (dirty > 2) break;
+        }
+      }
+      if (dirty <= 2) return lo + y;
+    }
+  } catch {
+    // 외부 이미지로 캔버스가 오염되면 getImageData 가 막힌다 — 그냥 꽉 채워 자른다.
+  }
+  return hi;
+}
+
+/** 캔버스의 [y, y+h) 구간만 잘라 JPEG data URL 로. */
+function sliceToJpeg(src: HTMLCanvasElement, y: number, h: number): string {
+  const c = document.createElement('canvas');
+  c.width = src.width;
+  c.height = h;
+  const ctx = c.getContext('2d');
+  if (ctx) {
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, c.width, c.height);
+    ctx.drawImage(src, 0, y, src.width, h, 0, 0, src.width, h);
+  }
+  // PNG + 알파(smask)는 용량이 10배 가까이 커진다. 배경이 흰색으로 고정이라 JPEG 로 충분.
+  return c.toDataURL('image/jpeg', 0.92);
+}
 
 export async function exportReportPdf(): Promise<boolean> {
   const root = findReportNode();
@@ -34,8 +77,11 @@ export async function exportReportPdf(): Promise<boolean> {
   const CONTENT_W = 210 - MARGIN * 2;
   const CONTENT_H = 297 - MARGIN * 2;
 
-  // 1패스: 캡처 — 페이지별 비율 수집
-  const captured: { dataUrl: string; ratio: number }[] = [];
+  // 모든 페이지를 같은 배율(항상 A4 콘텐츠 폭에 꽉)로 배치한다.
+  // 세로가 넘치면 '축소'가 아니라 '다음 장으로 이어서' 자른다 — 페이지마다 크기가 달라지지 않도록.
+  const MAX_RATIO = CONTENT_H / CONTENT_W; // 캡처 1장이 A4 한 장에 들어갈 수 있는 최대 세로/가로 비
+  let first = true;
+
   for (const p of pages) {
     // 뷰포트가 좁거나 숨겨진 환경에서도 폭이 0으로 잡히지 않도록 명시
     const capW = p.offsetWidth || root.offsetWidth || 780;
@@ -49,21 +95,25 @@ export async function exportReportPdf(): Promise<boolean> {
       ignoreElements: (el) => el instanceof HTMLElement && el.dataset.exportIgnore != null,
     });
     if (canvas.width === 0 || canvas.height === 0) throw new Error('캡처 크기가 0입니다(창이 표시된 상태에서 다시 시도)');
-    captured.push({ dataUrl: canvas.toDataURL('image/png'), ratio: canvas.height / canvas.width });
-  }
-  // 2패스: 페이지별 독립 맞춤 — 기본은 A4 콘텐츠 폭 꽉(좌우 여백 = MARGIN 통일),
-  // 세로가 A4를 넘는 긴 페이지만 그 페이지 한정으로 세로 기준 축소(전체가 함께 작아지지 않게).
-  captured.forEach((c, i) => {
-    if (i > 0) doc.addPage();
-    let wMm = CONTENT_W;
-    let hMm = wMm * c.ratio;
-    if (hMm > CONTENT_H) {
-      hMm = CONTENT_H;
-      wMm = hMm / c.ratio;
+
+    const pageMaxPx = Math.floor(canvas.width * MAX_RATIO); // A4 한 장에 담기는 캡처 높이(px)
+    let y = 0;
+    while (y < canvas.height) {
+      const remain = canvas.height - y;
+      // 남은 분량이 한 장에 들어가면 그대로, 아니면 여백 지점을 찾아 자른다.
+      const h =
+        remain <= pageMaxPx
+          ? remain
+          : Math.max(
+              Math.floor(pageMaxPx * 0.5), // 너무 조금만 담기는 장이 생기지 않게 하한
+              findBreakY(canvas, y + Math.floor(pageMaxPx * 0.75), y + pageMaxPx) - y,
+            );
+      if (!first) doc.addPage();
+      first = false;
+      doc.addImage(sliceToJpeg(canvas, y, h), 'JPEG', MARGIN, MARGIN, CONTENT_W, (h / canvas.width) * CONTENT_W);
+      y += h;
     }
-    const x = MARGIN + (CONTENT_W - wMm) / 2;
-    doc.addImage(c.dataUrl, 'PNG', x, MARGIN, wMm, hMm);
-  });
+  }
 
   doc.save(`${title}_${todayStamp()}.pdf`);
   return true;

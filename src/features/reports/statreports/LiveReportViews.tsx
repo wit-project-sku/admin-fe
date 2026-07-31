@@ -2,7 +2,7 @@
 // P2 서버 API 연동 완료: 시간대·오전/오후·요일·카테고리별 1위·의상 매트릭스·월별 통계.
 // AI 종합 분석은 실데이터 규칙 기반 자동 작성(aiAnalysis.ts, 무과금) — 외부 API 교체 여지 유지.
 import s from './StatReports.module.css';
-import { CompareBarChart, Diff, EditableAiCard, HBarChart, KpiRow, Section } from './StatReportParts';
+import { ButtonUsageChart, CompareBarChart, Diff, EditableAiCard, KpiRow, Section, SplitTable } from './StatReportParts';
 import { buildButtonAi, buildShootingAi } from './aiAnalysis';
 import { chunkKioskCols } from './ShootingReportView';
 import { fmtMD, type KpiItem } from './statReportsMockData';
@@ -730,33 +730,26 @@ export function ButtonLiveView({ variant, anchor, ym }: { variant: 'weekly' | 'm
                 {rows.length === 0 ? (
                   <EmptyNote title='기간 내 사용 데이터가 없습니다' hint='해당 키오스크에서 버튼 클릭이 집계되면 그래프와 표가 채워집니다.' />
                 ) : (
-                <div className={s.row2}>
-                  <HBarChart title='버튼별 클릭(회)' data={rows.map((r) => ({ label: r.label, value: r.clicks }))} unit='회' />
-                  <HBarChart title='버튼별 사용 시간(분)' data={rows.map((r) => ({ label: r.label, value: Math.round(r.duration / 60) }))} unit='분' color='#f59e0b' />
-                </div>
+                <ButtonUsageChart
+                  data={rows.map((r) => ({ label: r.label, clicks: r.clicks, avgSec: Math.round(r.avg) }))}
+                />
                 )}
                 {rows.length === 0 ? null : (
-                <table className={s.table} style={{ marginTop: 10 }}>
-                  <thead>
-                    <tr><th>아이콘</th><th>클릭</th><th>사용 시간</th><th>평균 체류</th></tr>
-                  </thead>
-                  <tbody>
-                    {rows.map((row, i) => (
-                      <tr key={`${kid}-${row.key}`}>
-                        <td className={`${s.tdL} ${i === 0 ? s.tdB : ''}`}>{row.label}</td>
-                        <td className={i === 0 ? s.tdB : ''}>{row.clicks.toLocaleString()}회</td>
-                        <td>{fmtDurationSec(row.duration)}</td>
-                        <td>{Math.round(row.avg)}초</td>
-                      </tr>
-                    ))}
-                    <tr className={s.sumRow}>
-                      <td className={s.tdL}>소계</td>
-                      <td>{v.clicks.toLocaleString()}회</td>
-                      <td>{fmtDurationSec(v.duration)}</td>
-                      <td>{v.clicks > 0 ? Math.round(v.duration / v.clicks) : 0}초</td>
-                    </tr>
-                  </tbody>
-                </table>
+                  <SplitTable
+                    head={['아이콘', '클릭', '사용 시간', '평균 체류']}
+                    rows={rows.map((row) => [
+                      row.label,
+                      `${row.clicks.toLocaleString()}회`,
+                      fmtDurationSec(row.duration),
+                      `${Math.round(row.avg)}초`,
+                    ])}
+                    sum={[
+                      '소계',
+                      `${v.clicks.toLocaleString()}회`,
+                      fmtDurationSec(v.duration),
+                      `${v.clicks > 0 ? Math.round(v.duration / v.clicks) : 0}초`,
+                    ]}
+                  />
                 )}
                 </div>
                 {ki === kiosks.length - 1 ? (

@@ -7,6 +7,7 @@ import {
   CartesianGrid,
   ComposedChart,
   LabelList,
+  Legend,
   Line,
   ResponsiveContainer,
   Tooltip,
@@ -219,31 +220,129 @@ export function EditableAiCard({
 }
 
 /** 가로 바차트 — 버튼별 클릭/사용 시간 등 항목 수가 늘어도 행만 늘어난다(관리자 웹 방식) */
-export function HBarChart({
-  title,
-  data,
-  color = '#2563eb',
-  unit = '',
+/**
+ * 행이 많은 표를 좌우 2단으로 쪼개 세로 길이를 절반으로 만든다(A4 한 장 유지용).
+ * 마지막 소계 행은 2단 아래 전체 폭으로 한 번만 놓는다.
+ */
+export function SplitTable({
+  head,
+  rows,
+  sum,
+  boldFirstRow = true,
 }: {
-  title: string;
-  data: { label: string; value: number }[];
-  color?: string;
-  unit?: string;
+  head: string[];
+  rows: (string | number)[][];
+  sum?: (string | number)[];
+  boldFirstRow?: boolean;
 }) {
-  const height = Math.max(120, data.length * 30 + 40);
+  const half = Math.ceil(rows.length / 2);
+  const cols = [rows.slice(0, half), rows.slice(half)].filter((c) => c.length > 0);
+  return (
+    <div className={s.tableSplit}>
+      {cols.map((col, ci) => (
+        <table className={s.table} key={ci}>
+          <thead>
+            <tr>
+              {head.map((h) => (
+                <th key={h}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {col.map((r, ri) => (
+              <tr key={ri}>
+                {r.map((cell, x) => (
+                  <td
+                    key={x}
+                    className={`${x === 0 ? s.tdL : ''} ${boldFirstRow && ci === 0 && ri === 0 ? s.tdB : ''}`}
+                  >
+                    {cell}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ))}
+      {sum ? (
+        <table className={`${s.table} ${s.tableSplitSum}`}>
+          <tbody>
+            <tr className={s.sumRow}>
+              {sum.map((cell, x) => (
+                <td key={x} className={x === 0 ? s.tdL : ''}>
+                  {cell}
+                </td>
+              ))}
+            </tr>
+          </tbody>
+        </table>
+      ) : null}
+    </div>
+  );
+}
+
+/**
+ * 버튼별 사용 현황 — 클릭(막대, 좌축) + 평균 체류(선, 우축).
+ *
+ * <p>가로 막대(layout='vertical')는 높이가 버튼 개수에 비례해 A4 한 장을 넘겼다. 세로 막대는 개수와 무관하게
+ * 높이가 고정이라 지점당 1페이지가 유지된다.
+ *
+ * <p>두 번째 계열을 '사용 시간'이 아니라 '평균 체류'로 둔 이유: 사용 시간 = 클릭 × 평균 체류라 클릭 막대와
+ * 거의 같은 모양이 나와 정보가 중복된다. 사용 시간은 아래 표에 그대로 있다.
+ */
+export function ButtonUsageChart({
+  data,
+}: {
+  data: { label: string; clicks: number; avgSec: number }[];
+}) {
   return (
     <div className={s.chartCard}>
-      <h4 className={s.chartTitle}>{title}</h4>
-      <ResponsiveContainer width='100%' height={height}>
-        <BarChart layout='vertical' data={data} margin={{ top: 4, right: 44, left: 8, bottom: 4 }}>
-          <CartesianGrid strokeDasharray='3 3' stroke='var(--border-subtle)' horizontal={false} />
-          <XAxis type='number' tick={{ fontSize: 10, fill: 'var(--text-muted)' }} axisLine={false} tickLine={false} />
-          <YAxis type='category' dataKey='label' width={104} tick={{ fontSize: 11, fill: 'var(--text-secondary)' }} axisLine={false} tickLine={false} />
-          <Tooltip {...TOOLTIP_STYLE} formatter={(v: number) => [`${v.toLocaleString()}${unit}`, '']} />
-          <Bar dataKey='value' fill={color} radius={[0, 4, 4, 0]} maxBarSize={16}>
-            <LabelList dataKey='value' position='right' style={{ fontSize: 10.5, fontWeight: 700, fill: 'var(--text-primary)' }} formatter={(v: number) => v.toLocaleString()} />
-          </Bar>
-        </BarChart>
+      <h4 className={s.chartTitle}>버튼별 클릭(회) · 평균 체류(초)</h4>
+      <ResponsiveContainer width='100%' height={300}>
+        <ComposedChart data={data} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+          <CartesianGrid strokeDasharray='3 3' stroke='var(--border-subtle)' vertical={false} />
+          <XAxis
+            dataKey='label'
+            interval={0}
+            angle={-45}
+            textAnchor='end'
+            height={96}
+            tick={{ fontSize: 9.5, fill: 'var(--text-secondary)' }}
+            axisLine={false}
+            tickLine={false}
+          />
+          <YAxis
+            yAxisId='l'
+            tick={{ fontSize: 10, fill: 'var(--text-muted)' }}
+            axisLine={false}
+            tickLine={false}
+          />
+          <YAxis
+            yAxisId='r'
+            orientation='right'
+            tick={{ fontSize: 10, fill: 'var(--text-muted)' }}
+            axisLine={false}
+            tickLine={false}
+          />
+          <Tooltip
+            {...TOOLTIP_STYLE}
+            formatter={(v: number, n: string) => [
+              n === '평균 체류' ? `${v.toLocaleString()}초` : `${v.toLocaleString()}회`,
+              n,
+            ]}
+          />
+          <Legend verticalAlign='top' align='right' height={22} wrapperStyle={{ fontSize: 11 }} />
+          <Bar yAxisId='l' name='클릭' dataKey='clicks' fill='#2563eb' radius={[3, 3, 0, 0]} maxBarSize={14} />
+          <Line
+            yAxisId='r'
+            name='평균 체류'
+            type='monotone'
+            dataKey='avgSec'
+            stroke='#f59e0b'
+            strokeWidth={2}
+            dot={{ r: 2 }}
+          />
+        </ComposedChart>
       </ResponsiveContainer>
     </div>
   );

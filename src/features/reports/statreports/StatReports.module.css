@@ -727,3 +727,35 @@
   opacity: 0.5;
   cursor: default;
 }
+
+
+/* ── 아이콘별 표 2단(지점별 상세를 A4 한 장에 유지) ── */
+.tableSplit {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+  align-items: start;
+}
+
+.tableSplitSum {
+  grid-column: 1 / -1;
+}
+
+/* 지점 블록 안에서만 표를 조밀하게 — 다른 리포트의 표는 그대로 둔다 */
+.kioskBlock .table {
+  font-size: 12px;
+}
+
+.kioskBlock .table th {
+  font-size: 12px;
+  padding: 5px 6px;
+}
+
+.kioskBlock .table td {
+  padding: 4px 6px;
+}
+
+.kioskBlock .tdL {
+  padding-left: 8px !important;
+}
