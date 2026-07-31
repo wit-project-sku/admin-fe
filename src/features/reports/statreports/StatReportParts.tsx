@@ -332,7 +332,11 @@ export function ButtonUsageChart({
         {showDuration ? <span className={s.axisRight}>사용 시간({unit}) ―</span> : <span />}
       </div>
       <ResponsiveContainer width='100%' height={292}>
-        <ComposedChart data={rows} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+        {/*
+          X축 라벨을 -45° 로 눕히면 눈금 왼쪽으로 뻗는다. 좌축이 있으면 그 폭(약 60px)이 받아 주지만,
+          '사용시간'만 볼 때는 좌축이 사라져 첫 라벨이 차트 밖으로 잘린다 → 그만큼 왼쪽 여백을 준다.
+        */}
+        <ComposedChart data={rows} margin={{ top: 4, right: 4, left: showClicks ? 0 : 56, bottom: 0 }}>
           <CartesianGrid strokeDasharray='3 3' stroke='var(--border-subtle)' vertical={false} />
           <XAxis
             dataKey='label'
