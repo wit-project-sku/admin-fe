@@ -845,17 +845,14 @@
 }
 
 
-/* ── 화면 조회 전용 필터 (리포트 루트 밖 / 캡처 제외) ── */
-.filterBar {
+/* ── 화면 조회 전용 필터 (캡처 제외) ── */
+.periodKiosk {
   display: flex;
   align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin: 0 0 14px;
-  padding: 10px 14px;
-  border: 1px solid var(--border, #e2e8f0);
-  border-radius: 10px;
-  background: #f8fafc;
+  gap: 8px;
+  margin-left: 18px;
+  padding-left: 18px;
+  border-left: 1px solid var(--border, #e2e8f0);
 }
 
 .chartFilter {

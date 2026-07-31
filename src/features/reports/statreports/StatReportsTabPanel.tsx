@@ -1,11 +1,11 @@
 // 통계 리포트 패널 — 주간/월간 촬영·버튼 4종 (stats-mockup 디자인 정합).
 // 발행 규칙 안내 배너 + 카드형 리포트 선택기 + 기간 선택기 + A4 폭 리포트 프레임.
 // 기본은 실데이터(서버 집계), '표본 디자인' 모드로 전 섹션 레이아웃을 검토할 수 있다.
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import rp from '@pages/ReportsPage.module.css';
 import s from './StatReports.module.css';
 import { ButtonReportView } from './ButtonReportView';
-import { ButtonLiveView, ShootingMonthlyLiveView, ShootingWeeklyLiveView } from './LiveReportViews';
+import { ButtonLiveView, ShootingMonthlyLiveView, ShootingWeeklyLiveView, type ReportKioskOption } from './LiveReportViews';
 import { ShootingMonthlyView, ShootingWeeklyView } from './ShootingReportView';
 import { monthRangesOf, weekRangesOf } from './useStatReportLive';
 
@@ -41,6 +41,22 @@ export function StatReportsTabPanel({ exportMode = false }: { exportMode?: boole
   const [anchor, setAnchor] = useState<string>(() => DEFAULT_ANCHOR);
   const [ym, setYm] = useState<string>(() => DEFAULT_YM);
 
+  // 지점 선택 — 버튼 리포트 전용. 옵션은 리포트 뷰가 실제로 가진 지점만 올려 준다.
+  const [kioskSel, setKioskSel] = useState<'ALL' | number>('ALL');
+  const [kioskOpts, setKioskOpts] = useState<ReportKioskOption[]>([]);
+  const handleKiosks = useCallback((list: ReportKioskOption[]) => {
+    setKioskOpts((prev) =>
+      prev.length === list.length && prev.every((p, i) => p.id === list[i].id) ? prev : list,
+    );
+  }, []);
+  // 기간·리포트가 바뀌어 고른 지점이 사라지면 전체로 되돌린다(빈 화면 방지).
+  useEffect(() => {
+    if (kioskSel !== 'ALL' && kioskOpts.length > 0 && !kioskOpts.some((o) => o.id === kioskSel)) {
+      setKioskSel('ALL');
+    }
+  }, [kioskOpts, kioskSel]);
+
+  const isButton = kind === 'button-weekly' || kind === 'button-monthly';
   const isWeekly = kind === 'shoot-weekly' || kind === 'button-weekly';
   const wk = weekRangesOf(anchor); // 선택 주 라벨 표시용
 
@@ -106,6 +122,28 @@ export function StatReportsTabPanel({ exportMode = false }: { exportMode?: boole
           >
             지난 {isWeekly ? '주' : '달'}로
           </button>
+
+          {/* 지점 선택 — 화면 조회 전용. PDF 는 어떤 선택 상태에서도 전체 리포트로 나간다. */}
+          {isButton ? (
+            <div className={s.periodKiosk}>
+              <span className={s.periodLabel}>지점</span>
+              <select
+                className={s.filterSelect}
+                value={kioskSel === 'ALL' ? 'ALL' : String(kioskSel)}
+                onChange={(e) =>
+                  setKioskSel(e.target.value === 'ALL' ? 'ALL' : Number(e.target.value))
+                }
+              >
+                <option value='ALL'>전체 (전체 통계 리포트)</option>
+                {kioskOpts.map((o) => (
+                  <option key={o.id} value={String(o.id)}>
+                    {o.name}
+                  </option>
+                ))}
+              </select>
+              <span className={s.filterHint}>PDF 다운로드는 항상 전체 리포트</span>
+            </div>
+          ) : null}
         </div>
       ) : null}
 
@@ -113,8 +151,9 @@ export function StatReportsTabPanel({ exportMode = false }: { exportMode?: boole
         {mode === 'live' ? (
           kind === 'shoot-weekly' ? <ShootingWeeklyLiveView anchor={anchor || undefined} />
           : kind === 'shoot-monthly' ? <ShootingMonthlyLiveView ym={ym || undefined} />
-          : kind === 'button-weekly' ? <ButtonLiveView variant='weekly' anchor={anchor || undefined} exportMode={exportMode} />
-          : <ButtonLiveView variant='monthly' ym={ym || undefined} exportMode={exportMode} />
+          : kind === 'button-weekly'
+            ? <ButtonLiveView variant='weekly' anchor={anchor || undefined} exportMode={exportMode} kioskSel={kioskSel} onKiosks={handleKiosks} />
+            : <ButtonLiveView variant='monthly' ym={ym || undefined} exportMode={exportMode} kioskSel={kioskSel} onKiosks={handleKiosks} />
         ) : (
           kind === 'shoot-weekly' ? <ShootingWeeklyView />
           : kind === 'shoot-monthly' ? <ShootingMonthlyView />

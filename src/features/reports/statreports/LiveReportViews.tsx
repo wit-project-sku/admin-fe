@@ -1,7 +1,7 @@
 // 실데이터 리포트 뷰 — useStatReportLive 훅으로 서버 집계를 조합해 렌더.
 // P2 서버 API 연동 완료: 시간대·오전/오후·요일·카테고리별 1위·의상 매트릭스·월별 통계.
 // AI 종합 분석은 실데이터 규칙 기반 자동 작성(aiAnalysis.ts, 무과금) — 외부 API 교체 여지 유지.
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import s from './StatReports.module.css';
 import { ButtonUsageChart, CompareBarChart, Diff, EditableAiCard, KpiRow, Section, SplitTable, type UsageMetric } from './StatReportParts';
 import { buildButtonAi, buildShootingAi } from './aiAnalysis';
@@ -578,27 +578,50 @@ export function ShootingMonthlyLiveView({ ym }: { ym?: string }) {
 }
 
 /* ── 버튼 리포트 (주간/월간) ── */
+export type ReportKioskOption = { id: number; name: string };
+
 export function ButtonLiveView({
   variant,
   anchor,
   ym,
   exportMode = false,
+  kioskSel = 'ALL',
+  onKiosks,
 }: {
   variant: 'weekly' | 'monthly';
   anchor?: string;
   ym?: string;
   /** PDF 생성 중 — 화면 필터를 무시하고 항상 전체 리포트를 렌더한다. */
   exportMode?: boolean;
+  /** 화면에서 고른 지점(상단 대상 기간 바의 드롭다운). */
+  kioskSel?: 'ALL' | number;
+  /** 드롭다운 옵션을 상단 바에서 그리도록 지점 목록을 올려 보낸다(리포트가 실제로 가진 지점만). */
+  onKiosks?: (list: ReportKioskOption[]) => void;
 }) {
   const r = variant === 'weekly' ? weekRangesOf(anchor) : monthRangesOf(ym);
   const prevLabel = variant === 'weekly' ? '전주' : '전월';
   const { cur, prev, cum } = useButtonsLive(r.start, r.end, r.prevStart, r.prevEnd, true);
   const catalog = useReportKioskButtons(true); // 홈 버튼 전체(클릭 0 포함)
-  // 화면 조회용 필터 — 문서(PDF)에는 반영하지 않는다(클라이언트 확정).
-  const [kioskSel, setKioskSel] = useState<'ALL' | number>('ALL');
+  // 그래프 계열 선택은 그래프 옆에 두므로 이 뷰가 갖는다. 지점 선택은 상단 바(패널)에서 내려온다.
   const [metric, setMetric] = useState<UsageMetric>('ALL');
-  const effKiosk = exportMode ? 'ALL' : kioskSel;
+  const effKiosk: 'ALL' | number = exportMode ? 'ALL' : kioskSel;
   const effMetric: UsageMetric = exportMode ? 'ALL' : metric;
+
+  // 지점 목록(금기·전기·누적 합집합) — 훅 순서를 지키려 early return 앞에서 계산한다.
+  const kioskOptions = useMemo<ReportKioskOption[]>(() => {
+    const order = new Map<string, number>();
+    for (const b of [cur.data, prev.data, cum.data]) {
+      for (const row of b?.buttonDetails ?? []) {
+        const key = row.representativeKioskName || `키오스크 ${row.kioskId}`;
+        if (!order.has(key)) order.set(key, row.kioskId);
+      }
+    }
+    return [...order.entries()].sort((a, b) => a[1] - b[1]).map(([name, id]) => ({ id, name }));
+  }, [cur.data, prev.data, cum.data]);
+
+  useEffect(() => {
+    onKiosks?.(kioskOptions);
+  }, [kioskOptions, onKiosks]);
 
   if (cur.isPending) return <LoadingCard text='실데이터를 불러오는 중…' />;
   if (cur.isError) return <LoadingCard text='버튼 통계를 불러오지 못했습니다.' />;
@@ -675,27 +698,6 @@ export function ButtonLiveView({
   const shown = effKiosk === 'ALL' ? kiosks : kiosks.filter(([k]) => kioskOrder.get(k) === effKiosk);
 
   return (
-    <>
-      {/* 리포트 루트 밖 → PDF 캡처 대상이 아니다. 화면 조회 전용 필터. */}
-      <div className={s.filterBar}>
-        <span className={s.filterLabel}>지점</span>
-        <select
-          className={s.filterSelect}
-          value={effKiosk === 'ALL' ? 'ALL' : String(effKiosk)}
-          onChange={(e) => setKioskSel(e.target.value === 'ALL' ? 'ALL' : Number(e.target.value))}
-        >
-          <option value='ALL'>전체 (전체 통계 리포트)</option>
-          {kiosks.map(([k]) => (
-            <option key={k} value={String(kioskOrder.get(k) ?? 0)}>
-              {k}
-            </option>
-          ))}
-        </select>
-        <span className={s.filterHint}>
-          지점을 고르면 해당 지점 상세만 봅니다. <b>PDF 다운로드는 항상 전체 리포트</b>입니다.
-        </span>
-      </div>
-
     <div className={s.report} data-report-root data-report-title={`${variant === 'weekly' ? '주간' : '월간'} 버튼 사용 통계 리포트`}>
       {effKiosk === 'ALL' ? (
       <div data-report-page>
@@ -815,6 +817,5 @@ export function ButtonLiveView({
           })}
 
     </div>
-    </>
   );
 }

@@ -324,20 +324,12 @@ export function ButtonUsageChart({
   }));
   const showClicks = metric !== 'DURATION';
   const showDuration = metric !== 'CLICKS';
-  // 한 계열만 볼 때는 선 대신 막대로 그린다(순위 비교가 목적이라 막대가 읽기 쉽다).
-  const durationAsBar = metric === 'DURATION';
   return (
     <div className={s.chartCard}>
       <h4 className={s.chartTitle}>{title}</h4>
       <div className={s.axisLegend}>
         {showClicks ? <span className={s.axisLeft}>◼ 클릭(회)</span> : <span />}
-        {showDuration ? (
-          <span className={s.axisRight}>
-            {durationAsBar ? '◼ ' : ''}사용 시간({unit}){durationAsBar ? '' : ' ―'}
-          </span>
-        ) : (
-          <span />
-        )}
+        {showDuration ? <span className={s.axisRight}>사용 시간({unit}) ―</span> : <span />}
       </div>
       <ResponsiveContainer width='100%' height={292}>
         <ComposedChart data={rows} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
@@ -363,7 +355,7 @@ export function ButtonUsageChart({
           {showDuration ? (
             <YAxis
               yAxisId='r'
-              orientation={durationAsBar ? 'left' : 'right'}
+              orientation='right'
               tick={{ fontSize: 10, fill: '#b45309' }}
               axisLine={false}
               tickLine={false}
@@ -388,18 +380,7 @@ export function ButtonUsageChart({
               isAnimationActive={false}
             />
           ) : null}
-          {showDuration && durationAsBar ? (
-            <Bar
-              yAxisId='r'
-              name='사용 시간'
-              dataKey='duration'
-              fill='#f59e0b'
-              radius={[3, 3, 0, 0]}
-              maxBarSize={14}
-              isAnimationActive={false}
-            />
-          ) : null}
-          {showDuration && !durationAsBar ? (
+          {showDuration ? (
             <Line
               yAxisId='r'
               name='사용 시간'
