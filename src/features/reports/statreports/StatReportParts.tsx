@@ -278,6 +278,12 @@ export function SplitTable({
   );
 }
 
+/** X축 눈금 글자 크기 — 라벨 영역 높이 계산과 렌더가 같은 값을 써야 한다. */
+const X_TICK_FONT = 9.5;
+
+/** 플롯(막대·선) 영역 높이. 전체 높이 = 이 값 + X축 라벨 영역. */
+const PLOT_H = 196;
+
 /** 최대값에 맞춰 시간 축 단위를 고른다 — 초 → 분 → 시간. */
 function pickDurationUnit(maxSec: number): { unit: string; div: number } {
   if (maxSec < 120) return { unit: '초', div: 1 };
@@ -324,6 +330,10 @@ export function ButtonUsageChart({
   }));
   const showClicks = metric !== 'DURATION';
   const showDuration = metric !== 'CLICKS';
+  // X축 라벨을 -45° 로 눕히면 세로로 차지하는 높이 = 글자폭 × sin45°.
+  // 96px 고정이면 5자 이름(약 34px)일 때 아래쪽이 60px 넘게 비어 보인다 → 가장 긴 이름에 맞춰 잡는다.
+  const longestLabel = rows.reduce((m, r) => Math.max(m, r.label.length), 0);
+  const xAxisH = Math.min(104, Math.max(46, Math.round(longestLabel * X_TICK_FONT * Math.SQRT1_2) + 14));
   return (
     <div className={s.chartCard}>
       <h4 className={s.chartTitle}>{title}</h4>
@@ -331,7 +341,7 @@ export function ButtonUsageChart({
         {showClicks ? <span className={s.axisLeft}>◼ 클릭(회)</span> : <span />}
         {showDuration ? <span className={s.axisRight}>사용 시간({unit}) ―</span> : <span />}
       </div>
-      <ResponsiveContainer width='100%' height={292}>
+      <ResponsiveContainer width='100%' height={PLOT_H + xAxisH}>
         {/*
           X축 라벨을 -45° 로 눕히면 눈금 왼쪽으로 뻗는다. 좌축이 있으면 그 폭(약 60px)이 받아 주지만,
           '사용시간'만 볼 때는 좌축이 사라져 첫 라벨이 차트 밖으로 잘린다 → 그만큼 왼쪽 여백을 준다.
@@ -343,8 +353,8 @@ export function ButtonUsageChart({
             interval={0}
             angle={-45}
             textAnchor='end'
-            height={96}
-            tick={{ fontSize: 9.5, fill: 'var(--text-secondary)' }}
+            height={xAxisH}
+            tick={{ fontSize: X_TICK_FONT, fill: 'var(--text-secondary)' }}
             axisLine={false}
             tickLine={false}
           />
