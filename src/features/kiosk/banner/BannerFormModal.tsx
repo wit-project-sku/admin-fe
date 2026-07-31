@@ -91,6 +91,10 @@ export function BannerFormModal({ kiosks, editing, submitting, onClose, onSubmit
         <div className={s.modalBody}>
           {error ? <div className={`${s.notice} ${s.noticeErr}`}>{error}</div> : null}
 
+          <div className={s.sizeGuide}>
+            배너 이미지 사이즈는 <b>2160 × 573</b> 으로 맞춰주세요.
+          </div>
+
           <div className={s.field}>
             <span className={s.fieldLabel}>배너 이미지</span>
 
@@ -135,7 +139,7 @@ export function BannerFormModal({ kiosks, editing, submitting, onClose, onSubmit
               <>
                 <label className={s.uploadArea}>
                   + 이미지 추가
-                  <span className={s.uploadSub}>여러 장 선택 가능 · 권장 2160 × 573px · 장당 최대 20MB</span>
+                  <span className={s.uploadSub}>여러 장 선택 가능 · 2160 × 573px · 장당 최대 20MB</span>
                   <input
                     ref={fileRef}
                     type="file"

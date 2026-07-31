@@ -113,6 +113,8 @@ export function BannerDetailModal({
 
           <div className={s.warn}>
             노출 <b>순서</b>는 키오스크마다 다릅니다 — 순서 변경은 <b>키오스크별 노출</b> 탭에서 하세요.
+            <br />
+            이미지를 교체할 때도 사이즈는 <b>2160 × 573</b> 으로 맞춰주세요.
           </div>
         </div>
 
