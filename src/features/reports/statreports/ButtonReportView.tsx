@@ -3,7 +3,7 @@
 // → 지점별 상세(아이콘별 전체/키오스크별 집계) → 일별(주차별) 상세
 // 지표·용어는 관리자 웹 '키오스크 분석'과 동일: 클릭 · 사용 시간 · 평균 체류.
 import s from './StatReports.module.css';
-import { AiPanel, CompareBarChart, Diff, HBarChart, KpiRow, Section } from './StatReportParts';
+import { AiPanel, ButtonUsageChart, Diff, KpiRow, Section, SplitTable } from './StatReportParts';
 import {
   BUTTON_AVG_SEC,
   fmtMD,
@@ -39,22 +39,18 @@ export function ButtonReportView({ variant }: { variant: 'weekly' | 'monthly' })
       </div>
       <KpiRow items={d.kpis} />
 
-      <Section title='키오스크별 사용 집계' sub={`클릭 · 사용 시간 — ${prevLabel} 대비 비교(점선)`}>
-        <div className={s.row2}>
-          <CompareBarChart
-            title={`키오스크별 클릭 — ${variant === 'weekly' ? '금주' : '당월'}(막대) vs ${prevLabel}(점선)`}
-            data={d.kioskClicks}
-            curName={`${variant === 'weekly' ? '금주' : '당월'} ${totalClicks.toLocaleString()}회`}
-            prevName={`${prevLabel}`}
-          />
-          <CompareBarChart
-            title={`키오스크별 사용 시간(분) — ${variant === 'weekly' ? '금주' : '당월'}(막대) vs ${prevLabel}(점선)`}
-            data={d.kioskUsageMin}
-            curName={`${variant === 'weekly' ? '금주' : '당월'} ${fmtDur(totalUsage)}`}
-            prevName={`${prevLabel}`}
-            color='#f59e0b'
-          />
-        </div>
+      <Section
+        title='키오스크별 사용 집계'
+        sub={`클릭 합계 ${totalClicks.toLocaleString()}회 · 사용 시간 합계 ${fmtDur(totalUsage)}`}
+      >
+        <ButtonUsageChart
+          title='키오스크별 클릭 · 사용 시간'
+          data={d.kioskClicks.map((c, i) => ({
+            label: c.label,
+            clicks: c.cur,
+            durationSec: (d.kioskUsageMin[i]?.cur ?? 0) * 60,
+          }))}
+        />
       </Section>
 
       <Section title='AI 종합 분석' sub='자동 작성 · 담당자 검토'>
@@ -81,31 +77,27 @@ export function ButtonReportView({ variant }: { variant: 'weekly' | 'monthly' })
                   클릭 <b>{kClicks.toLocaleString()}회</b> · 사용 시간 {fmtDur(kUsage)} · 평균 체류 {Math.floor(kUsage / kClicks)}초
                   · {prevLabel} 대비 <Diff text={kSum.diff} /> ({prevLabel} {kSum.prevClicks.toLocaleString()}회)
                 </p>
-                <div className={s.row2}>
-                  <HBarChart title='버튼별 클릭(회)' data={k.buttons.map(([name, v]) => ({ label: name, value: v }))} unit='회' />
-                  <HBarChart title='버튼별 사용 시간(분)' data={k.buttons.map(([name, v]) => ({ label: name, value: Math.round((v * (BUTTON_AVG_SEC[name] ?? 0)) / 60) }))} unit='분' color='#f59e0b' />
-                </div>
-                <table className={s.table} style={{ marginTop: 10 }}>
-                  <thead>
-                    <tr><th>아이콘</th><th>클릭</th><th>사용 시간</th><th>평균 체류</th></tr>
-                  </thead>
-                  <tbody>
-                    {k.buttons.map(([name, clicks], i) => (
-                      <tr key={name}>
-                        <td className={`${s.tdL} ${i === 0 ? s.tdB : ''}`}>{name}</td>
-                        <td className={i === 0 ? s.tdB : ''}>{clicks.toLocaleString()}회</td>
-                        <td>{fmtDur(clicks * (BUTTON_AVG_SEC[name] ?? 0))}</td>
-                        <td>{clicks > 0 ? (BUTTON_AVG_SEC[name] ?? 0) : 0}초</td>
-                      </tr>
-                    ))}
-                    <tr className={s.sumRow}>
-                      <td className={s.tdL}>소계</td>
-                      <td>{kClicks.toLocaleString()}회</td>
-                      <td>{fmtDur(kUsage)}</td>
-                      <td>{Math.floor(kUsage / kClicks)}초</td>
-                    </tr>
-                  </tbody>
-                </table>
+                <ButtonUsageChart
+                  data={k.buttons.map(([name, v]) => ({
+                    label: name,
+                    clicks: v,
+                    durationSec: v * (BUTTON_AVG_SEC[name] ?? 0),
+                  }))}
+                />
+                <SplitTable
+                  head={['아이콘', '클릭', '사용 시간', '평균 체류']}
+                  rows={k.buttons.map(([name, clicks]) => [
+                    name,
+                    `${clicks.toLocaleString()}회`,
+                    fmtDur(clicks * (BUTTON_AVG_SEC[name] ?? 0)),
+                    `${clicks > 0 ? (BUTTON_AVG_SEC[name] ?? 0) : 0}초`,
+                  ])}
+                  sum={[
+                    { label: '총 클릭수', value: `${kClicks.toLocaleString()}회` },
+                    { label: '총 사용시간', value: fmtDur(kUsage) },
+                    { label: '평균 체류', value: `${Math.floor(kUsage / kClicks)}초` },
+                  ]}
+                />
                 </div>
                 {ki === d.perKiosk.length - 1 ? (
                   <>

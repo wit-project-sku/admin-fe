@@ -727,3 +727,158 @@
   opacity: 0.5;
   cursor: default;
 }
+
+
+/* ── 아이콘별 표 2단(지점별 상세를 A4 한 장에 유지) ── */
+.tableSplit {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+  align-items: start;
+}
+
+/* ── 이중 축 라벨 — 범례 대신 각 축 위에 계열 색으로 ── */
+.axisLegend {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0 2px 2px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.axisLeft {
+  color: #2563eb;
+}
+
+.axisRight {
+  color: #b45309;
+}
+
+/* ── 2단 표 소계 — 값만 있으면 어느 열인지 모른다 → 항목명 병기 ── */
+.sumStrip {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 22px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #0f172a;
+  color: #ffffff;
+  font-size: 12px;
+}
+
+.sumItem {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.sumLabel {
+  color: #cbd5e1;
+  font-weight: 600;
+}
+
+/* 지점 블록 안에서만 표를 조밀하게 — 다른 리포트의 표는 그대로 둔다 */
+.kioskBlock .table {
+  font-size: 12px;
+}
+
+.kioskBlock .table th {
+  font-size: 12px;
+  padding: 5px 6px;
+}
+
+.kioskBlock .table td {
+  padding: 4px 6px;
+}
+
+.kioskBlock .tdL {
+  padding-left: 8px !important;
+}
+
+
+/* ── PDF 생성 중 화면 차단 ── */
+.exportBlocker {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: grid;
+  place-items: center;
+  background: rgba(15, 23, 42, 0.55);
+  cursor: progress;
+}
+
+.exportBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 26px 34px;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.25);
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.exportHint {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.exportSpinner {
+  width: 26px;
+  height: 26px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: exportSpin 0.8s linear infinite;
+}
+
+@keyframes exportSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+/* ── 화면 조회 전용 필터 (캡처 제외) ── */
+.periodKiosk {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 18px;
+  padding-left: 18px;
+  border-left: 1px solid var(--border, #e2e8f0);
+}
+
+.chartFilter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.filterLabel {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-secondary, #475569);
+}
+
+.filterSelect {
+  padding: 7px 10px;
+  font-size: 12.5px;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text-primary, #0f172a);
+  min-width: 180px;
+}
+
+.filterHint {
+  font-size: 11.5px;
+  color: var(--text-muted, #64748b);
+}

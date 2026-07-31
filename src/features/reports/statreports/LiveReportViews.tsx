@@ -1,8 +1,9 @@
 // 실데이터 리포트 뷰 — useStatReportLive 훅으로 서버 집계를 조합해 렌더.
 // P2 서버 API 연동 완료: 시간대·오전/오후·요일·카테고리별 1위·의상 매트릭스·월별 통계.
 // AI 종합 분석은 실데이터 규칙 기반 자동 작성(aiAnalysis.ts, 무과금) — 외부 API 교체 여지 유지.
+import { useEffect, useMemo, useState } from 'react';
 import s from './StatReports.module.css';
-import { CompareBarChart, Diff, EditableAiCard, HBarChart, KpiRow, Section } from './StatReportParts';
+import { ButtonUsageChart, CompareBarChart, Diff, EditableAiCard, KpiRow, Section, SplitTable, type UsageMetric } from './StatReportParts';
 import { buildButtonAi, buildShootingAi } from './aiAnalysis';
 import { chunkKioskCols } from './ShootingReportView';
 import { fmtMD, type KpiItem } from './statReportsMockData';
@@ -577,11 +578,50 @@ export function ShootingMonthlyLiveView({ ym }: { ym?: string }) {
 }
 
 /* ── 버튼 리포트 (주간/월간) ── */
-export function ButtonLiveView({ variant, anchor, ym }: { variant: 'weekly' | 'monthly'; anchor?: string; ym?: string }) {
+export type ReportKioskOption = { id: number; name: string };
+
+export function ButtonLiveView({
+  variant,
+  anchor,
+  ym,
+  exportMode = false,
+  kioskSel = 'ALL',
+  onKiosks,
+}: {
+  variant: 'weekly' | 'monthly';
+  anchor?: string;
+  ym?: string;
+  /** PDF 생성 중 — 화면 필터를 무시하고 항상 전체 리포트를 렌더한다. */
+  exportMode?: boolean;
+  /** 화면에서 고른 지점(상단 대상 기간 바의 드롭다운). */
+  kioskSel?: 'ALL' | number;
+  /** 드롭다운 옵션을 상단 바에서 그리도록 지점 목록을 올려 보낸다(리포트가 실제로 가진 지점만). */
+  onKiosks?: (list: ReportKioskOption[]) => void;
+}) {
   const r = variant === 'weekly' ? weekRangesOf(anchor) : monthRangesOf(ym);
   const prevLabel = variant === 'weekly' ? '전주' : '전월';
   const { cur, prev, cum } = useButtonsLive(r.start, r.end, r.prevStart, r.prevEnd, true);
   const catalog = useReportKioskButtons(true); // 홈 버튼 전체(클릭 0 포함)
+  // 그래프 계열 선택은 그래프 옆에 두므로 이 뷰가 갖는다. 지점 선택은 상단 바(패널)에서 내려온다.
+  const [metric, setMetric] = useState<UsageMetric>('ALL');
+  const effKiosk: 'ALL' | number = exportMode ? 'ALL' : kioskSel;
+  const effMetric: UsageMetric = exportMode ? 'ALL' : metric;
+
+  // 지점 목록(금기·전기·누적 합집합) — 훅 순서를 지키려 early return 앞에서 계산한다.
+  const kioskOptions = useMemo<ReportKioskOption[]>(() => {
+    const order = new Map<string, number>();
+    for (const b of [cur.data, prev.data, cum.data]) {
+      for (const row of b?.buttonDetails ?? []) {
+        const key = row.representativeKioskName || `키오스크 ${row.kioskId}`;
+        if (!order.has(key)) order.set(key, row.kioskId);
+      }
+    }
+    return [...order.entries()].sort((a, b) => a[1] - b[1]).map(([name, id]) => ({ id, name }));
+  }, [cur.data, prev.data, cum.data]);
+
+  useEffect(() => {
+    onKiosks?.(kioskOptions);
+  }, [kioskOptions, onKiosks]);
 
   if (cur.isPending) return <LoadingCard text='실데이터를 불러오는 중…' />;
   if (cur.isError) return <LoadingCard text='버튼 통계를 불러오지 못했습니다.' />;
@@ -654,8 +694,12 @@ export function ButtonLiveView({ variant, anchor, ym }: { variant: 'weekly' | 'm
     })),
   });
 
+  // 선택 지점만 추림. 전체면 그대로. (PDF 는 exportMode 로 항상 전체)
+  const shown = effKiosk === 'ALL' ? kiosks : kiosks.filter(([k]) => kioskOrder.get(k) === effKiosk);
+
   return (
     <div className={s.report} data-report-root data-report-title={`${variant === 'weekly' ? '주간' : '월간'} 버튼 사용 통계 리포트`}>
+      {effKiosk === 'ALL' ? (
       <div data-report-page>
       <div className={s.head}>
         <div className={s.headRow}>
@@ -674,21 +718,29 @@ export function ButtonLiveView({ variant, anchor, ym }: { variant: 'weekly' | 'm
         { label: '누적 사용 시간', value: cumBlock ? fmtDurationSec(cumBlock.totalDuration) : '—' },
       ]} />
 
-      <Section title='키오스크별 사용 집계' sub={`클릭 · 사용 시간 — ${prevLabel} 대비 비교(점선)`}>
-        <div className={s.row2}>
-          <CompareBarChart
-            title={`키오스크별 클릭 vs ${prevLabel}(점선)`}
-            data={kiosks.map(([k, v]) => ({ label: k, cur: v.clicks, prev: prevByKiosk.get(k) ?? 0 }))}
-            curName={`합계 ${block.totalClicks.toLocaleString()}회`}
-            prevName={prevLabel}
-          />
-          <CompareBarChart
-            title='키오스크별 사용 시간(분)'
-            data={kiosks.map(([k, v]) => ({ label: k, cur: Math.round(v.duration / 60) }))}
-            curName={`합계 ${fmtDurationSec(block.totalDuration)}`}
-            color='#f59e0b'
-          />
+      {/* 지점별 상세와 같은 형태(세로 막대 + 사용 시간 선, 이중 축) — 문서 안에서 그래프 읽는 법이 하나로 통일된다. */}
+      <Section
+        title='키오스크별 사용 집계'
+        sub={`클릭 합계 ${block.totalClicks.toLocaleString()}회 · 사용 시간 합계 ${fmtDurationSec(block.totalDuration)}`}
+      >
+        {/* 화면 조회 전용 — PDF 에는 항상 전체 계열이 들어간다. */}
+        <div className={s.chartFilter} data-export-ignore>
+          <span className={s.filterLabel}>표시 데이터</span>
+          <select
+            className={s.filterSelect}
+            value={effMetric}
+            onChange={(e) => setMetric(e.target.value as UsageMetric)}
+          >
+            <option value='ALL'>전체</option>
+            <option value='CLICKS'>클릭수</option>
+            <option value='DURATION'>사용시간</option>
+          </select>
         </div>
+        <ButtonUsageChart
+          title='키오스크별 클릭 · 사용 시간'
+          metric={effMetric}
+          data={kiosks.map(([k, v]) => ({ label: k, clicks: v.clicks, durationSec: v.duration }))}
+        />
       </Section>
 
       <Section title='AI 종합 분석' sub='실데이터 자동 작성 · 수정 가능'>
@@ -696,11 +748,11 @@ export function ButtonLiveView({ variant, anchor, ym }: { variant: 'weekly' | 'm
       </Section>
 
       </div>
+      ) : null}
 
-      {kiosks.map(([k, v], ki) => {
+      {shown.map(([k, v], ki) => {
             const pb = diffBadge(v.clicks, prevByKiosk.get(k) ?? 0, '회', '');
             // 클릭된 버튼 + 홈 버튼 카탈로그(클릭 0 포함) 병합 — 미사용 버튼도 빈 막대/0행으로 표시
-            const kid = v.rows[0]?.kioskId ?? kioskOrder.get(k) ?? 0;
             const seen = new Set<string>();
             const merged = v.rows.map((rw) => {
               seen.add(rw.buttonType);
@@ -730,36 +782,31 @@ export function ButtonLiveView({ variant, anchor, ym }: { variant: 'weekly' | 'm
                 {rows.length === 0 ? (
                   <EmptyNote title='기간 내 사용 데이터가 없습니다' hint='해당 키오스크에서 버튼 클릭이 집계되면 그래프와 표가 채워집니다.' />
                 ) : (
-                <div className={s.row2}>
-                  <HBarChart title='버튼별 클릭(회)' data={rows.map((r) => ({ label: r.label, value: r.clicks }))} unit='회' />
-                  <HBarChart title='버튼별 사용 시간(분)' data={rows.map((r) => ({ label: r.label, value: Math.round(r.duration / 60) }))} unit='분' color='#f59e0b' />
-                </div>
+                <ButtonUsageChart
+                  data={rows.map((r) => ({ label: r.label, clicks: r.clicks, durationSec: r.duration }))}
+                />
                 )}
                 {rows.length === 0 ? null : (
-                <table className={s.table} style={{ marginTop: 10 }}>
-                  <thead>
-                    <tr><th>아이콘</th><th>클릭</th><th>사용 시간</th><th>평균 체류</th></tr>
-                  </thead>
-                  <tbody>
-                    {rows.map((row, i) => (
-                      <tr key={`${kid}-${row.key}`}>
-                        <td className={`${s.tdL} ${i === 0 ? s.tdB : ''}`}>{row.label}</td>
-                        <td className={i === 0 ? s.tdB : ''}>{row.clicks.toLocaleString()}회</td>
-                        <td>{fmtDurationSec(row.duration)}</td>
-                        <td>{Math.round(row.avg)}초</td>
-                      </tr>
-                    ))}
-                    <tr className={s.sumRow}>
-                      <td className={s.tdL}>소계</td>
-                      <td>{v.clicks.toLocaleString()}회</td>
-                      <td>{fmtDurationSec(v.duration)}</td>
-                      <td>{v.clicks > 0 ? Math.round(v.duration / v.clicks) : 0}초</td>
-                    </tr>
-                  </tbody>
-                </table>
+                  <SplitTable
+                    head={['아이콘', '클릭', '사용 시간', '평균 체류']}
+                    rows={rows.map((row) => [
+                      row.label,
+                      `${row.clicks.toLocaleString()}회`,
+                      fmtDurationSec(row.duration),
+                      `${Math.round(row.avg)}초`,
+                    ])}
+                    sum={[
+                      { label: '총 클릭수', value: `${v.clicks.toLocaleString()}회` },
+                      { label: '총 사용시간', value: fmtDurationSec(v.duration) },
+                      {
+                        label: '평균 체류',
+                        value: `${v.clicks > 0 ? Math.round(v.duration / v.clicks) : 0}초`,
+                      },
+                    ]}
+                  />
                 )}
                 </div>
-                {ki === kiosks.length - 1 ? (
+                {ki === shown.length - 1 ? (
                   <>
                     <p className={s.note}>※ 클릭 = 홈 화면 버튼 터치 1회 · 사용 시간 = 버튼 진입 후 다른 메뉴 이동/홈 복귀까지 체류 시간 합계 · 평균 체류 = 사용 시간 ÷ 클릭 수 (관리자 웹 '키오스크 분석'과 동일 지표).</p>
                     <p className={s.footer}>집계 기준: 홈 버튼 클릭 이벤트 · 실데이터(서버 집계)</p>
