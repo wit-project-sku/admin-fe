@@ -53,10 +53,13 @@ export function ButtonReportView({ variant }: { variant: 'weekly' | 'monthly' })
         />
       </Section>
 
-      <Section title='AI 종합 분석' sub='자동 작성 · 담당자 검토'>
-        <AiPanel tag={variant === 'weekly' ? 'AI WEEKLY INSIGHT' : 'AI MONTHLY INSIGHT'} overall={d.aiOverall} sites={d.aiSites} />
-      </Section>
+      </div>
 
+      {/* AI 분석은 지점 수에 비례해 늘어난다 → 요약 페이지와 분리(첫 장 고정) */}
+      <div data-report-page>
+        <Section title='AI 종합 분석' sub='자동 작성 · 담당자 검토'>
+          <AiPanel tag={variant === 'weekly' ? 'AI WEEKLY INSIGHT' : 'AI MONTHLY INSIGHT'} overall={d.aiOverall} sites={d.aiSites} />
+        </Section>
       </div>
 
       {d.perKiosk.map((k, ki) => {
