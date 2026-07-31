@@ -305,8 +305,10 @@ function humanDuration(sec: number): string {
  */
 export function ButtonUsageChart({
   data,
+  title = '버튼별 클릭 · 사용 시간',
 }: {
   data: { label: string; clicks: number; durationSec: number }[];
+  title?: string;
 }) {
   const { unit, div } = pickDurationUnit(Math.max(0, ...data.map((d) => d.durationSec)));
   const rows = data.map((d) => ({
@@ -317,7 +319,7 @@ export function ButtonUsageChart({
   }));
   return (
     <div className={s.chartCard}>
-      <h4 className={s.chartTitle}>버튼별 클릭 · 사용 시간</h4>
+      <h4 className={s.chartTitle}>{title}</h4>
       <div className={s.axisLegend}>
         <span className={s.axisLeft}>◼ 클릭(회)</span>
         <span className={s.axisRight}>사용 시간({unit}) ―</span>

@@ -82,9 +82,9 @@ function validateOutfitForm(form: OutfitFormState, previewCount: number): Outfit
   const kioskIds = form.kioskIds.map((k) => Number(k)).filter((n) => Number.isFinite(n) && n > 0);
   if (kioskIds.length === 0) e.kioskIds = '설치 키오스크를 1개 이상 선택해 주세요.';
 
+  // 운영 일정은 둘 다 선택값이다(비우면 상시 운영). 순서만 검사한다.
   const start = form.startDate.trim();
   const end = form.endDate.trim();
-  if (!start) e.startDate = '운영 시작일을 선택해 주세요.';
   if (start && end && end < start) {
     e.endDate = '운영 종료일은 시작일 이후여야 합니다.';
   }
@@ -99,11 +99,12 @@ function buildOutfitWriteBody(form: OutfitFormState): OutfitWriteBody {
   const code = form.outfitCode.trim();
   const isUniform = form.type === UNIFORM;
 
+  const start = form.startDate.trim();
   const body: OutfitWriteBody = {
     status: form.status,
     type: form.type,
     kioskIds: form.kioskIds.map((k) => Number(k)).filter((n) => Number.isFinite(n) && n > 0),
-    startDate: form.startDate.trim(),
+    startDate: start ? start : null,
     endDate: end ? end : null,
   };
   if (code) body.outfitCode = code;
@@ -378,8 +379,7 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
                 <span className={m.sectionLabel}>운영 일정</span>
                 <div className={m.gridRow}>
                   <InputField
-                    label='운영 시작일'
-                    required
+                    label='운영 시작일 (선택)'
                     error={fieldErrors.startDate}
                     type='date'
                     value={form.startDate}
@@ -391,7 +391,7 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
                     }}
                   />
                   <InputField
-                    label='운영 종료일'
+                    label='운영 종료일 (선택)'
                     error={fieldErrors.endDate}
                     type='date'
                     value={form.endDate}
@@ -404,8 +404,8 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
                   />
                 </div>
                 <p className={m.fieldHint}>
-                  운영 시작일은 필수입니다. 종료일은 선택이며, 비우면 무기한으로 저장됩니다. 입력 시 시작일 이후여야
-                  합니다.
+                  둘 다 선택값입니다. <b>비워 두면 상시 운영</b>(시작=즉시, 종료=무기한)으로 저장됩니다. 종료일을 넣을
+                  때는 시작일 이후여야 합니다.
                 </p>
               </div>
               <MultiSelectField

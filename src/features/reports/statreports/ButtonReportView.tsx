@@ -3,7 +3,7 @@
 // → 지점별 상세(아이콘별 전체/키오스크별 집계) → 일별(주차별) 상세
 // 지표·용어는 관리자 웹 '키오스크 분석'과 동일: 클릭 · 사용 시간 · 평균 체류.
 import s from './StatReports.module.css';
-import { AiPanel, ButtonUsageChart, CompareBarChart, Diff, KpiRow, Section, SplitTable } from './StatReportParts';
+import { AiPanel, ButtonUsageChart, Diff, KpiRow, Section, SplitTable } from './StatReportParts';
 import {
   BUTTON_AVG_SEC,
   fmtMD,
@@ -39,22 +39,18 @@ export function ButtonReportView({ variant }: { variant: 'weekly' | 'monthly' })
       </div>
       <KpiRow items={d.kpis} />
 
-      <Section title='키오스크별 사용 집계' sub={`클릭 · 사용 시간 — ${prevLabel} 대비 비교(점선)`}>
-        <div className={s.row2}>
-          <CompareBarChart
-            title={`키오스크별 클릭 — ${variant === 'weekly' ? '금주' : '당월'}(막대) vs ${prevLabel}(점선)`}
-            data={d.kioskClicks}
-            curName={`${variant === 'weekly' ? '금주' : '당월'} ${totalClicks.toLocaleString()}회`}
-            prevName={`${prevLabel}`}
-          />
-          <CompareBarChart
-            title={`키오스크별 사용 시간(분) — ${variant === 'weekly' ? '금주' : '당월'}(막대) vs ${prevLabel}(점선)`}
-            data={d.kioskUsageMin}
-            curName={`${variant === 'weekly' ? '금주' : '당월'} ${fmtDur(totalUsage)}`}
-            prevName={`${prevLabel}`}
-            color='#f59e0b'
-          />
-        </div>
+      <Section
+        title='키오스크별 사용 집계'
+        sub={`클릭 합계 ${totalClicks.toLocaleString()}회 · 사용 시간 합계 ${fmtDur(totalUsage)}`}
+      >
+        <ButtonUsageChart
+          title='키오스크별 클릭 · 사용 시간'
+          data={d.kioskClicks.map((c, i) => ({
+            label: c.label,
+            clicks: c.cur,
+            durationSec: (d.kioskUsageMin[i]?.cur ?? 0) * 60,
+          }))}
+        />
       </Section>
 
       <Section title='AI 종합 분석' sub='자동 작성 · 담당자 검토'>

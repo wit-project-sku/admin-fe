@@ -674,21 +674,15 @@ export function ButtonLiveView({ variant, anchor, ym }: { variant: 'weekly' | 'm
         { label: '누적 사용 시간', value: cumBlock ? fmtDurationSec(cumBlock.totalDuration) : '—' },
       ]} />
 
-      <Section title='키오스크별 사용 집계' sub={`클릭 · 사용 시간 — ${prevLabel} 대비 비교(점선)`}>
-        <div className={s.row2}>
-          <CompareBarChart
-            title={`키오스크별 클릭 vs ${prevLabel}(점선)`}
-            data={kiosks.map(([k, v]) => ({ label: k, cur: v.clicks, prev: prevByKiosk.get(k) ?? 0 }))}
-            curName={`합계 ${block.totalClicks.toLocaleString()}회`}
-            prevName={prevLabel}
-          />
-          <CompareBarChart
-            title='키오스크별 사용 시간(분)'
-            data={kiosks.map(([k, v]) => ({ label: k, cur: Math.round(v.duration / 60) }))}
-            curName={`합계 ${fmtDurationSec(block.totalDuration)}`}
-            color='#f59e0b'
-          />
-        </div>
+      {/* 지점별 상세와 같은 형태(세로 막대 + 사용 시간 선, 이중 축) — 문서 안에서 그래프 읽는 법이 하나로 통일된다. */}
+      <Section
+        title='키오스크별 사용 집계'
+        sub={`클릭 합계 ${block.totalClicks.toLocaleString()}회 · 사용 시간 합계 ${fmtDurationSec(block.totalDuration)}`}
+      >
+        <ButtonUsageChart
+          title='키오스크별 클릭 · 사용 시간'
+          data={kiosks.map(([k, v]) => ({ label: k, clicks: v.clicks, durationSec: v.duration }))}
+        />
       </Section>
 
       <Section title='AI 종합 분석' sub='실데이터 자동 작성 · 수정 가능'>
@@ -700,7 +694,6 @@ export function ButtonLiveView({ variant, anchor, ym }: { variant: 'weekly' | 'm
       {kiosks.map(([k, v], ki) => {
             const pb = diffBadge(v.clicks, prevByKiosk.get(k) ?? 0, '회', '');
             // 클릭된 버튼 + 홈 버튼 카탈로그(클릭 0 포함) 병합 — 미사용 버튼도 빈 막대/0행으로 표시
-            const kid = v.rows[0]?.kioskId ?? kioskOrder.get(k) ?? 0;
             const seen = new Set<string>();
             const merged = v.rows.map((rw) => {
               seen.add(rw.buttonType);
