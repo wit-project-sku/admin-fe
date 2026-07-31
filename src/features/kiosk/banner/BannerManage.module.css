@@ -131,11 +131,11 @@
   flex: none;
   width: 640px;
   max-width: 52vw;
-  aspect-ratio: 2160 / 573;
-  background: #f1f5f9;
-  border: 1px solid var(--border-subtle, #eef2f7);
   border-radius: 8px;
   overflow: hidden;
+  /* 박스에 비율을 고정하면 이미지 비율이 조금만 달라도 위아래 여백(레터박스)이 생긴다.
+     높이를 이미지가 정하게 두어 어떤 이미지든 영역에 100% 꽉 차게 한다. */
+  line-height: 0;
 }
 
 .thumbWrap.wide {
@@ -146,8 +146,7 @@
 
 .thumb {
   width: 100%;
-  height: 100%;
-  object-fit: contain;
+  height: auto;
   display: block;
   pointer-events: none;
 }
@@ -499,9 +498,8 @@
 
 .pickedThumb {
   width: 68px;
-  aspect-ratio: 2160 / 573;
-  object-fit: contain;
-  background: #f1f5f9;
+  height: auto;
+  display: block;
   border-radius: 4px;
 }
 
@@ -571,7 +569,7 @@
 .detailImgWrap > button {
   display: block;
   width: 100%;
-  height: 100%;
+  line-height: 0;
 }
 
 .chev {
@@ -583,10 +581,7 @@
 /* ── 상세 모달: 노출 키오스크 전체 목록 ── */
 .detailImg {
   width: 100%;
-  aspect-ratio: 2160 / 573;
-  object-fit: contain;
-  background: #f1f5f9;
-  border: 1px solid var(--border-subtle, #eef2f7);
+  height: auto;
   border-radius: 10px;
   display: block;
 }
@@ -654,6 +649,9 @@
 
 .detailImgWrap {
   width: 100%;
+  line-height: 0;
+  border-radius: 10px;
+  overflow: hidden;
 }
 
 
@@ -712,4 +710,16 @@
 .rowSelected {
   border-color: #93c5fd;
   background: #f8fbff;
+}
+
+
+/* 등록·수정 모달 상단 사이즈 안내 */
+.sizeGuide {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+  font-size: 12.5px;
+  font-weight: 600;
 }
