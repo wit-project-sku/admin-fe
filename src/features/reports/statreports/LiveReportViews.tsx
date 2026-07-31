@@ -327,10 +327,12 @@ export function ShootingWeeklyLiveView({ anchor }: { anchor?: string }) {
         <EditableAiCard tag='AI WEEKLY INSIGHT' overall={ai.overall} sites={ai.sites} note={AI_NOTE} />
       </Section>
 
-      <NewOutfitsSection periodLabel='이번 주' start={r.start} end={r.end} mode='live' />
       </div>
 
+      {/* 신규 의상은 카드 높이가 커서 1페이지 끝에 두면 제목만 남고 카드가 다음 장으로 넘어갔다.
+          섹션 통째로 다음 페이지로 내리고, 남는 공간은 지점별·일별 상세로 채운다. */}
       <div data-report-page>
+      <NewOutfitsSection periodLabel='이번 주' start={r.start} end={r.end} mode='live' />
       <Section title='지점별 상세' sub='전체 · 전주 대비'>
         <table className={s.table}>
           <thead>
@@ -517,10 +519,11 @@ export function ShootingMonthlyLiveView({ ym }: { ym?: string }) {
         <EditableAiCard tag='AI MONTHLY INSIGHT' overall={ai.overall} sites={ai.sites} note={AI_NOTE} />
       </Section>
 
-      <NewOutfitsSection periodLabel='이번 달' start={r.start} end={r.end} mode='live' />
       </div>
 
+      {/* 신규 의상 섹션을 통째로 다음 페이지로(제목만 남고 카드가 넘어가는 것 방지) — 남는 공간은 지점별 상세로 */}
       <div data-report-page>
+      <NewOutfitsSection periodLabel='이번 달' start={r.start} end={r.end} mode='live' />
       <Section title='지점별 상세' sub='전체 · 전월 대비'>
         <table className={s.table}>
           <thead>
