@@ -418,18 +418,21 @@
 .bottomNavZoneLeft,
 .bottomNavZoneCenter,
 .bottomNavZoneRight {
+  display: flex; align-items: center; justify-content: center;
   position: absolute;
   cursor: pointer;
   pointer-events: auto;
   border-radius: 50%;
 }
 .bottomNavZoneLeft {
+  display: flex; align-items: center; justify-content: center;
   left: 345px;
   top: 99px;
   width: 235px;
   height: 235px;
 }
 .bottomNavZoneCenter {
+  display: flex; align-items: center; justify-content: center;
   left: 903px;
   top: 39px;
   width: 356px;

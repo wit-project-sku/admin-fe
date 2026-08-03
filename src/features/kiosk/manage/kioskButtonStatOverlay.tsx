@@ -6,17 +6,10 @@ import s from './kioskButtonStatOverlay.module.css';
 export type ButtonStat = { clicks: number; durationSec: number; avgSec: number };
 export type ButtonStatMap = Map<string, ButtonStat>;
 
-function fmtDur(sec: number): string {
-  const v = Math.max(0, Math.round(sec));
-  if (v < 60) return `${v}초`;
-  const h = Math.floor(v / 3600);
-  const m = Math.floor((v % 3600) / 60);
-  return h > 0 ? `${h}시간 ${m}분` : `${m}분`;
-}
-
 /**
- * 타일 위에 겹치는 수치 배지. 버튼 이미지를 가리지 않도록 하단에 얇게 깐다.
- * 클릭 수에 따라 배경 농도를 달리해 '어느 자리가 많이 눌렸는지'가 배치 그대로 보이게 한다.
+ * 타일 위 클릭 수 배지. 사용시간·평균체류는 옆 표에서 읽으므로 여기엔 클릭만 크게 둔다
+ * (미러가 두 번 축소돼 작은 글자는 인쇄물에서 사라진다).
+ * 위치는 절대 재배열하지 않고 클릭량은 배경 농도로만 표현한다.
  */
 export function ButtonStatBadge({
   stat,
@@ -34,9 +27,6 @@ export function ButtonStatBadge({
   return (
     <span className={`${s.badge} ${s[unit]} ${s[`lv${level}`]}`}>
       <b className={s.clicks}>{stat.clicks.toLocaleString()}</b>
-      <span className={s.sub}>
-        {fmtDur(stat.durationSec)} · {Math.round(stat.avgSec)}초
-      </span>
     </span>
   );
 }

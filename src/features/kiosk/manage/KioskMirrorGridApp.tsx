@@ -281,15 +281,18 @@ export function KioskMirrorGridApp({ buttons, skin, onMove, onSelect, selectedId
         {/* ── Bottom row (표시 전용, 카메라만 고정 버튼) ── */}
         <div className={styles.bottomRow}>
           <div className={styles.kdramaItem} onClick={() => cam1 && onSelect?.(cam1)}>
+            {cam1 ? <ButtonStatBadge stat={stats?.get(cam1.buttonType)} max={maxClicks} unit='cq' /> : null}
             <div className={styles.kdramaBox}>K-DRAMA</div>
             <span className={styles.navLabel}>{cam1?.buttonType ?? 'K-DRAMA'}</span>
           </div>
           <div className={styles.cameraBtn} onClick={() => cam2 && onSelect?.(cam2)}>
+            {cam2 ? <ButtonStatBadge stat={stats?.get(cam2.buttonType)} max={maxClicks} unit='cq' /> : null}
             <div className={styles.cameraCircle}>
               {cam2?.imageUrl ? <img src={cam2.imageUrl} alt='' /> : '📷'}
             </div>
           </div>
           <div className={styles.restroomItem} onClick={() => cam3 && onSelect?.(cam3)}>
+            {cam3 ? <ButtonStatBadge stat={stats?.get(cam3.buttonType)} max={maxClicks} unit='cq' /> : null}
             {cam3?.imageUrl ? (
               <div className={styles.navCircle}>
                 <img src={cam3.imageUrl} alt='' />

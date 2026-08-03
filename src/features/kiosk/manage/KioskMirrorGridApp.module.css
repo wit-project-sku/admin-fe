@@ -362,6 +362,7 @@
 .kdramaItem,
 .restroomItem,
 .cameraBtn {
+  position: relative;
   position: absolute;
   padding: 0;
   border: none;
@@ -374,12 +375,14 @@
 }
 
 .kdramaItem {
+  position: relative;
   left: 245px;
   top: 89px;
   width: 381px;
 }
 
 .restroomItem {
+  position: relative;
   left: 1581px;
   top: 99px;
   width: 235px;

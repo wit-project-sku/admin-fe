@@ -278,17 +278,23 @@ export function KioskMirrorHwaseong({ buttons, onMove, onSelect, selectedId, dis
             className={`${styles.bottomNavZoneLeft} ${cam1 && selectedId === cam1.id ? styles.bottomNavZoneSel : ''}`}
             title={cam1?.buttonType ?? '스마트 관광'}
             onClick={() => cam1 && onSelect?.(cam1)}
-          />
+          >
+            {cam1 ? <ButtonStatBadge stat={stats?.get(cam1.buttonType)} max={maxClicks} unit='board' /> : null}
+          </div>
           <div
             className={`${styles.bottomNavZoneCenter} ${cam2 && selectedId === cam2.id ? styles.bottomNavZoneSel : ''}`}
             title={cam2?.buttonType ?? 'AR 한복체험'}
             onClick={() => cam2 && onSelect?.(cam2)}
-          />
+          >
+            {cam2 ? <ButtonStatBadge stat={stats?.get(cam2.buttonType)} max={maxClicks} unit='board' /> : null}
+          </div>
           <div
             className={`${styles.bottomNavZoneRight} ${cam3 && selectedId === cam3.id ? styles.bottomNavZoneSel : ''}`}
             title={cam3?.buttonType ?? '화장실'}
             onClick={() => cam3 && onSelect?.(cam3)}
-          />
+          >
+            {cam3 ? <ButtonStatBadge stat={stats?.get(cam3.buttonType)} max={maxClicks} unit='board' /> : null}
+          </div>
         </div>
 
         {/* ── 배너 (표시 전용) ── */}

@@ -902,22 +902,22 @@
 
 /* 미러는 세로로 긴 9:16 보드라 폭을 고정하고, 그래프가 남는 폭을 쓴다 */
 .mirrorWrap {
-  flex: 0 0 300px;
-  max-width: 300px;
+  flex: 0 0 420px;
+  max-width: 420px;
 }
 
 /* 두 미러 모두 560×996px 로 렌더된다(2160×3840 보드를 자체 축소).
    transform 은 레이아웃 높이를 줄이지 않으므로 컨테이너 높이를 직접 잡아 준다. */
 .mirrorBoard {
-  width: 300px;
-  height: 533px; /* 300 × 3840/2160 */
+  width: 420px;
+  height: 747px; /* 420 × 3840/2160 */
   overflow: hidden;
   border: 1px solid var(--border-subtle, #eef2f7);
   border-radius: 10px;
 }
 
 .mirrorBoard > * {
-  transform: scale(0.5357); /* 300 / 560 */
+  transform: scale(0.75); /* 420 / 560 */
   transform-origin: top left;
 }
 

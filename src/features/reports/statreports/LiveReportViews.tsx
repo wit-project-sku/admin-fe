@@ -656,6 +656,12 @@ export function ButtonLiveView({
     cu.duration += row.totalDuration;
     byKiosk.set(key, cu);
   }
+  // 버튼별 전기 클릭(지점|버튼) — 표의 '전주 대비' 열에 쓴다.
+  const prevByButton = new Map<string, number>();
+  for (const row of prevBlock?.buttonDetails ?? []) {
+    const key = `${row.representativeKioskName || `키오스크 ${row.kioskId}`}|${row.buttonType}`;
+    prevByButton.set(key, (prevByButton.get(key) ?? 0) + row.totalClicks);
+  }
   const prevByKiosk = new Map<string, number>();
   for (const row of prevBlock?.buttonDetails ?? []) {
     const key = row.representativeKioskName || `키오스크 ${row.kioskId}`;
@@ -810,9 +816,29 @@ export function ButtonLiveView({
                     }
                   />
                   <div className={s.mirrorSide}>
-                    <ButtonUsageChart
-                      data={rows.map((r) => ({ label: r.label, clicks: r.clicks, durationSec: r.duration }))}
-                    />
+                    {/* 그래프 대신 표 — 전주 대비까지 담기고, 순위는 클릭 내림차순 정렬로 대신한다. */}
+                    <table className={s.table}>
+                      <thead>
+                        <tr>
+                          <th>아이콘</th><th>클릭</th><th>{prevLabel} 대비</th><th>사용 시간</th><th>평균 체류</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rows.map((row, i) => {
+                          const pc = prevByButton.get(`${k}|${row.key}`) ?? 0;
+                          const d = row.clicks - pc;
+                          return (
+                            <tr key={row.key}>
+                              <td className={`${s.tdL} ${i === 0 ? s.tdB : ''}`}>{row.label}</td>
+                              <td className={i === 0 ? s.tdB : ''}>{row.clicks.toLocaleString()}회</td>
+                              <td>{pc === 0 && row.clicks === 0 ? '—' : <Diff text={`${d < 0 ? '▼' : '▲'}${Math.abs(d)}회`} />}</td>
+                              <td>{fmtDurationSec(row.duration)}</td>
+                              <td>{Math.round(row.avg)}초</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
                 )}
