@@ -24,9 +24,11 @@ export function ButtonStatBadge({
   if (!stat) return null;
   const ratio = max > 0 ? stat.clicks / max : 0;
   const level = stat.clicks === 0 ? 0 : ratio >= 0.5 ? 3 : ratio >= 0.15 ? 2 : 1;
+  // 1위는 농도가 아니라 글자로 구분한다 — 축소된 미러에서 배경 농도차는 잘 안 읽힌다.
+  const isTop = max > 0 && stat.clicks === max;
   return (
-    <span className={`${s.badge} ${s[unit]} ${s[`lv${level}`]}`}>
-      <b className={s.clicks}>{stat.clicks.toLocaleString()}</b>
+    <span className={`${s.badge} ${s[unit]} ${s[`lv${level}`]} ${isTop ? s.top : ''}`}>
+      <b className={s.clicks}>{stat.clicks.toLocaleString()}회</b>
     </span>
   );
 }

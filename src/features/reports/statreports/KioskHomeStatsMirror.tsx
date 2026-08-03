@@ -32,6 +32,9 @@ export function KioskHomeStatsMirror({
 
   return (
     <div className={s.mirrorWrap}>
+      <p className={s.mirrorCaption}>
+        버튼 위 숫자 = 기간 내 <b>클릭 수</b> · 파란 굵은 글씨가 최다 클릭
+      </p>
       <div className={s.mirrorBoard}>
         {isHwaseong ? (
           <KioskMirrorHwaseong buttons={buttons} onMove={noop} disabled stats={stats} hideBanner />

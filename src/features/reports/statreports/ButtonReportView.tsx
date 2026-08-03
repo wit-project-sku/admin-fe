@@ -101,7 +101,6 @@ export function ButtonReportView({ variant }: { variant: 'weekly' | 'monthly' })
                 {ki === d.perKiosk.length - 1 ? (
                   <>
                     <p className={s.note}>※ 클릭 = 홈 화면 버튼 터치 1회 · 사용 시간 = 버튼 진입 후 다른 메뉴 이동/홈 복귀까지 체류 시간 합계 · 평균 체류 = 사용 시간 ÷ 클릭 수 (관리자 웹 '키오스크 분석'과 동일 지표).</p>
-                    <p className={s.footer}>집계 기준: 홈 버튼 클릭 이벤트 · WIT 통계 시스템 자동 생성{variant === 'monthly' ? ' · 월간 발행 주차에는 주간 리포트 동시 발행' : ''} (표본 데이터는 목업용 가상 수치)</p>
                   </>
                 ) : null}
               </div>

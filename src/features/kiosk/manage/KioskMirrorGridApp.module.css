@@ -362,7 +362,7 @@
 .kdramaItem,
 .restroomItem,
 .cameraBtn {
-  position: relative;
+  /* absolute 가 배지(리포트 전용)의 기준 박스까지 겸한다 — relative 를 덧붙이면 좌표가 깨진다 */
   position: absolute;
   padding: 0;
   border: none;
@@ -375,14 +375,12 @@
 }
 
 .kdramaItem {
-  position: relative;
   left: 245px;
   top: 89px;
   width: 381px;
 }
 
 .restroomItem {
-  position: relative;
   left: 1581px;
   top: 99px;
   width: 235px;

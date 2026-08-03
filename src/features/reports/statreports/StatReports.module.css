@@ -955,3 +955,14 @@
 .mirrorStripSub {
   color: var(--text-muted, #64748b);
 }
+
+/* 미러 캡션 — 타일 배지에서 뺀 '클릭 수' 설명을 한 번만 적는다 */
+.mirrorCaption {
+  margin: 0 0 6px;
+  font-size: 11px;
+  color: #64748b;
+}
+.mirrorCaption b {
+  color: #1d4ed8;
+  font-weight: 700;
+}

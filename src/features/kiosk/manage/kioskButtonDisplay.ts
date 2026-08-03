@@ -46,6 +46,7 @@ export function formatKioskButtonStatusLabel(status: string): string {
 const BUTTON_LABEL_OVERRIDE: Record<string, string> = {
   '관광명소(준비중)': '프로모션',
   '스마트관광(준비중)': '프로모션',
+  'K Culture(준비중)': '프로모션',
 };
 
 export function kioskButtonLabel(buttonType: string | null | undefined): string {

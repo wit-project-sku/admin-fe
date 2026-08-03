@@ -1,14 +1,16 @@
-/* 타일 위에 겹치는 수치 배지 — 버튼 이미지를 최대한 가리지 않도록 하단에 얇게 깐다.
-   두 미러의 축소 방식이 달라 글자 크기 단위를 나눈다(둘 다 보드 기준 44/26px 상당). */
+/* 타일 위에 겹치는 클릭 수 배지 — 우상단 코너 pill.
+   타일 하단은 버튼 이름(.tileLabel) 자리라 띠 형태로 깔면 이름을 덮는다.
+   이름과 버튼 이미지가 모두 보여야 하므로 아이콘 여백이 있는 코너를 쓴다.
+   두 미러의 축소 방식이 달라 글자 크기 단위를 나눈다. */
 .badge {
   position: absolute;
-  left: 3%;
-  right: 3%;
-  bottom: 2%;
+  top: 0;
+  right: 0;
   display: flex;
   justify-content: center;
-  padding: 1% 4%;
-  border-radius: 10%;
+  padding: 0.22em 0.72em;
+  border-radius: 999px;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.18);
   background: rgba(255, 255, 255, 0.93);
   border: 1px solid rgba(15, 23, 42, 0.1);
   line-height: 1.08;
@@ -34,3 +36,15 @@
 .lv2 { background: rgba(191, 219, 254, 0.95); }
 .lv3 { background: rgba(29, 78, 216, 0.95); }
 .lv3 .clicks { color: #ffffff; }
+
+/* 1위 버튼 — 숫자를 키우고 파란 굵은 글씨로. lv* 뒤에 둬야 배경·색을 덮는다. */
+.top {
+  background: #ffffff;
+  border-color: rgba(37, 99, 235, 0.45);
+}
+.top .clicks {
+  color: #1d4ed8;
+  font-weight: 900;
+}
+.cq.top .clicks { font-size: 4.6cqw; }
+.board.top .clicks { font-size: 100px; }
