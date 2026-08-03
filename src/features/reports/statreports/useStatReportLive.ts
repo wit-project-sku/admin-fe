@@ -86,12 +86,38 @@ export function lastMonthRanges(): MonthRanges {
 
 const SERVICE_START = '2024-11-01';
 
+/**
+ * 페이징 API 를 <b>전체 집계</b> 용도로 부를 때 응답이 잘렸는지 확인한다.
+ *
+ * <p>통계 엔드포인트는 전부 페이징이고 서버 기본 {@code pageSize=10}·{@code sort=DESC} 다.
+ * pageSize 를 안 넘기면 조용히 최근 10건만 와서 <b>수치가 과소집계된다</b>(월간 촬영 리포트가
+ * 31일 중 10일만 받아 66% 낮게 나오던 사고). 값이 틀렸다는 신호가 화면 어디에도 없으므로
+ * 여기서 명시적으로 경고를 남긴다.
+ */
+function warnIfTruncated(label: string, received: number, totalElements: number): void {
+  if (totalElements > received) {
+    console.warn(
+      `[통계 리포트] ${label}: ${totalElements}건 중 ${received}건만 받았습니다 — pageSize 를 늘려야 합니다(집계가 과소로 나옵니다).`,
+    );
+  }
+}
+
+/** start~end 를 모두 담을 페이지 크기(일별 응답은 하루 1행). 여유 1행. */
+function daysBetween(start: string, end: string): number {
+  const ms = Date.parse(`${end}T00:00:00`) - Date.parse(`${start}T00:00:00`);
+  return Number.isFinite(ms) ? Math.floor(ms / 86_400_000) + 1 : 31;
+}
+
 /* ── 촬영: 일별(일×지점) ── */
 type ShootingDaily = { rows: Record<string, string | number>[]; kioskNames: string[] };
 
 async function fetchShootingDaily(start: string, end: string): Promise<ShootingDaily> {
-  const res = await APIService.private.get('/admin/stats/daily', { params: { start, end } });
-  const { rows, kioskNames } = buildShootingStatsTableModel(res, 'date');
+  // pageSize 를 안 넘기면 서버 기본값 10 이 적용돼 최근 10일만 온다(월간 31일 → 21일 누락).
+  const res = await APIService.private.get('/admin/stats/daily', {
+    params: { start, end, pageNum: 1, pageSize: daysBetween(start, end) + 1 },
+  });
+  const { rows, kioskNames, totalElements } = buildShootingStatsTableModel(res, 'date');
+  warnIfTruncated(`촬영 일별 ${start}~${end}`, rows.length, totalElements);
   // 서버는 최신순(DESC) — 리포트는 시간 오름차순으로 통일(그래프·일별 표)
   rows.sort((a, b) => String(a.date).localeCompare(String(b.date)));
   // 키오스크 표시명(=뒤)으로 변환 — rows 키도 함께 리매핑해 정합 유지
@@ -121,6 +147,7 @@ export function useShootingMonthlyLive(enabled: boolean) {
         params: { pageNum: 1, pageSize: 60, sort: 'DESC' },
       });
       const { rows, kioskNames, totalPages, totalElements } = buildShootingStatsTableModel(res, 'month');
+      warnIfTruncated('촬영 월별', rows.length, totalElements);
       const labeled = rows.map((row) => {
         const r: Record<string, string | number> = { month: row.month, total: row.total };
         for (const n of kioskNames) r[kioskLabel(n)] = row[n];
