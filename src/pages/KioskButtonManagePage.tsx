@@ -3,6 +3,7 @@ import shared from '@commons/shared.module.css';
 import { KioskButtonAddModal } from '@/features/kiosk/manage/KioskButtonAddModal';
 import { KioskButtonByKioskPanel } from '@/features/kiosk/manage/KioskButtonByKioskPanel';
 import { KioskSubtitleSheet } from '@/features/kiosk/manage/KioskSubtitleSheet';
+import { KioskUpdateButton } from '@/features/kiosk/manage/KioskUpdateButton';
 import styles from '@/features/kiosk/manage/KioskAppManagePage.module.css';
 import { useKioskButtonManagePage } from '@/features/kiosk/manage/useKioskButtonManagePage';
 
@@ -45,9 +46,13 @@ export default function KioskButtonManagePage() {
           <h1 className={shared.pageTitle}>WITH 버튼 관리</h1>
           <p className={shared.pageSubtitle}>키오스크 별 아이콘 배치 · 정보 · 자막/영상</p>
         </div>
-        <button type='button' className={shared.btnPrimary} onClick={openAddModal}>
-          새 버튼 추가
-        </button>
+        <div className={shared.actionGroup}>
+          {/* 키오스크 데스크톱 앱 즉시 업데이트(주간 점검 창과 별개의 수동 트리거). */}
+          <KioskUpdateButton />
+          <button type='button' className={shared.btnPrimary} onClick={openAddModal}>
+            새 버튼 추가
+          </button>
+        </div>
       </div>
 
       <p className={styles.tabBarHint} style={{ margin: '0 0 12px' }}>
