@@ -333,6 +333,7 @@ export function ShootingWeeklyLiveView({ anchor }: { anchor?: string }) {
           섹션 통째로 다음 페이지로 내리고, 남는 공간은 지점별·일별 상세로 채운다. */}
       <div data-report-page>
       <NewOutfitsSection periodLabel='이번 주' start={r.start} end={r.end} mode='live' />
+      <div data-report-keep>
       <Section title='지점별 상세' sub='전체 · 전주 대비'>
         <table className={s.table}>
           <thead>
@@ -359,7 +360,9 @@ export function ShootingWeeklyLiveView({ anchor }: { anchor?: string }) {
           </tbody>
         </table>
       </Section>
+      </div>
 
+      <div data-report-keep>
       <Section title='일별 상세' sub='키오스크 세로 × 일자 가로'>
         {rows.length === 0 ? (
           <EmptyNote />
@@ -389,6 +392,7 @@ export function ShootingWeeklyLiveView({ anchor }: { anchor?: string }) {
           </table>
         )}
       </Section>
+      </div>
 
 </div>
 
@@ -524,6 +528,7 @@ export function ShootingMonthlyLiveView({ ym }: { ym?: string }) {
       {/* 신규 의상 섹션을 통째로 다음 페이지로(제목만 남고 카드가 넘어가는 것 방지) — 남는 공간은 지점별 상세로 */}
       <div data-report-page>
       <NewOutfitsSection periodLabel='이번 달' start={r.start} end={r.end} mode='live' />
+      <div data-report-keep>
       <Section title='지점별 상세' sub='전체 · 전월 대비'>
         <table className={s.table}>
           <thead>
@@ -550,6 +555,7 @@ export function ShootingMonthlyLiveView({ ym }: { ym?: string }) {
           </tbody>
         </table>
       </Section>
+      </div>
 
 </div>
 
