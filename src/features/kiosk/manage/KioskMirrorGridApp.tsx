@@ -3,7 +3,7 @@ import { KioskAppIconGlyph } from '../kioskAppIcons';
 import { ButtonStatBadge, type ButtonStatMap } from './kioskButtonStatOverlay';
 import type { KioskButtonDto } from '@/hooks/kiosk-api/kioskButtonsTypes';
 import { GRID_FIRST_LINE, GRID_LAST_LINE, SLOTS_PER_LINE, tileBgFor } from './constants';
-import { resolveKioskButtonIconKey } from './kioskButtonDisplay';
+import { kioskButtonLabel, resolveKioskButtonIconKey } from './kioskButtonDisplay';
 import type { MoveRequest } from './KioskMirrorPreview';
 import { setScaledDragImage } from './scaledDragImage';
 import styles from './KioskMirrorGridApp.module.css';
@@ -46,6 +46,8 @@ type Props = {
   disabled?: boolean;
   /** 통계 리포트 전용 — buttonType 별 기간 집계를 타일 위에 덧그린다(관리 화면은 미전달). */
   stats?: ButtonStatMap;
+  /** 리포트에서는 표시 전용 배너 구간을 뺀다(통계가 없는 영역이라 지면 낭비). */
+  hideBanner?: boolean;
 };
 
 const TARGET_WIDTH = 560;
@@ -68,7 +70,7 @@ function spanOf(b: KioskButtonDto): number {
  * 마크업/CSS 를 그대로 이식(4열 그리드·AI 와이드·헤더/공지/검색/하단).
  * 타일 슬롯만 관리자 API 버튼 데이터로 채우고, 3~6열만 드래그·선택 편집.
  */
-export function KioskMirrorGridApp({ buttons, skin, onMove, onSelect, selectedId, disabled, stats }: Props) {
+export function KioskMirrorGridApp({ buttons, skin, onMove, onSelect, selectedId, disabled, stats, hideBanner }: Props) {
   const today = formatDate(new Date());
   const dragIdRef = useRef<number | null>(null);
   const [dragId, setDragId] = useState<number | null>(null);
@@ -186,7 +188,7 @@ export function KioskMirrorGridApp({ buttons, skin, onMove, onSelect, selectedId
       >
         {tileInner(b)}
         <ButtonStatBadge stat={stats?.get(b.buttonType)} max={maxClicks} unit='cq' />
-        <span className={styles.tileLabel}>{b.buttonType}</span>
+        <span className={styles.tileLabel}>{kioskButtonLabel(b.buttonType)}</span>
       </div>
     );
   };
@@ -300,7 +302,7 @@ export function KioskMirrorGridApp({ buttons, skin, onMove, onSelect, selectedId
         </div>
 
         {/* ── Banner (표시 전용) ── */}
-        <div className={styles.banner}>배너 · 표시 전용</div>
+        {hideBanner ? null : <div className={styles.banner}>배너 · 표시 전용</div>}
       </div>
     </div>
   );

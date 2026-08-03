@@ -4,6 +4,7 @@
 import { KioskMirrorGridApp, INSADONG_SKIN, OSAN_SKIN } from '@/features/kiosk/manage/KioskMirrorGridApp';
 import { KioskMirrorHwaseong } from '@/features/kiosk/manage/KioskMirrorHwaseong';
 import type { ButtonStat, ButtonStatMap } from '@/features/kiosk/manage/kioskButtonStatOverlay';
+import { kioskButtonLabel } from '@/features/kiosk/manage/kioskButtonDisplay';
 import type { KioskButtonDto } from '@/hooks/kiosk-api/kioskButtonsTypes';
 import s from './StatReports.module.css';
 
@@ -38,7 +39,7 @@ function OtherButtonsStrip({
         const st = stats.get(b.buttonType);
         return (
           <span className={s.mirrorStripItem} key={b.id}>
-            <b>{b.buttonType}</b>
+            <b>{kioskButtonLabel(b.buttonType)}</b>
             <span>{(st?.clicks ?? 0).toLocaleString()}회</span>
             <span className={s.mirrorStripSub}>
               {fmtDur(st?.durationSec ?? 0)} · {Math.round(st?.avgSec ?? 0)}초
@@ -69,14 +70,14 @@ export function KioskHomeStatsMirror({
   const isOsan = kioskId === 4 || kioskName.includes('오색') || kioskName.includes('오산');
 
   const noop = () => {};
+  // 홈 화면에 뜨지 않는 OFF_MAIN 은 리포트에서 다루지 않는다(클라이언트 확정).
   const fixed = buttons.filter((b) => b.placement === 'FIXED');
-  const offMain = buttons.filter((b) => b.placement === 'OFF_MAIN');
 
   return (
     <div className={s.mirrorWrap}>
       <div className={s.mirrorBoard}>
         {isHwaseong ? (
-          <KioskMirrorHwaseong buttons={buttons} onMove={noop} disabled stats={stats} />
+          <KioskMirrorHwaseong buttons={buttons} onMove={noop} disabled stats={stats} hideBanner />
         ) : (
           <KioskMirrorGridApp
             buttons={buttons}
@@ -84,11 +85,11 @@ export function KioskHomeStatsMirror({
             onMove={noop}
             disabled
             stats={stats}
+            hideBanner
           />
         )}
       </div>
       <OtherButtonsStrip title="고정 버튼" buttons={fixed} stats={stats} />
-      <OtherButtonsStrip title="화면 밖" buttons={offMain} stats={stats} />
     </div>
   );
 }

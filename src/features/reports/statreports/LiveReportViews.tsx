@@ -6,6 +6,7 @@ import s from './StatReports.module.css';
 import { ButtonUsageChart, CompareBarChart, Diff, EditableAiCard, KpiRow, Section, type UsageMetric } from './StatReportParts';
 import { buildButtonAi, buildShootingAi } from './aiAnalysis';
 import { chunkKioskCols } from './ShootingReportView';
+import { kioskButtonLabel } from '@/features/kiosk/manage/kioskButtonDisplay';
 import { KioskHomeStatsMirror } from './KioskHomeStatsMirror';
 import { fmtMD, type KpiItem } from './statReportsMockData';
 import { NewOutfitsSection } from './NewOutfitsSection';
@@ -768,12 +769,12 @@ export function ButtonLiveView({
             const seen = new Set<string>();
             const merged = v.rows.map((rw) => {
               seen.add(rw.buttonType);
-              return { key: rw.buttonType, label: rw.buttonType, clicks: rw.totalClicks, duration: rw.totalDuration, avg: rw.avgDuration, line: 0, position: 0 };
+              return { key: rw.buttonType, label: kioskButtonLabel(rw.buttonType), clicks: rw.totalClicks, duration: rw.totalDuration, avg: rw.avgDuration, line: 0, position: 0 };
             });
             for (const hb of catalog.data?.[k] ?? []) {
               if (seen.has(hb.buttonType)) continue;
               seen.add(hb.buttonType);
-              merged.push({ key: hb.buttonType, label: hb.buttonType, clicks: 0, duration: 0, avg: 0, line: hb.line, position: hb.position });
+              merged.push({ key: hb.buttonType, label: kioskButtonLabel(hb.buttonType), clicks: 0, duration: 0, avg: 0, line: hb.line, position: hb.position });
             }
             const rows = merged.sort((a, b) => b.clicks - a.clicks || a.line - b.line || a.position - b.position);
             return (
