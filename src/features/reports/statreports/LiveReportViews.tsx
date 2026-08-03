@@ -3,9 +3,10 @@
 // AI 종합 분석은 실데이터 규칙 기반 자동 작성(aiAnalysis.ts, 무과금) — 외부 API 교체 여지 유지.
 import { useEffect, useMemo, useState } from 'react';
 import s from './StatReports.module.css';
-import { ButtonUsageChart, CompareBarChart, Diff, EditableAiCard, KpiRow, Section, SplitTable, type UsageMetric } from './StatReportParts';
+import { ButtonUsageChart, CompareBarChart, Diff, EditableAiCard, KpiRow, Section, type UsageMetric } from './StatReportParts';
 import { buildButtonAi, buildShootingAi } from './aiAnalysis';
 import { chunkKioskCols } from './ShootingReportView';
+import { KioskHomeStatsMirror } from './KioskHomeStatsMirror';
 import { fmtMD, type KpiItem } from './statReportsMockData';
 import { NewOutfitsSection } from './NewOutfitsSection';
 import {
@@ -793,29 +794,41 @@ export function ButtonLiveView({
                 {rows.length === 0 ? (
                   <EmptyNote title='기간 내 사용 데이터가 없습니다' hint='해당 키오스크에서 버튼 클릭이 집계되면 그래프와 표가 채워집니다.' />
                 ) : (
-                <ButtonUsageChart
-                  data={rows.map((r) => ({ label: r.label, clicks: r.clicks, durationSec: r.duration }))}
-                />
-                )}
-                {rows.length === 0 ? null : (
-                  <SplitTable
-                    head={['아이콘', '클릭', '사용 시간', '평균 체류']}
-                    rows={rows.map((row) => [
-                      row.label,
-                      `${row.clicks.toLocaleString()}회`,
-                      fmtDurationSec(row.duration),
-                      `${Math.round(row.avg)}초`,
-                    ])}
-                    sum={[
-                      { label: '총 클릭수', value: `${v.clicks.toLocaleString()}회` },
-                      { label: '총 사용시간', value: fmtDurationSec(v.duration) },
-                      {
-                        label: '평균 체류',
-                        value: `${v.clicks > 0 ? Math.round(v.duration / v.clicks) : 0}초`,
-                      },
-                    ]}
+                <div className={s.mirrorRow}>
+                  <KioskHomeStatsMirror
+                    kioskName={k}
+                    kioskId={kioskOrder.get(k)}
+                    buttons={catalog.data?.[k] ?? []}
+                    stats={
+                      new Map(
+                        rows.map((r) => [
+                          r.key,
+                          { clicks: r.clicks, durationSec: r.duration, avgSec: r.avg },
+                        ]),
+                      )
+                    }
                   />
+                  <div className={s.mirrorSide}>
+                    <ButtonUsageChart
+                      data={rows.map((r) => ({ label: r.label, clicks: r.clicks, durationSec: r.duration }))}
+                    />
+                  </div>
+                </div>
                 )}
+                <div className={s.sumStrip} style={{ marginTop: 10 }}>
+                  <span className={s.sumItem}>
+                    <span className={s.sumLabel}>총 클릭수</span>
+                    <b>{v.clicks.toLocaleString()}회</b>
+                  </span>
+                  <span className={s.sumItem}>
+                    <span className={s.sumLabel}>총 사용시간</span>
+                    <b>{fmtDurationSec(v.duration)}</b>
+                  </span>
+                  <span className={s.sumItem}>
+                    <span className={s.sumLabel}>평균 체류</span>
+                    <b>{v.clicks > 0 ? Math.round(v.duration / v.clicks) : 0}초</b>
+                  </span>
+                </div>
                 </div>
                 {ki === shown.length - 1 ? (
                   <>

@@ -1,5 +1,6 @@
 import { useRef, useState, type DragEvent } from 'react';
 import { KioskAppIconGlyph } from '../kioskAppIcons';
+import { ButtonStatBadge, type ButtonStatMap } from './kioskButtonStatOverlay';
 import type { KioskButtonDto } from '@/hooks/kiosk-api/kioskButtonsTypes';
 import { GRID_FIRST_LINE, GRID_LAST_LINE, SLOTS_PER_LINE, tileBgFor } from './constants';
 import { resolveKioskButtonIconKey } from './kioskButtonDisplay';
@@ -13,6 +14,8 @@ type Props = {
   onSelect?: (button: KioskButtonDto) => void;
   selectedId?: number | null;
   disabled?: boolean;
+  /** 통계 리포트 전용 — buttonType 별 기간 집계를 타일 위에 덧그린다(관리 화면은 미전달). */
+  stats?: ButtonStatMap;
 };
 
 /** 2160×3840 보드를 이 너비로 축소해 패널에 맞춘다(비율 그대로). */
@@ -39,7 +42,7 @@ function spanOf(b: KioskButtonDto): number {
  * 그대로 이식하고, 타일 슬롯만 관리자 API 버튼 데이터로 채운다.
  * 헤더/공지/날씨/검색바/하단내비/배너는 표시 전용, 3~6열 그리드만 드래그·클릭 편집.
  */
-export function KioskMirrorHwaseong({ buttons, onMove, onSelect, selectedId, disabled }: Props) {
+export function KioskMirrorHwaseong({ buttons, onMove, onSelect, selectedId, disabled, stats }: Props) {
   const today = formatDate(new Date());
   const dragIdRef = useRef<number | null>(null);
   const [dragId, setDragId] = useState<number | null>(null);
@@ -53,6 +56,8 @@ export function KioskMirrorHwaseong({ buttons, onMove, onSelect, selectedId, dis
   const cam1 = fixedAt(7, 1);
   const cam2 = fixedAt(7, 2);
   const cam3 = fixedAt(7, 3);
+  // 배지 농도 기준(최댓값). 위치는 그대로 두고 색으로만 사용량을 표현한다.
+  const maxClicks = stats ? Math.max(0, ...[...stats.values()].map((v) => v.clicks)) : 0;
   const mainButtons = buttons.filter((b) => (b.placement ?? 'MAIN') === 'MAIN' && b.line >= 1);
 
   const finishDrop = (targetLine: number, targetPos: number) => {
@@ -148,7 +153,8 @@ export function KioskMirrorHwaseong({ buttons, onMove, onSelect, selectedId, dis
               }}
               {...dropHandlers(key, line, p)}
             >
-              <div className={wide ? styles.tileCardWide : styles.tileCard}>{tileInner(b)}</div>
+              <div className={wide ? styles.tileCardWide : styles.tileCard}>{tileInner(b)}
+        <ButtonStatBadge stat={stats?.get(b.buttonType)} max={maxClicks} unit='board' /></div>
               <span className={styles.tileLabel}>{b.buttonType}</span>
             </div>
           );

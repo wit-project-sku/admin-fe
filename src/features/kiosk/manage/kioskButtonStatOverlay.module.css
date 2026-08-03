@@ -1,0 +1,45 @@
+/* 타일 위에 겹치는 수치 배지 — 버튼 이미지를 최대한 가리지 않도록 하단에 얇게 깐다.
+   두 미러의 축소 방식이 달라 글자 크기 단위를 나눈다(둘 다 보드 기준 44/26px 상당). */
+.badge {
+  position: absolute;
+  left: 3%;
+  right: 3%;
+  bottom: 2%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2% 1%;
+  border-radius: 10%;
+  background: rgba(255, 255, 255, 0.93);
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  line-height: 1.08;
+  pointer-events: none;
+}
+
+/* GridApp(인사동·오색) — 컨테이너 쿼리 단위 */
+.cq .clicks { font-size: 2.04cqw; }
+.cq .sub { font-size: 1.2cqw; }
+
+/* 화성휴게소 — 보드 원본 px(스케일로 함께 줄어든다) */
+.board .clicks { font-size: 44px; }
+.board .sub { font-size: 26px; }
+
+.clicks {
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.sub {
+  font-weight: 600;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+/* 클릭량 단계 — 위치는 그대로 두고 농도로만 표현한다 */
+.lv0 { background: rgba(248, 250, 252, 0.9); }
+.lv0 .clicks { color: #94a3b8; }
+.lv1 { background: rgba(239, 246, 255, 0.94); }
+.lv2 { background: rgba(191, 219, 254, 0.95); }
+.lv3 { background: rgba(29, 78, 216, 0.95); }
+.lv3 .clicks { color: #ffffff; }
+.lv3 .sub { color: #dbeafe; }

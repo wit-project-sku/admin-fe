@@ -7,6 +7,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { APIService } from '@/utils/axios';
 import { buildShootingStatsTableModel } from '../shootingStatsMappers';
+import type { KioskButtonDto } from '@/hooks/kiosk-api/kioskButtonsTypes';
 import type {
   KioskButtonStatsSummaryBlock,
   KioskButtonStatsSummaryResponse,
@@ -239,7 +240,8 @@ export function useButtonsLive(start: string, end: string, prevStart: string, pr
 /** 리포트용 홈 버튼 카탈로그 — 클릭 0인 버튼도 빈 막대/0행으로 채우기 위해
  *  키오스크별 등록 버튼 전체(placement=MAIN/FIXED)를 조회한다.
  *  응답은 kioskId=null·kioskName만 오므로 kioskLabel(=뒤)로 키를 만든다. 테스트 단말(모니터)은 제외. */
-export type ReportKioskButton = { buttonType: string; buttonName: string; line: number; position: number };
+/** 홈 화면 미러를 그리려면 좌표·이미지까지 필요하다(관리 화면과 같은 컴포넌트를 재사용). */
+export type ReportKioskButton = KioskButtonDto;
 export function useReportKioskButtons(enabled: boolean) {
   return useQuery({
     queryKey: ['stat-report-kiosk-buttons'],
@@ -250,26 +252,13 @@ export function useReportKioskButtons(enabled: boolean) {
           params: { pageNum, pageSize: 200 },
         });
         const page = unwrap<{ content?: unknown[]; last?: boolean; totalPages?: number }>(res);
-        const content = (page.content ?? []) as Array<{
-          kioskName?: string;
-          buttonType?: string;
-          buttonName?: string;
-          placement?: string;
-          line?: number;
-          position?: number;
-        }>;
+        const content = (page.content ?? []) as KioskButtonDto[];
         if (content.length === 0) break;
         for (const b of content) {
-          // 홈 화면에 표시되는 버튼만(MAIN 그리드 + FIXED 고정). OFF_MAIN(미표시)은 제외.
-          if (b.placement !== 'MAIN' && b.placement !== 'FIXED') continue;
+          // 미러가 placement 로 배치를 결정하므로 DTO 를 그대로 넘긴다(OFF_MAIN 도 목록엔 필요).
           const label = kioskLabel(b.kioskName ?? '');
           if (!label || label.includes('모니터')) continue; // 테스트 단말 제외
-          (byKiosk[label] ??= []).push({
-            buttonType: b.buttonType ?? '',
-            buttonName: b.buttonName ?? '',
-            line: b.line ?? 99,
-            position: b.position ?? 99,
-          });
+          (byKiosk[label] ??= []).push(b);
         }
         if (page.last || (page.totalPages && pageNum >= page.totalPages)) break;
       }

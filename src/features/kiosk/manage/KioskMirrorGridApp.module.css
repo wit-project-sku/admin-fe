@@ -251,6 +251,7 @@
 }
 
 .tile {
+  position: relative; /* 통계 배지(리포트 전용)의 기준 박스 */
   display: flex;
   flex-direction: column;
   align-items: center;

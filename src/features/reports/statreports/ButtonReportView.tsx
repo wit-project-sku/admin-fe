@@ -6,7 +6,6 @@ import s from './StatReports.module.css';
 import { AiPanel, ButtonUsageChart, Diff, KpiRow, Section, SplitTable } from './StatReportParts';
 import {
   BUTTON_AVG_SEC,
-  fmtMD,
   KIOSK_SHORT,
   buttonMonthly,
   buttonWeekly,

@@ -1,5 +1,6 @@
 import { useRef, useState, type CSSProperties, type DragEvent, type ReactElement } from 'react';
 import { KioskAppIconGlyph } from '../kioskAppIcons';
+import { ButtonStatBadge, type ButtonStatMap } from './kioskButtonStatOverlay';
 import type { KioskButtonDto } from '@/hooks/kiosk-api/kioskButtonsTypes';
 import { GRID_FIRST_LINE, GRID_LAST_LINE, SLOTS_PER_LINE, tileBgFor } from './constants';
 import { resolveKioskButtonIconKey } from './kioskButtonDisplay';
@@ -43,6 +44,8 @@ type Props = {
   onSelect?: (button: KioskButtonDto) => void;
   selectedId?: number | null;
   disabled?: boolean;
+  /** 통계 리포트 전용 — buttonType 별 기간 집계를 타일 위에 덧그린다(관리 화면은 미전달). */
+  stats?: ButtonStatMap;
 };
 
 const TARGET_WIDTH = 560;
@@ -65,7 +68,7 @@ function spanOf(b: KioskButtonDto): number {
  * 마크업/CSS 를 그대로 이식(4열 그리드·AI 와이드·헤더/공지/검색/하단).
  * 타일 슬롯만 관리자 API 버튼 데이터로 채우고, 3~6열만 드래그·선택 편집.
  */
-export function KioskMirrorGridApp({ buttons, skin, onMove, onSelect, selectedId, disabled }: Props) {
+export function KioskMirrorGridApp({ buttons, skin, onMove, onSelect, selectedId, disabled, stats }: Props) {
   const today = formatDate(new Date());
   const dragIdRef = useRef<number | null>(null);
   const [dragId, setDragId] = useState<number | null>(null);
@@ -79,6 +82,8 @@ export function KioskMirrorGridApp({ buttons, skin, onMove, onSelect, selectedId
   const cam1 = fixedAt(7, 1);
   const cam2 = fixedAt(7, 2);
   const cam3 = fixedAt(7, 3);
+  // 배지 농도 기준(최댓값). 위치는 그대로 두고 색으로만 사용량을 표현한다.
+  const maxClicks = stats ? Math.max(0, ...[...stats.values()].map((v) => v.clicks)) : 0;
   const mainButtons = buttons.filter((b) => (b.placement ?? 'MAIN') === 'MAIN' && b.line >= 1);
 
   const finishDrop = (targetLine: number, targetPos: number) => {
@@ -180,6 +185,7 @@ export function KioskMirrorGridApp({ buttons, skin, onMove, onSelect, selectedId
         {...dropHandlers(key, line, p)}
       >
         {tileInner(b)}
+        <ButtonStatBadge stat={stats?.get(b.buttonType)} max={maxClicks} unit='cq' />
         <span className={styles.tileLabel}>{b.buttonType}</span>
       </div>
     );
