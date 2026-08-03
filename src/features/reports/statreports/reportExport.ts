@@ -49,6 +49,35 @@ function findBreakY(canvas: HTMLCanvasElement, lo: number, hi: number): number {
   return hi;
 }
 
+/**
+ * 페이지 안에서 <b>쪼개지면 안 되는 블록</b>의 세로 범위를 캡처 좌표(px)로 모은다.
+ *
+ * <p>슬라이서는 DOM 이 아니라 픽셀로 자르기 때문에, 제목과 본문을 한 div 로 묶어도 그 경계를 모른다.
+ * {@code data-report-keep} 이 붙은 요소의 위치를 미리 재서 자를 위치를 그 앞으로 물린다.
+ */
+function collectKeepBlocks(page: HTMLElement, scale: number): { top: number; bottom: number }[] {
+  const pageTop = page.getBoundingClientRect().top;
+  return Array.from(page.querySelectorAll<HTMLElement>('[data-report-keep]')).map((el) => {
+    const r = el.getBoundingClientRect();
+    return { top: (r.top - pageTop) * scale, bottom: (r.bottom - pageTop) * scale };
+  });
+}
+
+/**
+ * 자를 위치가 '쪼개면 안 되는 블록' 한가운데면 그 블록 시작 지점으로 당긴다.
+ * 블록 자체가 한 장보다 크면 어쩔 수 없이 그대로 자른다(무한루프 방지).
+ */
+function avoidSplitting(
+  cut: number,
+  from: number,
+  blocks: { top: number; bottom: number }[],
+): number {
+  for (const b of blocks) {
+    if (cut > b.top && cut < b.bottom && b.top > from) return b.top;
+  }
+  return cut;
+}
+
 /** 캔버스의 [y, y+h) 구간만 잘라 JPEG data URL 로. */
 function sliceToJpeg(src: HTMLCanvasElement, y: number, h: number): string {
   const c = document.createElement('canvas');
@@ -97,17 +126,19 @@ export async function exportReportPdf(): Promise<boolean> {
     if (canvas.width === 0 || canvas.height === 0) throw new Error('캡처 크기가 0입니다(창이 표시된 상태에서 다시 시도)');
 
     const pageMaxPx = Math.floor(canvas.width * MAX_RATIO); // A4 한 장에 담기는 캡처 높이(px)
+    const keeps = collectKeepBlocks(p, 2); // scale 과 동일해야 한다
     let y = 0;
     while (y < canvas.height) {
       const remain = canvas.height - y;
-      // 남은 분량이 한 장에 들어가면 그대로, 아니면 여백 지점을 찾아 자른다.
-      const h =
-        remain <= pageMaxPx
-          ? remain
-          : Math.max(
-              Math.floor(pageMaxPx * 0.5), // 너무 조금만 담기는 장이 생기지 않게 하한
-              findBreakY(canvas, y + Math.floor(pageMaxPx * 0.75), y + pageMaxPx) - y,
-            );
+      // 남은 분량이 한 장에 들어가면 그대로, 아니면 ① 여백 지점을 찾고 ② 쪼개면 안 되는 블록은 피한다.
+      let h: number;
+      if (remain <= pageMaxPx) {
+        h = remain;
+      } else {
+        const blank = findBreakY(canvas, y + Math.floor(pageMaxPx * 0.75), y + pageMaxPx);
+        const safe = avoidSplitting(blank, y, keeps);
+        h = Math.max(Math.floor(pageMaxPx * 0.25), safe - y); // 너무 얇은 장 방지(하한)
+      }
       if (!first) doc.addPage();
       first = false;
       doc.addImage(sliceToJpeg(canvas, y, h), 'JPEG', MARGIN, MARGIN, CONTENT_W, (h / canvas.width) * CONTENT_W);

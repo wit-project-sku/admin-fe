@@ -106,15 +106,19 @@ export function NewOutfitsSection({
 }) {
   const live = useNewOutfits(start, end);
 
+  // 제목과 카드가 페이지 경계에서 갈라지지 않도록 한 묶음으로 표시한다(reportExport 가 이 표식을 본다).
   if (mode === 'sample') {
     return (
-      <Section title={`${periodLabel} 새로 등록된 의상`} sub='기간 내 신규 등록 — 자동 생성 시 실물 사진 삽입'>
-        <NewOutfitCards list={SAMPLE_NEW_OUTFITS} />
-      </Section>
+      <div data-report-keep>
+        <Section title={`${periodLabel} 새로 등록된 의상`} sub='기간 내 신규 등록 — 자동 생성 시 실물 사진 삽입'>
+          <NewOutfitCards list={SAMPLE_NEW_OUTFITS} />
+        </Section>
+      </div>
     );
   }
 
   return (
+    <div data-report-keep>
     <Section title={`${periodLabel} 새로 등록된 의상`} sub='기간 내 신규 등록 의상'>
       {live.isPending ? (
         <p className={s.note}>불러오는 중…</p>
@@ -128,5 +132,6 @@ export function NewOutfitsSection({
         <NewOutfitCards list={live.data.list} />
       )}
     </Section>
+    </div>
   );
 }
