@@ -469,3 +469,9 @@
   font-weight: 600;
 }
 
+
+/* 언어선택 배지 — .homeCircle 과 공유하는 원형 클립에 잘리지 않게 이 버튼만 푼다 */
+.langBtn {
+  position: relative;
+  overflow: visible;
+}

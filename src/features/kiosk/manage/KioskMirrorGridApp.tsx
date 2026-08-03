@@ -272,6 +272,9 @@ export function KioskMirrorGridApp({ buttons, skin, onMove, onSelect, selectedId
             </div>
             <span className={styles.krBtn} onClick={() => langBtn && onSelect?.(langBtn)}>
               KR
+              {langBtn ? (
+                <ButtonStatBadge stat={stats?.get(langBtn.buttonType)} max={maxClicks} unit='cq' />
+              ) : null}
             </span>
           </div>
 

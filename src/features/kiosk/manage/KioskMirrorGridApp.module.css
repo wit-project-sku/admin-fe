@@ -190,6 +190,9 @@
 }
 
 .krBtn {
+  /* 배지가 원형 클립에 잘리지 않도록. 이 버튼은 이미지 없이 'KR' 텍스트만 그린다. */
+  position: relative;
+  overflow: visible;
   font-weight: 700;
   font-size: 1.56cqh;
   line-height: 1;

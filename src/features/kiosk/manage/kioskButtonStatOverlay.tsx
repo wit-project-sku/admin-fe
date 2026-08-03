@@ -17,17 +17,16 @@ export function ButtonStatBadge({
   unit,
 }: {
   stat?: ButtonStat;
+  /** 이 미러에서 가장 많이 클릭된 수 — 1위 강조 판정에만 쓴다 */
   max: number;
   /** 미러별 축소 방식이 달라 글자 단위를 나눈다 — cq: 컨테이너쿼리, board: 보드 원본 px */
   unit: 'cq' | 'board';
 }) {
   if (!stat) return null;
-  const ratio = max > 0 ? stat.clicks / max : 0;
-  const level = stat.clicks === 0 ? 0 : ratio >= 0.5 ? 3 : ratio >= 0.15 ? 2 : 1;
-  // 1위는 농도가 아니라 글자로 구분한다 — 축소된 미러에서 배경 농도차는 잘 안 읽힌다.
+  // 배경·글자색·크기는 모든 버튼이 같고, 1위만 조금 크고 굵게 구분한다.
   const isTop = max > 0 && stat.clicks === max;
   return (
-    <span className={`${s.badge} ${s[unit]} ${s[`lv${level}`]} ${isTop ? s.top : ''}`}>
+    <span className={`${s.badge} ${s[unit]} ${isTop ? s.top : ''}`}>
       <b className={s.clicks}>{stat.clicks.toLocaleString()}회</b>
     </span>
   );

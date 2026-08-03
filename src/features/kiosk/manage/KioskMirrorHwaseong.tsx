@@ -260,6 +260,9 @@ export function KioskMirrorHwaseong({ buttons, onMove, onSelect, selectedId, dis
 
             <span className={styles.langBtn} onClick={() => lang && onSelect?.(lang)}>
               <span className={styles.langBtnText}>KR</span>
+              {lang ? (
+                <ButtonStatBadge stat={stats?.get(lang.buttonType)} max={maxClicks} unit='board' />
+              ) : null}
             </span>
           </div>
 
