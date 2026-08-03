@@ -203,7 +203,8 @@ export function useOutfitTopLive(start: string, end: string, enabled: boolean) {
 /* ── 버튼 요약(금기·전기·누적) ── */
 async function fetchButtonsBlock(startDate: string, endDate: string): Promise<KioskButtonStatsSummaryBlock | null> {
   const res = await APIService.private.get<KioskButtonStatsSummaryResponse>('/admin/stats/buttons/summary', {
-    params: { startDate, endDate, pageNum: 1, pageSize: 500 },
+    // includeKioskDetails: 지점별 상세는 buttonDetails(버튼타입별 전 지점 합계)로는 만들 수 없다.
+    params: { startDate, endDate, pageNum: 1, pageSize: 500, includeKioskDetails: true },
   });
   const block = (res as unknown as KioskButtonStatsSummaryResponse)?.data?.content?.[0]
     ?? (res as unknown as { content?: KioskButtonStatsSummaryBlock[] })?.content?.[0];
@@ -212,6 +213,7 @@ async function fetchButtonsBlock(startDate: string, endDate: string): Promise<Ki
   return {
     ...block,
     buttonDetails: block.buttonDetails.map((d) => ({ ...d, representativeKioskName: kioskLabel(d.representativeKioskName) })),
+    kioskButtonDetails: (block.kioskButtonDetails ?? []).map((d) => ({ ...d, kioskName: kioskLabel(d.kioskName) })),
   };
 }
 

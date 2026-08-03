@@ -1,3 +1,4 @@
+import type { KioskButtonStatsSummaryBlock } from '@/hooks/kiosk-api/kioskButtonStatsTypes';
 // 실데이터 리포트 뷰 — useStatReportLive 훅으로 서버 집계를 조합해 렌더.
 // P2 서버 API 연동 완료: 시간대·오전/오후·요일·카테고리별 1위·의상 매트릭스·월별 통계.
 // AI 종합 분석은 실데이터 규칙 기반 자동 작성(aiAnalysis.ts, 무과금) — 외부 API 교체 여지 유지.
@@ -591,6 +592,8 @@ export function ShootingMonthlyLiveView({ ym }: { ym?: string }) {
 /* ── 버튼 리포트 (주간/월간) ── */
 export type ReportKioskOption = { id: number; name: string };
 
+type KioskRow = NonNullable<KioskButtonStatsSummaryBlock['kioskButtonDetails']>[number];
+
 export function ButtonLiveView({
   variant,
   anchor,
@@ -622,9 +625,8 @@ export function ButtonLiveView({
   const kioskOptions = useMemo<ReportKioskOption[]>(() => {
     const order = new Map<string, number>();
     for (const b of [cur.data, prev.data, cum.data]) {
-      for (const row of b?.buttonDetails ?? []) {
-        const key = row.representativeKioskName || `키오스크 ${row.kioskId}`;
-        if (!order.has(key)) order.set(key, row.kioskId);
+      for (const row of b?.kioskButtonDetails ?? []) {
+        if (!order.has(row.kioskName)) order.set(row.kioskName, row.kioskId);
       }
     }
     return [...order.entries()].sort((a, b) => a[1] - b[1]).map(([name, id]) => ({ id, name }));
@@ -646,36 +648,33 @@ export function ButtonLiveView({
   const cumBlock = cum.data ?? null;
   const badge = diffBadge(block.totalClicks, prevBlock?.totalClicks ?? 0, '회', `${prevLabel} 대비`);
 
-  // 지점별 집계(그래프·블록) — buttonDetails를 지점으로 그룹
-  const byKiosk = new Map<string, { rows: typeof block.buttonDetails; clicks: number; duration: number }>();
-  for (const row of block.buttonDetails) {
-    const key = row.representativeKioskName || `키오스크 ${row.kioskId}`;
-    const cu = byKiosk.get(key) ?? { rows: [], clicks: 0, duration: 0 };
+  // 지점별 집계 — 반드시 kioskButtonDetails 를 쓴다.
+  // buttonDetails 는 버튼타입별로 전 지점을 합친 1행이고 representativeKioskName 은 '최다 클릭 지점'이라,
+  // 그걸로 그룹핑하면 지점마다 자기가 1위인 버튼만 남고 수치는 전 지점 합계가 된다(과거 버그).
+  const byKiosk = new Map<string, { rows: KioskRow[]; clicks: number; duration: number }>();
+  for (const row of block.kioskButtonDetails ?? []) {
+    const cu = byKiosk.get(row.kioskName) ?? { rows: [], clicks: 0, duration: 0 };
     cu.rows.push(row);
     cu.clicks += row.totalClicks;
     cu.duration += row.totalDuration;
-    byKiosk.set(key, cu);
+    byKiosk.set(row.kioskName, cu);
   }
   // 버튼별 전기 클릭(지점|버튼) — 표의 '전주 대비' 열에 쓴다.
   const prevByButton = new Map<string, number>();
-  for (const row of prevBlock?.buttonDetails ?? []) {
-    const key = `${row.representativeKioskName || `키오스크 ${row.kioskId}`}|${row.buttonType}`;
-    prevByButton.set(key, (prevByButton.get(key) ?? 0) + row.totalClicks);
-  }
   const prevByKiosk = new Map<string, number>();
-  for (const row of prevBlock?.buttonDetails ?? []) {
-    const key = row.representativeKioskName || `키오스크 ${row.kioskId}`;
-    prevByKiosk.set(key, (prevByKiosk.get(key) ?? 0) + row.totalClicks);
+  for (const row of prevBlock?.kioskButtonDetails ?? []) {
+    const bk = `${row.kioskName}|${row.buttonType}`;
+    prevByButton.set(bk, (prevByButton.get(bk) ?? 0) + row.totalClicks);
+    prevByKiosk.set(row.kioskName, (prevByKiosk.get(row.kioskName) ?? 0) + row.totalClicks);
   }
-  // 전체 키오스크 합집합(금기·전기·누적) — 기간 내 사용이 0인 지점도 그래프·상세에 모두 표시
+  // 전체 키오스크 합집합(금기·전기·누적) — 기간 내 사용이 0인 지점도 상세에 모두 표시
   const kioskOrder = new Map<string, number>();
   for (const b of [block, prevBlock, cumBlock]) {
-    for (const row of b?.buttonDetails ?? []) {
-      const key = row.representativeKioskName || `키오스크 ${row.kioskId}`;
-      if (!kioskOrder.has(key)) kioskOrder.set(key, row.kioskId);
+    for (const row of b?.kioskButtonDetails ?? []) {
+      if (!kioskOrder.has(row.kioskName)) kioskOrder.set(row.kioskName, row.kioskId);
     }
   }
-  const kiosks: [string, { rows: typeof block.buttonDetails; clicks: number; duration: number }][] =
+  const kiosks: [string, { rows: KioskRow[]; clicks: number; duration: number }][] =
     [...kioskOrder.entries()]
       .sort((a, b) => a[1] - b[1])
       .map(([name]) => [name, byKiosk.get(name) ?? { rows: [], clicks: 0, duration: 0 }]);
