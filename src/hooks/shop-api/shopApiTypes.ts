@@ -8,6 +8,7 @@ export type ShopWriteBody = {
   // ── 한국어 (shopNameKr 필수) ──
   shopNameKr: string;
   baseCategoryKr?: string;
+  regionKr?: string;
   secondCategoryKr?: string;
   aiCategoryKr?: string;
   addressKr?: string;
@@ -17,6 +18,7 @@ export type ShopWriteBody = {
   // ── 영어 ──
   shopNameEn?: string;
   baseCategoryEn?: string;
+  regionEn?: string;
   secondCategoryEn?: string;
   aiCategoryEn?: string;
   addressEn?: string;
@@ -26,6 +28,7 @@ export type ShopWriteBody = {
   // ── 일본어 ──
   shopNameJp?: string;
   baseCategoryJp?: string;
+  regionJp?: string;
   secondCategoryJp?: string;
   aiCategoryJp?: string;
   addressJp?: string;
@@ -35,6 +38,7 @@ export type ShopWriteBody = {
   // ── 중국어 ──
   shopNameCh?: string;
   baseCategoryCh?: string;
+  regionCh?: string;
   secondCategoryCh?: string;
   aiCategoryCh?: string;
   addressCh?: string;

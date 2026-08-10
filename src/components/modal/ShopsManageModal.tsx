@@ -30,6 +30,7 @@ const LANGS = [
 const LANG_FIELDS: { base: string; label: string; textarea?: boolean }[] = [
   { base: 'shopName', label: '상점명' },
   { base: 'baseCategory', label: '1차 카테고리' },
+  { base: 'region', label: '권역' },
   { base: 'secondCategory', label: '2차 카테고리' },
   { base: 'aiCategory', label: 'AI 카테고리' },
   { base: 'address', label: '주소' },
