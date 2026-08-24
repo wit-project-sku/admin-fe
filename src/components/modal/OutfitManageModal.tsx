@@ -41,9 +41,18 @@ const OUTFIT_TYPE_OPTIONS: { value: OutfitType; label: string }[] = [
 
 const UNIFORM: OutfitType = 'SCHOOL_UNIFORM';
 
+/** 카테고리 목록 응답 한 건 — 대분류 + 그 안의 세부(남/여 등). 세부가 없으면 빈 배열. */
+type OutfitCategoryOption = {
+  id: number;
+  name?: string;
+  labelKr?: string;
+  subCategories?: { id: number; labelKr?: string }[];
+};
+
 type OutfitFormState = {
   outfitCode: string;
   categoryId: string;
+  subCategoryId: string;
   schoolId: string;
   status: 'ACTIVE' | 'INACTIVE';
   type: OutfitType;
@@ -54,12 +63,24 @@ type OutfitFormState = {
 
 type OutfitFieldErrors = Partial<
   Record<
-    'outfitCode' | 'categoryId' | 'schoolId' | 'status' | 'kioskIds' | 'startDate' | 'endDate' | 'image',
+    | 'outfitCode'
+    | 'categoryId'
+    | 'subCategoryId'
+    | 'schoolId'
+    | 'status'
+    | 'kioskIds'
+    | 'startDate'
+    | 'endDate'
+    | 'image',
     string
   >
 >;
 
-function validateOutfitForm(form: OutfitFormState, previewCount: number): OutfitFieldErrors {
+function validateOutfitForm(
+  form: OutfitFormState,
+  previewCount: number,
+  subCategoryRequired: boolean,
+): OutfitFieldErrors {
   const e: OutfitFieldErrors = {};
   const isUniform = form.type === UNIFORM;
 
@@ -73,6 +94,11 @@ function validateOutfitForm(form: OutfitFormState, previewCount: number): Outfit
   } else {
     const categoryId = Number(form.categoryId);
     if (!Number.isFinite(categoryId) || categoryId <= 0) e.categoryId = '의상 카테고리를 선택해 주세요.';
+    // 세부가 있는 대분류(한복·직업의상·일상의상)는 남/여까지 골라야 키오스크에서 제대로 걸린다.
+    else if (subCategoryRequired) {
+      const subId = Number(form.subCategoryId);
+      if (!Number.isFinite(subId) || subId <= 0) e.subCategoryId = '하위 분류를 선택해 주세요.';
+    }
   }
 
   if (form.status !== 'ACTIVE' && form.status !== 'INACTIVE') {
@@ -108,8 +134,13 @@ function buildOutfitWriteBody(form: OutfitFormState): OutfitWriteBody {
     endDate: end ? end : null,
   };
   if (code) body.outfitCode = code;
-  if (isUniform) body.schoolId = Number(form.schoolId);
-  else body.categoryId = Number(form.categoryId);
+  if (isUniform) {
+    body.schoolId = Number(form.schoolId);
+  } else {
+    body.categoryId = Number(form.categoryId);
+    const subId = Number(form.subCategoryId);
+    if (Number.isFinite(subId) && subId > 0) body.subCategoryId = subId;
+  }
   return body;
 }
 
@@ -124,6 +155,7 @@ type OutfitManageModalProps = {
 const EMPTY_FORM: OutfitFormState = {
   outfitCode: '',
   categoryId: '',
+  subCategoryId: '',
   schoolId: '',
   status: 'ACTIVE',
   type: 'NORMAL',
@@ -134,7 +166,20 @@ const EMPTY_FORM: OutfitFormState = {
 
 export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuccess }: OutfitManageModalProps) {
   const { data: categoriesData, isLoading: categoriesLoading, error: categoriesError } = useGetAllOutfitCategories();
-  const categories = useMemo(() => unwrapList(categoriesData) as SelectOption[], [categoriesData]);
+  const categoryList = useMemo(
+    () => unwrapList(categoriesData) as OutfitCategoryOption[],
+    [categoriesData],
+  );
+  // 드롭다운에는 코드(name)가 아니라 한국어 라벨을 보여준다 — 'hanbok' 보다 '한복'이 고르기 쉽다.
+  const categories = useMemo<SelectOption[]>(
+    () =>
+      categoryList.map((c) => ({
+        value: c.id,
+        label: c.labelKr ?? c.name ?? String(c.id),
+        name: c.name,
+      })),
+    [categoryList],
+  );
   const { data: kiosksData } = useGetKiosks();
   const kiosks = unwrapList(kiosksData) as MultiSelectItem[];
   const { data: detailData, isLoading: detailLoading } = useGetOutfitById(open && mode === 'edit' ? outfitId : null);
@@ -151,6 +196,19 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
 
   const isEdit = mode === 'edit';
   const isUniformType = form.type === UNIFORM;
+
+  const selectedCategory = useMemo(
+    () => categoryList.find((c) => String(c.id) === String(form.categoryId)),
+    [categoryList, form.categoryId],
+  );
+  const subCategories = useMemo<SelectOption[]>(
+    () =>
+      (selectedCategory?.subCategories ?? []).map((sub) => ({
+        value: sub.id,
+        label: sub.labelKr ?? String(sub.id),
+      })),
+    [selectedCategory],
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -178,6 +236,7 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
     setForm({
       outfitCode: pickOutfitCodeForInput(d),
       categoryId: resolveOutfitCategoryId(d, categories),
+      subCategoryId: d.subCategoryId != null ? String(d.subCategoryId) : '',
       schoolId: schoolId != null ? String(schoolId) : '',
       status: normalizeOutfitStatus(d.status),
       type,
@@ -232,7 +291,7 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
 
   const handleSubmit = async (e?: FormEvent) => {
     e?.preventDefault();
-    const validation = validateOutfitForm(form, previewUrl.length);
+    const validation = validateOutfitForm(form, previewUrl.length, subCategories.length > 0);
     if (Object.keys(validation).length > 0) {
       setFieldErrors(validation);
       return;
@@ -329,18 +388,36 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
                     }}
                   />
                 ) : (
-                  <DropDownField
-                    label='의상 카테고리'
-                    required
-                    error={fieldErrors.categoryId}
-                    options={categories}
-                    value={form.categoryId === '' ? '' : String(form.categoryId)}
-                    disabled={formDisabled || categoriesLoading}
-                    onChange={(e) => {
-                      clearFieldError('categoryId');
-                      setForm({ ...form, categoryId: e.target.value });
-                    }}
-                  />
+                  <>
+                    <DropDownField
+                      label='의상 카테고리'
+                      required
+                      error={fieldErrors.categoryId}
+                      options={categories}
+                      value={form.categoryId === '' ? '' : String(form.categoryId)}
+                      disabled={formDisabled || categoriesLoading}
+                      onChange={(e) => {
+                        clearFieldError('categoryId');
+                        clearFieldError('subCategoryId');
+                        // 대분류가 바뀌면 이전 세부는 남길 수 없다(다른 대분류의 세부는 서버가 거부한다).
+                        setForm({ ...form, categoryId: e.target.value, subCategoryId: '' });
+                      }}
+                    />
+                    {subCategories.length > 0 ? (
+                      <DropDownField
+                        label='하위 분류'
+                        required
+                        error={fieldErrors.subCategoryId}
+                        options={subCategories}
+                        value={form.subCategoryId === '' ? '' : String(form.subCategoryId)}
+                        disabled={formDisabled}
+                        onChange={(e) => {
+                          clearFieldError('subCategoryId');
+                          setForm({ ...form, subCategoryId: e.target.value });
+                        }}
+                      />
+                    ) : null}
+                  </>
                 )}
                 <DropDownField
                   label='상태'

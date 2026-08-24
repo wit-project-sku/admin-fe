@@ -10,6 +10,8 @@ export type OutfitWriteBody = {
   type: OutfitType;
   /** 일반/프리미엄 의상일 때 필수. 교복이면 생략. */
   categoryId?: number;
+  /** 대분류에 세부(남/여 등)가 있을 때 필수. 세부가 없는 대분류·교복이면 생략. */
+  subCategoryId?: number;
   /** 교복(SCHOOL_UNIFORM)일 때 필수. 그 외 생략. */
   schoolId?: number;
   kioskIds: number[];

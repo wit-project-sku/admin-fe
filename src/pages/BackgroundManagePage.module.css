@@ -1,0 +1,196 @@
+/* 배경 사진 관리 — 배너 관리와 같은 카드/툴바 어휘를 쓴다. */
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-subtle, #eef2f7);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.search {
+  min-width: 280px;
+  padding: 9px 12px;
+  font-size: 13px;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text-primary, #0f172a);
+}
+
+.primaryBtn {
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--primary, #fe6c50);
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.primaryBtn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.hint {
+  margin: 0;
+  padding: 12px 20px;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--text-muted, #64748b);
+  background: var(--surface-subtle, #f8fafc);
+  border-bottom: 1px solid var(--border-subtle, #eef2f7);
+}
+
+.hint code {
+  padding: 1px 5px;
+  font-size: 12px;
+  background: #fff;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 4px;
+}
+
+.noticeOk,
+.noticeErr {
+  margin: 0;
+  padding: 12px 20px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.noticeOk {
+  color: #047857;
+  background: #ecfdf5;
+}
+
+.noticeErr {
+  color: #b91c1c;
+  background: #fef2f2;
+}
+
+.empty {
+  padding: 48px 20px;
+  text-align: center;
+  font-size: 13.5px;
+  color: var(--text-muted, #64748b);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table th,
+.table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-subtle, #eef2f7);
+  vertical-align: middle;
+}
+
+.table th {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-secondary, #475569);
+  background: var(--surface-subtle, #f8fafc);
+}
+
+.thumbCol {
+  width: 92px;
+}
+
+.actionCol {
+  width: 160px;
+}
+
+.thumb {
+  width: 56px;
+  height: 100px; /* 9:16 — 등록 시 서버가 그 비율로 자른다 */
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--border, #e2e8f0);
+}
+
+.code {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-primary, #0f172a);
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #1e3a8a;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+}
+
+.index {
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 700;
+  color: #2563eb;
+}
+
+.muted {
+  color: var(--text-muted, #94a3b8);
+}
+
+.active,
+.inactive {
+  display: inline-block;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 999px;
+}
+
+.active {
+  color: #047857;
+  background: #ecfdf5;
+}
+
+.inactive {
+  color: #64748b;
+  background: #f1f5f9;
+}
+
+.ghostBtn,
+.dangerBtn {
+  padding: 6px 12px;
+  font-size: 12.5px;
+  font-weight: 700;
+  border-radius: 6px;
+  cursor: pointer;
+  background: #fff;
+}
+
+.ghostBtn {
+  color: var(--text-secondary, #475569);
+  border: 1px solid var(--border, #e2e8f0);
+  margin-right: 6px;
+}
+
+.dangerBtn {
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
