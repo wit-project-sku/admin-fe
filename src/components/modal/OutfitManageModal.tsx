@@ -42,6 +42,20 @@ const OUTFIT_TYPE_OPTIONS: { value: OutfitType; label: string }[] = [
 const UNIFORM: OutfitType = 'SCHOOL_UNIFORM';
 
 /** 카테고리 목록 응답 한 건 — 대분류 + 그 안의 세부(남/여 등). 세부가 없으면 빈 배열. */
+// 의상 이름 입력 언어. 상점 모달과 같은 순서를 쓴다 — 관리자가 두 화면을 오갈 때 칸 위치가 같아야 한다.
+const LABEL_LANGS = [
+  { key: 'labelKr', label: '한국어 (KR)' },
+  { key: 'labelEn', label: '영어 (EN)' },
+  { key: 'labelJp', label: '일본어 (JP)' },
+  { key: 'labelCh', label: '중국어 (CH)' },
+  { key: 'labelVn', label: '베트남어 (VN)' },
+  { key: 'labelId', label: '인도네시아어 (ID)' },
+  { key: 'labelTh', label: '태국어 (TH)' },
+  { key: 'labelRu', label: '러시아어 (RU)' },
+] as const;
+
+type LabelKey = (typeof LABEL_LANGS)[number]['key'];
+
 type OutfitCategoryOption = {
   id: number;
   name?: string;
@@ -49,7 +63,7 @@ type OutfitCategoryOption = {
   subCategories?: { id: number; labelKr?: string }[];
 };
 
-type OutfitFormState = {
+type OutfitFormState = Record<LabelKey, string> & {
   outfitCode: string;
   categoryId: string;
   subCategoryId: string;
@@ -64,6 +78,7 @@ type OutfitFormState = {
 type OutfitFieldErrors = Partial<
   Record<
     | 'outfitCode'
+    | 'labelKr'
     | 'categoryId'
     | 'subCategoryId'
     | 'schoolId'
@@ -115,6 +130,9 @@ function validateOutfitForm(
     e.endDate = '운영 종료일은 시작일 이후여야 합니다.';
   }
 
+  // 한국어 이름은 필수다. 비워 두면 화면에 코드(1.1)만 나가 이용자가 무슨 옷인지 알 수 없다.
+  if (!form.labelKr.trim()) e.labelKr = '의상 이름(한국어)을 입력해 주세요.';
+
   if (previewCount <= 0) e.image = '의상 이미지를 등록해 주세요.';
 
   return e;
@@ -134,6 +152,10 @@ function buildOutfitWriteBody(form: OutfitFormState): OutfitWriteBody {
     endDate: end ? end : null,
   };
   if (code) body.outfitCode = code;
+  // 8칸을 항상 함께 보낸다(빈 칸은 빈 문자열). 일부만 보내면 서버가 통째 교체하면서 나머지를 지운다.
+  LABEL_LANGS.forEach(({ key }) => {
+    body[key] = form[key].trim();
+  });
   if (isUniform) {
     body.schoolId = Number(form.schoolId);
   } else {
@@ -152,7 +174,13 @@ type OutfitManageModalProps = {
   onSuccess?: () => void;
 };
 
+const EMPTY_LABELS = Object.fromEntries(LABEL_LANGS.map(({ key }) => [key, ''])) as Record<
+  LabelKey,
+  string
+>;
+
 const EMPTY_FORM: OutfitFormState = {
+  ...EMPTY_LABELS,
   outfitCode: '',
   categoryId: '',
   subCategoryId: '',
@@ -234,6 +262,10 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
     setSchoolLabel(typeof rawSchoolName === 'string' ? rawSchoolName : '');
 
     setForm({
+      ...EMPTY_LABELS,
+      ...(Object.fromEntries(
+        LABEL_LANGS.map(({ key }) => [key, typeof d[key] === 'string' ? (d[key] as string) : '']),
+      ) as Record<LabelKey, string>),
       outfitCode: pickOutfitCodeForInput(d),
       categoryId: resolveOutfitCategoryId(d, categories),
       subCategoryId: d.subCategoryId != null ? String(d.subCategoryId) : '',
@@ -451,6 +483,32 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
                   setForm({ ...form, outfitCode: e.target.value });
                 }}
               />
+
+              {/* 4) 의상 이름 — 화면에 나가는 실제 옷 이름. 코드(1.1)는 식별자라 이용자에게 뜻이 없다. */}
+              <div className={m.scheduleSection}>
+                <span className={m.sectionLabel}>의상 이름 (다국어)</span>
+                <p className={m.fieldHint}>
+                  키오스크 화면에 표시되는 옷 이름입니다. 한국어는 필수이고, 비워 둔 언어는 화면에서 한국어로 대체됩니다.
+                </p>
+                <div className={m.gridRow}>
+                  {LABEL_LANGS.map(({ key, label }) => (
+                    <InputField
+                      key={key}
+                      label={label}
+                      required={key === 'labelKr'}
+                      error={key === 'labelKr' ? fieldErrors.labelKr : undefined}
+                      maxLength={key === 'labelKr' ? 60 : 80}
+                      placeholder={key === 'labelKr' ? '예: 조각보 한복' : ''}
+                      value={form[key]}
+                      disabled={formDisabled}
+                      onChange={(e) => {
+                        if (key === 'labelKr') clearFieldError('labelKr');
+                        setForm({ ...form, [key]: e.target.value });
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
 
               <div className={m.scheduleSection}>
                 <span className={m.sectionLabel}>운영 일정</span>

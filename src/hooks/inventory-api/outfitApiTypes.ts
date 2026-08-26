@@ -5,6 +5,15 @@ export type OutfitType = 'NORMAL' | 'PREMIUM' | 'SCHOOL_UNIFORM';
 export type OutfitWriteBody = {
   /** 의상 코드. 선택값(교복은 없어도 됨). */
   outfitCode?: string;
+  // 화면에 보이는 실제 옷 이름. 8칸을 함께 보낸다 — 서버는 하나도 안 오면 기존 이름을 유지한다.
+  labelKr?: string;
+  labelEn?: string;
+  labelJp?: string;
+  labelCh?: string;
+  labelVn?: string;
+  labelId?: string;
+  labelTh?: string;
+  labelRu?: string;
   status: 'ACTIVE' | 'INACTIVE';
   /** 의상 유형 (NORMAL | PREMIUM | SCHOOL_UNIFORM). */
   type: OutfitType;
