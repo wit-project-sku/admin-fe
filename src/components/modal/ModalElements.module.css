@@ -273,6 +273,44 @@
 }
 
 /********************** 여러 버튼 선택(MultiSelectField) *********************/
+.labelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.selectAllBox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.selectCount {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.selectAllBtn {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding: 3px 9px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+.selectAllBtn:hover {
+  background: var(--bg-muted);
+  border-color: var(--border-md);
+  color: var(--text-primary);
+}
+
 .itemGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

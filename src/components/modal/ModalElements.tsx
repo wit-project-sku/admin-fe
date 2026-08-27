@@ -172,6 +172,8 @@ type MultiSelectFieldProps = {
   selectedIds?: (string | number)[];
   onChange: (ids: (string | number)[]) => void;
   isEdit?: boolean;
+  /** 라벨 옆에 전체 선택/해제 토글과 선택 개수를 붙인다. */
+  selectAllable?: boolean;
 };
 
 const idKey = (v: string | number) => String(v);
@@ -184,26 +186,52 @@ export const MultiSelectField = ({
   selectedIds = [],
   onChange,
   isEdit = true,
+  selectAllable = false,
 }: MultiSelectFieldProps) => {
   const ids = Array.isArray(selectedIds) ? selectedIds : [];
+  const isSelected = (itemId: string | number) => ids.some((i) => idKey(i) === idKey(itemId));
+  const selectedCount = items.filter((item) => isSelected(item.id)).length;
+  const allSelected = items.length > 0 && selectedCount === items.length;
 
   const toggleItem = (itemId: string | number) => {
     if (!isEdit) return;
     const k = idKey(itemId);
-    const newIds = ids.some((i) => idKey(i) === k)
-      ? ids.filter((i) => idKey(i) !== k)
-      : [...ids, itemId];
+    const newIds = isSelected(itemId) ? ids.filter((i) => idKey(i) !== k) : [...ids, itemId];
     onChange(newIds);
+  };
+
+  /**
+   * 목록에 없는 선택은 건드리지 않는다 — 부모가 걸러 낸 항목(예: 숨긴 테스트 단말)까지
+   * 전체 해제가 지워 버리면, 화면에 보이지도 않는 값이 조용히 사라진다.
+   */
+  const toggleAll = () => {
+    if (!isEdit) return;
+    const kept = ids.filter((i) => !items.some((item) => idKey(item.id) === idKey(i)));
+    onChange(allSelected ? kept : [...kept, ...items.map((item) => item.id)]);
   };
 
   return (
     <div className={`${m.field} ${m.fieldFull}`}>
-      <span className={m.label}>
-        {label} {required && <span className={m.required}>*</span>}
-      </span>
+      <div className={m.labelRow}>
+        <span className={m.label}>
+          {label} {required && <span className={m.required}>*</span>}
+        </span>
+        {selectAllable && items.length > 0 && (
+          <div className={m.selectAllBox}>
+            <span className={m.selectCount}>
+              {selectedCount} / {items.length}
+            </span>
+            {isEdit && (
+              <button type="button" className={m.selectAllBtn} onClick={toggleAll}>
+                {allSelected ? '전체 해제' : '전체 선택'}
+              </button>
+            )}
+          </div>
+        )}
+      </div>
       <div className={[m.itemGrid, error ? m.multiSelectErrorWrap : ''].filter(Boolean).join(' ')}>
         {items.map((item) => {
-          const isActive = ids.some((i) => idKey(i) === idKey(item.id));
+          const isActive = isSelected(item.id);
           return (
             <div
               key={item.id}

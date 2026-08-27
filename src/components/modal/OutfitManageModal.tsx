@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from 'react';
 import m from './OutfitManageModal.module.css';
-import { useGetKiosks } from '../../hooks/useGetKiosks';
+import { isTestKiosk, useGetKiosks } from '../../hooks/useGetKiosks';
 import { useGetOutfitById } from '../../hooks/inventory-api/useGetOutfitById';
 import { useAddOutfit } from '../../hooks/inventory-api/useAddOutfit';
 import { useUpdateOutfit } from '../../hooks/inventory-api/useUpdateOutfit';
@@ -209,7 +209,11 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
     [categoryList],
   );
   const { data: kiosksData } = useGetKiosks();
-  const kiosks = unwrapList(kiosksData) as MultiSelectItem[];
+  // 사내 테스트 단말(#P001~003)은 매장이 아니라 의상을 걸 대상이 아니다.
+  const kiosks = useMemo(
+    () => (unwrapList(kiosksData) as MultiSelectItem[]).filter((k) => !isTestKiosk(k.name)),
+    [kiosksData],
+  );
   const { data: detailData, isLoading: detailLoading } = useGetOutfitById(open && mode === 'edit' ? outfitId : null);
   const { addOutfitAsync } = useAddOutfit();
   const { updateOutfitAsync } = useUpdateOutfit();
@@ -554,8 +558,11 @@ export default function OutfitManageModal({ open, mode, outfitId, onClose, onSuc
                   setForm({ ...form, kioskIds: newIds });
                 }}
                 isEdit={!formDisabled}
+                selectAllable
               />
-              <p className={m.fieldHint}>노출할 키오스크를 최소 1개 이상 선택해야 합니다.</p>
+              <p className={m.fieldHint}>
+                노출할 키오스크를 최소 1개 이상 선택해야 합니다. 사내 테스트 단말(#P001~003)은 목록에 나오지 않습니다.
+              </p>
             </div>
             <ImageUploadField
               label='의상 이미지 (1장)'

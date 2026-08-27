@@ -1,6 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
 import { APIService } from '../utils/axios';
 
+/**
+ * 사내 테스트 단말인가.
+ *
+ * 이름 접두어가 운영 매장(`#W001-인사동=북인사광장`)과 테스트 단말(`#P001-HQ=3개모니터`)을 가른다.
+ * 현재 테스트 단말은 #P001~#P003(HQ 2대·베트남 1대)이고, 매장이 아니라 사내 장비다.
+ */
+export const isTestKiosk = (name?: string | null): boolean => (name ?? '').trimStart().startsWith('#P');
+
 export type AdminKioskDto = {
   id: number;
   name: string;
