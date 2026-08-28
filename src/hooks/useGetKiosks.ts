@@ -2,12 +2,18 @@ import { useQuery } from '@tanstack/react-query';
 import { APIService } from '../utils/axios';
 
 /**
- * 사내 테스트 단말인가.
+ * 선택 목록에서 감출 사내 테스트 단말인가.
  *
- * 이름 접두어가 운영 매장(`#W001-인사동=북인사광장`)과 테스트 단말(`#P001-HQ=3개모니터`)을 가른다.
- * 현재 테스트 단말은 #P001~#P003(HQ 2대·베트남 1대)이고, 매장이 아니라 사내 장비다.
+ * 이름 접두어가 운영 매장(`#W001-인사동=북인사광장`)과 비매장 단말(`#P001-HQ=3개모니터`)을 가른다.
+ * 다만 **`#P` 가 전부 테스트인 것은 아니다** — `#P003-VN=2개모니터`(id 202)는 베트남에 실제로
+ * 설치된 모니터라 의상을 등록해야 한다. 그래서 접두어만으로 자르지 않고 **거점이 HQ 인 것만** 감춘다.
+ *
+ * id 가 아니라 이름으로 판정하는 이유: 키오스크 id 는 재번호가 매겨진 전례가 있다(P003 은 6 → 202).
  */
-export const isTestKiosk = (name?: string | null): boolean => (name ?? '').trimStart().startsWith('#P');
+export const isTestKiosk = (name?: string | null): boolean => {
+  const trimmed = (name ?? '').trimStart();
+  return trimmed.startsWith('#P') && trimmed.includes('-HQ');
+};
 
 export type AdminKioskDto = {
   id: number;
