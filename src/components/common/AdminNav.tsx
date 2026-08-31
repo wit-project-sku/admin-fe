@@ -135,21 +135,19 @@ const WITH_USAGE_GROUP: NavGroupDef = {
         </svg>
       ),
     },
-    // 보류(2026-08-12): '아이콘 등록 관리' 메뉴 숨김. 아이콘 위치 변경 기능을 당분간 막아 둔다
-    // (제주 3지점 버튼을 V89 로 적재한 뒤, 배치가 확정될 때까지 드래그로 흐트러지지 않게).
-    // 페이지/라우트/백엔드는 그대로 유지 — 재활성화하려면 아래 항목 주석 해제.
-    // {
-    //   label: '아이콘 등록 관리',
-    //   path: '/admin/kiosk-buttons',
-    //   icon: (
-    //     <svg width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
-    //       <rect x='3' y='3' width='7' height='7' rx='1' />
-    //       <rect x='14' y='3' width='7' height='7' rx='1' />
-    //       <rect x='14' y='14' width='7' height='7' rx='1' />
-    //       <rect x='3' y='14' width='7' height='7' rx='1' />
-    //     </svg>
-    //   ),
-    // },
+    // 2026-08-31 재활성화. 제주 3지점 버튼 배치가 확정되어 보류(2026-08-12) 사유가 해소됐다.
+    {
+      label: '아이콘 등록 관리',
+      path: '/admin/kiosk-buttons',
+      icon: (
+        <svg width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
+          <rect x='3' y='3' width='7' height='7' rx='1' />
+          <rect x='14' y='3' width='7' height='7' rx='1' />
+          <rect x='14' y='14' width='7' height='7' rx='1' />
+          <rect x='3' y='14' width='7' height='7' rx='1' />
+        </svg>
+      ),
+    },
     // 보류(2026-07-10): '언어 텍스트 관리'(엑셀형 자막 그리드) 메뉴 숨김. 페이지/라우트/백엔드는 유지 —
     // 재활성화하려면 아래 항목 주석 해제.
     // {
