@@ -47,7 +47,7 @@ export default function PaymentManageModal({ open, payment: p, onClose }) {
             <InfoField label='전화번호' value={normalizePhone(p.phoneNumber)} />
             <InfoField
               label='카드번호'
-              value={p.cardNumber ? `${p.cardNumber.slice(0, 4)}-****-****-${p.cardNumber.slice(-4)}` : '-'}
+              value={p.cardNumber || '-'}
             />
           </div>
           <div className={m.fieldRow}>

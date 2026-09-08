@@ -1,16 +1,24 @@
+import { useState } from 'react';
 import shared from '@commons/shared.module.css';
 import SearchBar from '@components/common/SearchBar';
 import FilterGroup from '@components/common/FilterGroup';
 import Pagination from '@components/common/Pagination';
 import OutfitManageModal from '@modals/OutfitManageModal';
 import DeleteModal from '@modals/DeleteModal';
+import DetailModal from '@modals/DetailModal';
 import RegisterBtn from '@components/common/RegisterBtn';
 import { OutfitsTable } from '../features/outfits/OutfitsTable';
-import { OUTFIT_PAGE_SIZE, OUTFIT_STATUS_FILTERS } from '../features/outfits/outfitListConfig';
+import type { OutfitRow } from '../features/outfits/outfitListMappers';
+import {
+  OUTFIT_PAGE_SIZE,
+  OUTFIT_STATUS_FILTERS,
+  OUTFIT_TYPE_FILTERS,
+} from '../features/outfits/outfitListConfig';
 import { useOutfitManageList } from '../features/outfits/useOutfitManageList';
 
 export default function OutfitsPage() {
   const list = useOutfitManageList();
+  const [detailRow, setDetailRow] = useState<OutfitRow | null>(null);
 
   return (
     <div>
@@ -25,9 +33,22 @@ export default function OutfitsPage() {
       <div className={shared.card}>
         <div
           className={shared.cardHead}
-          style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px' }}
+          style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}
         >
-          <FilterGroup filters={[...OUTFIT_STATUS_FILTERS]} current={list.filter} onFilterChange={list.setFilter} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
+            <FilterGroup
+              label="상태"
+              filters={[...OUTFIT_STATUS_FILTERS]}
+              current={list.filter}
+              onFilterChange={list.setFilter}
+            />
+            <FilterGroup
+              label="유형"
+              filters={[...OUTFIT_TYPE_FILTERS]}
+              current={list.typeFilter}
+              onFilterChange={list.setTypeFilter}
+            />
+          </div>
           <div style={{ flexShrink: 0 }}>
             <SearchBar
               value={list.search}
@@ -47,6 +68,7 @@ export default function OutfitsPage() {
           kioskNameById={list.kioskNameById}
           onEdit={list.openEdit}
           onDelete={list.openDelete}
+          onRowClick={setDetailRow}
         />
 
         <Pagination
@@ -81,6 +103,56 @@ export default function OutfitsPage() {
           onClose={() => list.setShowDeleteModal(false)}
         />
       ) : null}
+
+      <DetailModal
+        open={!!detailRow}
+        title={
+          detailRow
+            ? `의상 상세 — ${
+                detailRow.type === 'SCHOOL_UNIFORM'
+                  ? detailRow.schoolName || detailRow.outfitCode
+                  : detailRow.categoryName || detailRow.outfitCode
+              }`
+            : '의상 상세'
+        }
+        onClose={() => setDetailRow(null)}
+        fields={
+          detailRow
+            ? [
+                { label: '의상코드', value: detailRow.outfitCode },
+                {
+                  label: '의상 유형',
+                  value:
+                    detailRow.type === 'SCHOOL_UNIFORM'
+                      ? '교복 (SCHOOL_UNIFORM)'
+                      : detailRow.type === 'PREMIUM'
+                        ? '프리미엄 (PREMIUM)'
+                        : '일반 (NORMAL)',
+                },
+                detailRow.type === 'SCHOOL_UNIFORM'
+                  ? { label: '학교', value: detailRow.schoolName || '—' }
+                  : { label: '카테고리', value: detailRow.categoryName },
+                { label: '상태', value: detailRow.status === 'ACTIVE' ? '활성화' : '비활성화' },
+                { label: '설치 키오스크', value: detailRow.kioskIds?.length ? `${detailRow.kioskIds.length}곳` : '없음' },
+                {
+                  label: '운영 일정',
+                  value:
+                    detailRow.operationStartYmd || detailRow.operationEndYmd
+                      ? `${detailRow.operationStartYmd || '—'} ~ ${detailRow.operationEndYmd || '—'}`
+                      : '상시',
+                  full: true,
+                },
+              ]
+            : []
+        }
+        images={(() => {
+          if (!detailRow) return [];
+          const urls = [detailRow.imageUrl, ...(detailRow.images ?? []).map((im) => im.imageUrl)].filter(
+            (u): u is string => !!u,
+          );
+          return [...new Set(urls)].map((src) => ({ src, title: detailRow.outfitCode }));
+        })()}
+      />
     </div>
   );
 }

@@ -1,0 +1,725 @@
+/* 배너 관리 — 배너 중심(주) · 키오스크 중심(보조) 공용 스타일. */
+
+/* ── 카드 헤더/본문 (shared .card 는 패딩이 없어 여기서 준다) ── */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-subtle, #eef2f7);
+}
+
+.body {
+  padding: 20px;
+}
+
+.selectLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary, #475569);
+}
+
+.select {
+  min-width: 260px;
+  padding: 9px 12px;
+  font-size: 13px;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text-primary, #0f172a);
+}
+
+.count {
+  margin-left: auto;
+  font-size: 12.5px;
+  color: var(--text-muted, #64748b);
+}
+
+.countFull {
+  color: #d97706;
+  font-weight: 700;
+}
+
+.primaryBtn {
+  margin-left: auto;
+  padding: 9px 16px;
+  border: 0;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primaryBtn:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.primaryBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── 목록 ── */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 12px;
+  background: #fff;
+  transition: border-color 0.15s, box-shadow 0.15s, opacity 0.15s;
+}
+
+.row:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+
+/* 키오스크 중심 화면에서만 드래그 */
+.draggable {
+  cursor: grab;
+}
+
+.dragging {
+  opacity: 0.4;
+  cursor: grabbing;
+}
+
+.dropBefore {
+  box-shadow: inset 0 3px 0 0 #2563eb;
+  border-color: #93c5fd;
+}
+
+.dropAfter {
+  box-shadow: inset 0 -3px 0 0 #2563eb;
+  border-color: #93c5fd;
+}
+
+.handle {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #94a3b8;
+  user-select: none;
+}
+
+.order {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #f1f5f9;
+  font-size: 12px;
+  font-weight: 800;
+  color: #475569;
+}
+
+/* 배너는 2160×573 ≈ 3.77:1 — 목록에서 내용을 알아볼 수 있게 크게 보여준다(기존 260 → 640). */
+.thumbWrap {
+  flex: none;
+  width: 640px;
+  max-width: 52vw;
+  border-radius: 8px;
+  overflow: hidden;
+  /* 박스에 비율을 고정하면 이미지 비율이 조금만 달라도 위아래 여백(레터박스)이 생긴다.
+     높이를 이미지가 정하게 두어 어떤 이미지든 영역에 100% 꽉 차게 한다. */
+  line-height: 0;
+}
+
+.thumbWrap.wide {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+}
+
+.thumb {
+  width: 100%;
+  height: auto;
+  display: block;
+  pointer-events: none;
+}
+
+.meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: #475569;
+  flex-wrap: wrap;
+}
+
+.metaLabel {
+  color: #94a3b8;
+  min-width: 52px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 800;
+}
+
+.bActive {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.bScheduled {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.bExpired {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.bAll {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.actions {
+  flex: none;
+  display: flex;
+  gap: 7px;
+}
+
+.iconBtn {
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 8px;
+  background: #fff;
+  color: #475569;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.iconBtn:hover:not(:disabled) {
+  background: #f8fafc;
+}
+
+.iconBtn:disabled {
+  opacity: 0.32;
+  cursor: not-allowed;
+}
+
+.deleteBtn {
+  color: #dc2626;
+  border-color: #fecaca;
+}
+
+.deleteBtn:hover:not(:disabled) {
+  background: #fef2f2;
+}
+
+.empty {
+  padding: 46px 12px;
+  text-align: center;
+  color: var(--text-muted, #64748b);
+  font-size: 13px;
+  border: 1px solid var(--border-subtle, #eef2f7);
+  border-radius: 12px;
+  background: #fcfdfe;
+}
+
+.hint {
+  margin-top: 20px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid var(--border-subtle, #eef2f7);
+  font-size: 12px;
+  line-height: 1.85;
+  color: #475569;
+}
+
+.notice {
+  margin-bottom: 16px;
+  padding: 11px 14px;
+  border-radius: 9px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.noticeOk {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.noticeErr {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+/* ── 대상 선택기 ── */
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.radioRow {
+  display: flex;
+  gap: 8px;
+}
+
+.radioBtn {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border, #e2e8f0);
+  border-radius: 10px;
+  background: #fff;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #475569;
+  cursor: pointer;
+  text-align: left;
+}
+
+.radioBtn.on {
+  border-color: #2563eb;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.radioSub {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #94a3b8;
+}
+
+.radioBtn.on .radioSub {
+  color: #60a5fa;
+}
+
+.groupRow {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding-top: 2px;
+}
+
+.groupBtn {
+  padding: 5px 11px;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #475569;
+  cursor: pointer;
+}
+
+.groupBtn:hover {
+  background: #f8fafc;
+}
+
+.checkGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  max-height: 190px;
+  overflow-y: auto;
+  padding: 10px;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 10px;
+  background: #fcfdfe;
+}
+
+.checkItem {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  color: #334155;
+  cursor: pointer;
+  padding: 3px 4px;
+  border-radius: 6px;
+}
+
+.checkItem:hover {
+  background: #f1f5f9;
+}
+
+.checkCode {
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+/* ── 모달 ── */
+.dim {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: grid;
+  place-items: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal {
+  width: 100%;
+  max-width: 620px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.2);
+}
+
+.modalHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-subtle, #eef2f7);
+  font-size: 14.5px;
+  font-weight: 800;
+}
+
+.modalBody {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modalFoot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--border-subtle, #eef2f7);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.fieldLabel {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #334155;
+}
+
+.dateRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dateInput {
+  flex: 1;
+  padding: 9px 12px;
+  font-size: 13px;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.uploadArea {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 26px 22px;
+  border: 1.5px dashed var(--border, #cbd5e1);
+  border-radius: 12px;
+  background: #fbfdff;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.uploadArea:hover {
+  border-color: #94a3b8;
+  background: #f8fafc;
+}
+
+.uploadSub {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #94a3b8;
+}
+
+.fileInput {
+  display: none;
+}
+
+.pickedList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pickedItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: #475569;
+  padding: 6px 10px;
+  border: 1px solid var(--border-subtle, #eef2f7);
+  border-radius: 8px;
+  background: #fcfdfe;
+}
+
+.pickedThumb {
+  width: 68px;
+  height: auto;
+  display: block;
+  border-radius: 4px;
+}
+
+.ghostBtn {
+  padding: 9px 14px;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 8px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+}
+
+.warn {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #fff8f2;
+  border: 1px solid #f6e2d2;
+  font-size: 12px;
+  line-height: 1.7;
+  color: #92400e;
+}
+
+
+/* ── 탭 (ReportsPage 와 동일 규격) ── */
+.tabGroup {
+  display: flex;
+  gap: 2px;
+  background: var(--bg-card, #fff);
+  padding: 3px;
+  border-radius: var(--radius-md, 10px);
+  border: 1px solid var(--border, #e2e8f0);
+  width: fit-content;
+  margin-bottom: 16px;
+}
+
+.tabBtn {
+  padding: 9px 16px;
+  border-radius: var(--radius-sm, 7px);
+  background: transparent;
+  color: var(--text-secondary, #475569);
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.tabBtn:hover {
+  background: #f1f5f9;
+}
+
+.tabBtnActive {
+  background: var(--text-primary, #0f172a) !important;
+  color: #fff !important;
+}
+
+/* ── 목록 행: 클릭하면 상세 ── */
+.rowClickable {
+  cursor: pointer;
+}
+
+/* ImageZoom 은 img 를 <button> 으로 감싼다(inline-flex) → 썸네일 박스를 꽉 채우게 편다. */
+.thumbWrap > button,
+.detailImgWrap > button {
+  display: block;
+  width: 100%;
+  line-height: 0;
+}
+
+.chev {
+  flex: none;
+  color: #cbd5e1;
+  font-size: 16px;
+}
+
+/* ── 상세 모달: 노출 키오스크 전체 목록 ── */
+.detailImg {
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  display: block;
+}
+
+.detailGrid {
+  display: grid;
+  grid-template-columns: 76px 1fr;
+  gap: 8px 12px;
+  font-size: 12.5px;
+  color: #334155;
+  align-items: start;
+}
+
+.detailKey {
+  color: #94a3b8;
+  font-weight: 700;
+}
+
+.kioskGroups {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 210px;
+  overflow-y: auto;
+}
+
+.kioskGroup {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.kioskGroupName {
+  flex: none;
+  min-width: 58px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #475569;
+  text-align: center;
+}
+
+.kioskChips {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.kioskChip {
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--border, #e2e8f0);
+  background: #fff;
+  font-size: 11.5px;
+  color: #334155;
+}
+
+.modalActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.detailImgWrap {
+  width: 100%;
+  line-height: 0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+
+/* ── 다중 선택 ── */
+.selectBar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 10px;
+  background: #f8fafc;
+  font-size: 12.5px;
+  color: #475569;
+}
+
+.selectBarActive {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.selectAll {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 700;
+  cursor: pointer;
+  user-select: none;
+}
+
+.selectCount {
+  margin-left: auto;
+  font-weight: 700;
+}
+
+.checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: #2563eb;
+  cursor: pointer;
+  flex: none;
+}
+
+/* 행 왼쪽 체크박스 — 클릭 영역을 넓혀 오조작을 줄인다 */
+.rowCheck {
+  flex: none;
+  display: grid;
+  place-items: center;
+  align-self: stretch;
+  padding: 0 4px;
+  cursor: pointer;
+}
+
+.rowSelected {
+  border-color: #93c5fd;
+  background: #f8fbff;
+}
+
+
+/* 등록·수정 모달 상단 사이즈 안내 */
+.sizeGuide {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+  font-size: 12.5px;
+  font-weight: 600;
+}

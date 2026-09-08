@@ -1,5 +1,7 @@
 import axios, { type AxiosError, type AxiosInstance, type AxiosRequestConfig, AxiosHeaders } from 'axios';
 import { authStoreApi } from '../stores/authStore';
+import { isAccessTokenExpired } from './authToken';
+import { parseAuthSessionResponse } from './authResponse';
 
 const PUBLIC_API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const LOCAL_API_BASE_URL = import.meta.env.VITE_API_LOCAL_URL;
@@ -51,25 +53,67 @@ const onRefreshed = (newToken: string) => {
 
 const forceLogout = () => {
   authStoreApi.clearAuth();
-  window.location.href = '/admin/login';
+  window.location.hash = '#/admin/login';
 };
 
-/**
- * refresh 응답에서 토큰 추출. 백엔드는 `BaseResponse<TokenResponse>` =
- * `{ data: { accessToken, refreshToken } }` 형태(중첩)로 응답하므로 nested data 까지 본다.
- * accessToken 은 바디가 바로 문자열인 경우도 허용.
- */
-const pickRefreshField = (raw: unknown, field: 'accessToken' | 'refreshToken'): string | null => {
-  if (field === 'accessToken' && typeof raw === 'string') return raw;
-  if (!raw || typeof raw !== 'object') return null;
-  const o = raw as Record<string, unknown>;
-  if (typeof o[field] === 'string') return o[field] as string;
-  if (o.data && typeof o.data === 'object') {
-    const inner = (o.data as Record<string, unknown>)[field];
-    if (typeof inner === 'string') return inner;
+export const extractTokenFromRefreshBody = (raw: unknown) => parseAuthSessionResponse(raw)?.accessToken ?? null;
+
+/** Calls `/auths/refresh` and stores renewed session tokens. Shared by 401 interceptor and app bootstrap. */
+export async function performTokenRefresh(): Promise<string> {
+  const refreshToken = authStoreApi.getRefreshToken();
+  if (!refreshToken) {
+    throw new Error('리프레시 토큰이 없습니다.');
   }
-  return null;
-};
+
+  if (isRefreshing) {
+    return new Promise((resolve, reject) => {
+      subscribeTokenRefresh((newToken) => resolve(newToken));
+      setTimeout(() => reject(new Error('토큰 재발급 대기 시간이 초과되었습니다.')), REQUEST_TIMEOUT);
+    });
+  }
+
+  isRefreshing = true;
+
+  try {
+    const res = await publicApi.post(REFRESH_ENDPOINT, { refreshToken });
+    const session = parseAuthSessionResponse(res.data);
+
+    if (!session?.accessToken) {
+      throw new Error('리프레시 응답에 토큰이 없습니다.');
+    }
+
+    authStoreApi.refreshAccessToken(session.accessToken, session.refreshToken, session.username);
+    onRefreshed(session.accessToken);
+    return session.accessToken;
+  } finally {
+    isRefreshing = false;
+  }
+}
+
+/**
+ * On reload, silently renew an expired/missing access token when a refresh token is still valid.
+ * Returns true when the session should be treated as authenticated.
+ */
+export async function bootstrapAuthSession(): Promise<boolean> {
+  const accessToken = authStoreApi.getAccessToken();
+  const refreshToken = authStoreApi.getRefreshToken();
+
+  if (!refreshToken) {
+    return Boolean(accessToken);
+  }
+
+  if (accessToken && !isAccessTokenExpired(accessToken)) {
+    return true;
+  }
+
+  try {
+    await performTokenRefresh();
+    return true;
+  } catch {
+    authStoreApi.clearAuth();
+    return false;
+  }
+}
 
 privateApi.interceptors.response.use(
   (response) => response,
@@ -87,7 +131,6 @@ privateApi.interceptors.response.use(
     config._retry = true;
 
     const refreshToken = authStoreApi.getRefreshToken();
-
     if (!refreshToken) {
       forceLogout();
       return Promise.reject(error);
@@ -104,35 +147,13 @@ privateApi.interceptors.response.use(
       });
     }
 
-    isRefreshing = true;
-
     try {
-      // 백엔드 `/api/auths/refresh` 는 RefreshRequest{ refreshToken } 를 @RequestBody 로 받는다.
-      // (헤더가 아니라 바디로 보내야 함 — 헤더로 보내면 NotBlank 검증 실패로 400)
-      const res = await publicApi.post(REFRESH_ENDPOINT, { refreshToken });
-      const newToken = pickRefreshField(res.data, 'accessToken');
-      const newRefreshToken = pickRefreshField(res.data, 'refreshToken');
-
-      if (!newToken) {
-        throw new Error('리프레시 응답에 토큰이 없습니다.');
-      }
-
-      // 백엔드가 리프레시 토큰을 회전(새 값 발급)하면 함께 갱신해야 다음 갱신도 성공한다.
-      if (newRefreshToken) {
-        authStoreApi.setTokens(newToken, newRefreshToken);
-      } else {
-        authStoreApi.refreshAccessToken(newToken);
-      }
-      isRefreshing = false;
-      onRefreshed(newToken);
-
+      const newToken = await performTokenRefresh();
       const headers = AxiosHeaders.from(config.headers ?? {});
       headers.set('Authorization', `Bearer ${newToken}`);
       config.headers = headers;
-
       return privateApi(config);
     } catch (refreshError) {
-      isRefreshing = false;
       forceLogout();
       return Promise.reject(refreshError);
     }

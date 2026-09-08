@@ -40,6 +40,9 @@ export type KioskButtonStatsSummaryBlock = {
   cityActivityGraph: KioskButtonStatsNamedValue[];
   kioskUsageGraph: KioskButtonStatsNamedValue[];
   buttonDetails: KioskButtonStatsDetailRow[];
+  /** 지점×버튼 상세 — `includeKioskDetails=true` 일 때만 온다.
+   *  buttonDetails 는 버튼타입별 전 지점 합계(+대표지점)라 지점별 수치로 쓰면 안 된다. */
+  kioskButtonDetails?: KioskButtonStatsKioskRow[];
 };
 
 export type KioskButtonStatsSummaryPage = {
@@ -66,4 +69,16 @@ export type KioskButtonStatsSummaryParams = {
   kioskId?: number;
   buttonType?: string;
   city?: string;
+};
+
+/** 지점 하나의 버튼 하나 — 지점 간 합산이 없는 유일한 소스. */
+export type KioskButtonStatsKioskRow = {
+  kioskId: number;
+  kioskName: string;
+  buttonType: string;
+  buttonName: string | null;
+  iconKey: string | null;
+  totalClicks: number;
+  totalDuration: number;
+  avgDuration: number;
 };

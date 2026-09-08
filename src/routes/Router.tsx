@@ -1,7 +1,8 @@
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { lazy, Suspense, type ReactNode } from 'react';
+import { HashRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { lazy, Suspense, useEffect, type ReactNode } from 'react';
 import AdminLayout from '@layouts/AdminLayout';
 import { useAuthStore } from '../stores/authStore';
+import { bootstrapAuthSession } from '../utils/axios';
 import { ROLE_USER, useGetMe } from '../hooks/auth-api/useGetMe';
 import { isPathAllowedForRole, ROLE_DEFAULT_LANDING } from '../utils/roleAccess';
 
@@ -10,14 +11,20 @@ const DashboardPage = lazy(() => import('@pages/DashboardPage'));
 const WithMarketDashboardPage = lazy(() => import('@pages/WithMarketDashboardPage'));
 const ProductManagePage = lazy(() => import('@pages/ProductManagePage'));
 const ShopsManagePage = lazy(() => import('@pages/ShopsManagePage'));
+const BannerManagePage = lazy(() => import('@pages/BannerManagePage'));
+const BackgroundManagePage = lazy(() => import('@pages/BackgroundManagePage'));
 const DonationManagePage = lazy(() => import('@pages/DonationManagePage'));
+const DonationDashboardPage = lazy(() => import('@pages/DonationDashboardPage'));
 const PaymentManagePage = lazy(() => import('@pages/PaymentManagePage'));
 const DeliveryManagePage = lazy(() => import('@pages/DeliveryManagePage'));
 const RefundManagePage = lazy(() => import('@pages/RefundManagePage'));
 const ReportsPage = lazy(() => import('@pages/ReportsPage'));
+const StatReportsPage = lazy(() => import('@pages/StatReportsPage'));
 const OutfitsPage = lazy(() => import('@pages/OutfitsPage'));
+const KioskOutfitCategoryPage = lazy(() => import('@pages/KioskOutfitCategoryPage'));
 const KioskAnalyticsPage = lazy(() => import('@pages/KioskAnalyticsPage'));
 const KioskButtonManagePage = lazy(() => import('@pages/KioskButtonManagePage'));
+const KioskSubtitleGridPage = lazy(() => import('@pages/KioskSubtitleGridPage'));
 const UserManagePage = lazy(() => import('@pages/UserManagePage'));
 const NotFoundPage = lazy(() => import('@pages/notfound/NotFound'));
 
@@ -36,6 +43,21 @@ const Loader = () => (
     불러오는 중...
   </div>
 );
+
+function AuthBootstrap({ children }: { children: ReactNode }) {
+  const hasHydrated = useAuthStore((state) => state.hasHydrated);
+  const authBootstrapped = useAuthStore((state) => state.authBootstrapped);
+
+  useEffect(() => {
+    if (!hasHydrated || authBootstrapped) return;
+    void bootstrapAuthSession().finally(() => {
+      useAuthStore.getState().setAuthBootstrapped(true);
+    });
+  }, [hasHydrated, authBootstrapped]);
+
+  if (!hasHydrated || !authBootstrapped) return <Loader />;
+  return children;
+}
 
 function Guard({ children }: { children: ReactNode }) {
   const hasHydrated = useAuthStore((state) => state.hasHydrated);
@@ -74,8 +96,9 @@ function RoleAwareDashboard() {
 export default function AppRouter() {
   return (
     <Router>
-      <Suspense fallback={<Loader />}>
-        <Routes>
+      <AuthBootstrap>
+        <Suspense fallback={<Loader />}>
+          <Routes>
           <Route path="/" element={<Navigate to="/admin" replace />} />
           <Route
             path="/admin/login"
@@ -99,14 +122,23 @@ export default function AppRouter() {
             <Route path="dashboard" element={<RoleAwareDashboard />} />
             <Route path="products" element={<ProductManagePage />} />
             <Route path="shops" element={<ShopsManagePage />} />
-            <Route path="donations" element={<DonationManagePage />} />
+            <Route path="banners" element={<BannerManagePage />} />
+            <Route path="backgrounds" element={<BackgroundManagePage />} />
+            <Route path="kiosk-banners" element={<Navigate to="/admin/banners" replace />} />
+            <Route path="donations" element={<Navigate to="/admin/donations/dashboard" replace />} />
+            <Route path="donations/dashboard" element={<DonationDashboardPage />} />
+            <Route path="donations/ngo" element={<DonationManagePage lockedMode="NGO" />} />
+            <Route path="donations/school" element={<DonationManagePage lockedMode="SCHOOL" />} />
             <Route path="payments" element={<PaymentManagePage />} />
             <Route path="deliveries" element={<DeliveryManagePage />} />
             <Route path="refunds" element={<RefundManagePage />} />
             <Route path="reports" element={<ReportsPage />} />
+            <Route path="stat-reports" element={<StatReportsPage />} />
             <Route path="outfits" element={<OutfitsPage />} />
+            <Route path="outfit-categories" element={<KioskOutfitCategoryPage />} />
             <Route path="kiosk-analytics" element={<KioskAnalyticsPage />} />
             <Route path="kiosk-buttons" element={<KioskButtonManagePage />} />
+            <Route path="kiosk-subtitles" element={<KioskSubtitleGridPage />} />
             <Route path="kiosk-apps" element={<Navigate to="/admin/kiosk-buttons" replace />} />
             <Route path="users" element={<UserManagePage />} />
             <Route path="*" element={<NotFoundPage />} />
@@ -114,6 +146,7 @@ export default function AppRouter() {
           <Route path="*" element={<Navigate to="/admin/login" replace />} />
         </Routes>
       </Suspense>
+      </AuthBootstrap>
     </Router>
   );
 }

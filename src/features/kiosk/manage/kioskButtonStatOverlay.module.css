@@ -1,0 +1,32 @@
+/* 타일 위에 겹치는 클릭 수 배지 — 우상단 코너 pill.
+   타일 하단은 버튼 이름(.tileLabel) 자리라 띠 형태로 깔면 이름을 덮는다.
+   이름과 버튼 이미지가 모두 보여야 하므로 아이콘 여백이 있는 코너를 쓴다.
+   두 미러의 축소 방식이 달라 글자 크기 단위를 나눈다. */
+.badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  padding: 0.22em 0.72em;
+  border-radius: 999px;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.18);
+  background: rgba(255, 255, 255, 0.93);
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  line-height: 1.08;
+  pointer-events: none;
+}
+
+/* 글자 단위만 미러별로 다르다(축소 방식이 달라서) — 색·배경·굵기는 공통 */
+.cq .clicks { font-size: 3.7cqw; }
+.board .clicks { font-size: 80px; }
+
+.clicks {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+/* 1위 버튼만 조금 크고 굵게. 배경·글자색은 나머지와 같다. */
+.cq.top .clicks { font-size: 4.3cqw; }
+.board.top .clicks { font-size: 93px; }
+.top .clicks { font-weight: 900; }

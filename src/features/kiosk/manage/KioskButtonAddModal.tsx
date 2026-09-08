@@ -3,12 +3,8 @@ import type { AxiosError } from 'axios';
 import shared from '@commons/shared.module.css';
 import SearchableSelect from '@components/common/SearchableSelect';
 import { useCreateKioskButton } from '@/hooks/kiosk-api/useCreateKioskButton';
-import { KioskIconPicker } from '@/features/kiosk/kioskAppIcons';
-import { POSITIONS } from '@/features/kiosk/manage/constants';
-import { resolveKioskButtonIconKey } from '@/features/kiosk/manage/kioskButtonDisplay';
+import { SPAN_OPTIONS } from '@/features/kiosk/manage/constants';
 import styles from '@/features/kiosk/manage/KioskAppManagePage.module.css';
-
-const STATUSES = ['ACTIVE', 'INACTIVE'] as const;
 
 export type KioskSelectOption = { value: string; label: string; sublabel?: string };
 
@@ -24,9 +20,6 @@ type FormErrors = {
   kioskId?: string;
   buttonType?: string;
   buttonName?: string;
-  position?: string;
-  status?: string;
-  iconKey?: string;
 };
 
 function messageFromError(err: unknown): string {
@@ -43,9 +36,8 @@ export function KioskButtonAddModal({ open, onClose, kioskOptions, defaultKioskI
   const [buttonType, setButtonType] = useState('');
   const [buttonName, setButtonName] = useState('');
   const [kioskId, setKioskId] = useState('');
-  const [position, setPosition] = useState<number>(3);
-  const [iconKey, setIconKey] = useState('map');
-  const [status, setStatus] = useState<string>('ACTIVE');
+  const [span, setSpan] = useState<number>(1);
+  const [iconKey, setIconKey] = useState('');
   const [fieldErrors, setFieldErrors] = useState<FormErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -58,9 +50,8 @@ export function KioskButtonAddModal({ open, onClose, kioskOptions, defaultKioskI
     setFormError(null);
     setButtonType('');
     setButtonName('');
-    setPosition(3);
-    setIconKey('map');
-    setStatus('ACTIVE');
+    setSpan(1);
+    setIconKey('');
     const initial =
       defaultKioskId && kioskOptions.some((o) => o.value === defaultKioskId)
         ? defaultKioskId
@@ -88,34 +79,27 @@ export function KioskButtonAddModal({ open, onClose, kioskOptions, defaultKioskI
       if (!typeTrim) {
         nextErrors.buttonType = '버튼 타입(별칭)을 입력해주세요.';
       }
-      if (!POSITIONS.includes(position as (typeof POSITIONS)[number])) {
-        nextErrors.position = '위치는 1~22 중에서 선택해주세요.';
-      }
-      if (!STATUSES.includes(status as (typeof STATUSES)[number])) {
-        nextErrors.status = '상태를 선택해주세요.';
-      }
-      if (!iconKey.trim()) {
-        nextErrors.iconKey = '아이콘을 선택해주세요.';
-      }
       setFieldErrors(nextErrors);
       if (Object.keys(nextErrors).length > 0) return;
 
       const kid = Number(kioskId);
+      const iconTrim = iconKey.trim();
       try {
+        // 위치(열/칸)·상태는 보내지 않는다 — 서버가 다음 빈 칸에 자동 배치한다.
+        // iconKey 는 비우면 null(미지정) — 추후 수정에서 지정 가능.
         await createKioskButtonAsync({
           kioskId: kid,
           buttonType: typeTrim,
           buttonName: nameTrim,
-          position,
-          iconKey: resolveKioskButtonIconKey(iconKey),
-          status,
+          span,
+          iconKey: iconTrim ? iconTrim : null,
         });
         onClose();
       } catch (err) {
         setFormError(messageFromError(err));
       }
     },
-    [kioskId, buttonType, buttonName, position, iconKey, status, createKioskButtonAsync, onClose],
+    [kioskId, buttonType, buttonName, span, iconKey, kioskOptions, createKioskButtonAsync, onClose],
   );
 
   if (!open) return null;
@@ -198,73 +182,40 @@ export function KioskButtonAddModal({ open, onClose, kioskOptions, defaultKioskI
                   />
                   {fieldErrors.buttonType ? <p className={styles.fieldError}>{fieldErrors.buttonType}</p> : null}
                 </div>
-                <div className={styles.row2}>
-                  <div className={styles.field}>
-                    <label className={styles.fieldLabel} htmlFor={`${uid}-pos`}>
-                      위치 (1–22)
-                    </label>
-                    <select
-                      id={`${uid}-pos`}
-                      className={`${styles.select} ${fieldErrors.position ? styles.inputError : ''}`}
-                      value={position}
-                      onChange={(e) => {
-                        setPosition(Number(e.target.value));
-                        setFieldErrors((prev) => ({ ...prev, position: undefined }));
-                      }}
-                    >
-                      {POSITIONS.map((p) => (
-                        <option key={p} value={p}>
-                          {p}
-                        </option>
-                      ))}
-                    </select>
-                    {fieldErrors.position ? <p className={styles.fieldError}>{fieldErrors.position}</p> : null}
-                  </div>
-                  <div className={styles.field}>
-                    <label className={styles.fieldLabel} htmlFor={`${uid}-status`}>
-                      상태
-                    </label>
-                    <select
-                      id={`${uid}-status`}
-                      className={`${styles.select} ${fieldErrors.status ? styles.inputError : ''}`}
-                      value={status}
-                      onChange={(e) => {
-                        setStatus(e.target.value);
-                        setFieldErrors((prev) => ({ ...prev, status: undefined }));
-                      }}
-                    >
-                      {STATUSES.map((s) => (
-                        <option key={s} value={s}>
-                          {s}
-                        </option>
-                      ))}
-                    </select>
-                    {fieldErrors.status ? <p className={styles.fieldError}>{fieldErrors.status}</p> : null}
-                  </div>
+                <div className={styles.field}>
+                  <label className={styles.fieldLabel} htmlFor={`${uid}-span`}>
+                    폭
+                  </label>
+                  <select
+                    id={`${uid}-span`}
+                    className={styles.select}
+                    value={span}
+                    onChange={(e) => setSpan(Number(e.target.value))}
+                  >
+                    {SPAN_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div className={styles.field}>
-                  <span className={styles.fieldLabel} id={`${uid}-icon-hint`}>
-                    아이콘
-                  </span>
-                  <p className={styles.iconPickerHint} id={`${uid}-icon-desc`}>
-                    버튼에 표시할 아이콘을 선택하세요. 키는 <code className={styles.monoCode}>{iconKey}</code> 로 저장됩니다.
-                  </p>
-                  <div
-                    className={`${styles.iconPickerWrap} ${fieldErrors.iconKey ? styles.inputError : ''}`}
-                    role='group'
-                    aria-labelledby={`${uid}-icon-hint`}
-                    aria-describedby={`${uid}-icon-desc`}
-                  >
-                    <KioskIconPicker
-                      value={iconKey}
-                      onChange={(v) => {
-                        setIconKey(v);
-                        setFieldErrors((prev) => ({ ...prev, iconKey: undefined }));
-                      }}
-                    />
-                  </div>
-                  {fieldErrors.iconKey ? <p className={styles.fieldError}>{fieldErrors.iconKey}</p> : null}
+                  <label className={styles.fieldLabel} htmlFor={`${uid}-icon`}>
+                    아이콘 key (선택)
+                  </label>
+                  <input
+                    id={`${uid}-icon`}
+                    type='text'
+                    className={styles.input}
+                    value={iconKey}
+                    onChange={(e) => setIconKey(e.target.value)}
+                    placeholder='예: map (비우면 미지정 — 추후 수정에서 지정 가능)'
+                    autoComplete='off'
+                  />
                 </div>
+                <p className={styles.formHint} style={{ marginTop: 0 }}>
+                  위치는 지정하지 않아도 됩니다 — 그리드의 다음 빈 칸에 자동 배치됩니다.
+                </p>
               </>
             )}
             {formError ? (

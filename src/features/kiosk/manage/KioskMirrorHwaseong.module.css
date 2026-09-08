@@ -1,0 +1,477 @@
+/*
+ * 화성휴게소 실기기 메인 화면 미러 — kiosk-electron HwaseongHome.module.css 를
+ * 그대로 이식(고정 2160×3840 px). 아이콘/라벨만 관리자 API 데이터로 채우고,
+ * 보드 전체를 .scaleWrap 안에서 transform: scale 로 축소해 패널에 맞춘다.
+ * 좌표·치수·색은 앱과 픽셀 단위로 동일(→ 실기기와 같은 비율).
+ */
+
+/* 축소 래퍼 — 실제 표시 크기 = 2160·3840 × scale. board 는 원본 px 유지. */
+.scaleWrap {
+  position: relative;
+  overflow: hidden;
+  margin: 0 auto;
+  border-radius: 18px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+  background: #fff;
+}
+
+.board {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2160px;
+  height: 3840px;
+  overflow: hidden;
+  transform-origin: top left;
+  font-family: 'Noto Sans KR', 'Noto Sans', sans-serif;
+}
+
+/* ── 배경 ── */
+.bgBase {
+  position: absolute;
+  inset: 0;
+  width: 2160px;
+  height: 3840px;
+  background: #fff;
+}
+
+/* ── Header ── */
+.header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2160px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 130px 170px 65px;
+  gap: 80px;
+  box-sizing: border-box;
+}
+
+.headerTopRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 1820px;
+  height: 82px;
+  flex-shrink: 0;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+}
+
+.locationIcon {
+  width: 71px;
+  height: 90px;
+  flex-shrink: 0;
+}
+
+.siteName {
+  font-size: 68px;
+  font-weight: 700;
+  color: #005ab4;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.headerDate {
+  font-size: 68px;
+  font-weight: 700;
+  color: #232323;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.headerBottomRow {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  width: 1820px;
+  height: 365px;
+  flex-shrink: 0;
+}
+
+/* 공지 카드 */
+.noticeCard {
+  width: 1109px;
+  height: 365px;
+  backdrop-filter: blur(42.9px);
+  background: rgba(108, 90, 70, 0.1);
+  border-radius: 45px;
+  padding: 55px 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.noticeInner {
+  display: flex;
+  align-items: center;
+  gap: 38.61px;
+}
+
+.noticeLabel {
+  font-weight: 900;
+  font-size: 51px;
+  color: #000;
+  white-space: nowrap;
+  line-height: 1.05;
+}
+
+.noticeDivider {
+  width: 6.435px;
+  height: 242.383px;
+  background: #232323;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.noticeText {
+  font-size: 51px;
+  font-weight: 500;
+  color: #000;
+  line-height: 64.35px;
+  white-space: pre-wrap;
+  margin: 0;
+}
+
+/* 날씨 카드 */
+.weatherCard {
+  width: 665px;
+  height: 365px;
+  backdrop-filter: blur(42.9px);
+  background: rgba(108, 90, 70, 0.1);
+  border-radius: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  gap: 30px;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.weatherEmoji {
+  font-size: 190px;
+  line-height: 1;
+}
+
+.weatherIconImg {
+  width: 309.836px;
+  height: 214.501px;
+  object-fit: contain;
+}
+
+.weatherTemp {
+  font-size: 145px;
+  font-weight: 700;
+  color: #333;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* ── Content (search + grid) ── */
+.content {
+  position: absolute;
+  top: 721px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2160px;
+  padding: 0 170px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 65px;
+  box-sizing: border-box;
+  z-index: 2;
+}
+
+/* 검색 바 */
+.searchBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 1820px;
+  height: 182px;
+  flex-shrink: 0;
+}
+
+.homeCircle,
+.langBtn {
+  width: 180px;
+  height: 180px;
+  background: #005ab4;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.homeCircleImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.homeGlyph {
+  color: #fff;
+}
+
+.searchField {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 1350px;
+  height: 182px;
+  background: #fff;
+  border: 4.29px solid #005ab4;
+  border-radius: 120px;
+  padding: 55px 75px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.searchPlaceholder {
+  font-size: 60.06px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #999;
+}
+
+.searchIcon {
+  width: 92px;
+  height: 88px;
+  flex-shrink: 0;
+  color: #005ab4;
+}
+
+.langBtnText {
+  font-size: 60.06px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+}
+
+/* ── 메뉴 그리드 ── */
+.menuGrid {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 100px;
+  width: 1820px;
+  flex-shrink: 0;
+}
+
+.menuRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  width: 1820px;
+  flex-shrink: 0;
+}
+
+/* 타일(아이콘 카드 + 라벨) — 고정 300px 열 */
+.tileWrap {
+  position: relative; /* 통계 배지(리포트 전용)의 기준 박스 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 35px;
+  flex-shrink: 0;
+  width: 300px;
+  cursor: pointer;
+}
+
+.tileCard {
+  width: 300px;
+  height: 300px;
+  flex-shrink: 0;
+  transition: transform 0.12s, filter 0.12s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.tileWrap:hover .tileCard {
+  filter: brightness(0.96);
+}
+
+/* Figma 타일 렌더/화성 아이콘은 라운드 카드+그림자가 이미 포함 → contain 으로 크롭 없이 담는다. */
+.tileCardImg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
+}
+
+/* 이미지 없는 버튼 — 파스텔 라운드 카드 위 글리프 */
+.tileGlyphCard {
+  width: 100%;
+  height: 100%;
+  border-radius: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tileLabel {
+  font-size: 38px;
+  font-weight: 400;
+  color: #000;
+  text-align: center;
+  line-height: 1.1;
+  width: 100%;
+  word-break: keep-all;
+}
+
+/* 와이드 타일 (전국도로교통상황) */
+.tileWrapWide {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 35px;
+  width: 830px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.tileCardWide {
+  width: 830px;
+  height: 300px;
+  flex-shrink: 0;
+  transition: transform 0.12s, filter 0.12s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* 빈 슬롯 — 드롭 대상 */
+.emptyCard {
+  width: 300px;
+  height: 300px;
+  border-radius: 48px;
+  border: 5px dashed #b9cfe6;
+  background: rgba(0, 90, 180, 0.04);
+  flex-shrink: 0;
+}
+
+/* 상호작용 상태 */
+.tileSel .tileCard,
+.tileSel .tileCardWide,
+.tileSelWide .tileCardWide {
+  outline: 6px solid #005ab4;
+  outline-offset: 4px;
+  border-radius: 48px;
+}
+
+.dragging {
+  opacity: 0.4;
+}
+
+.over .tileCard,
+.over .tileCardWide,
+.over.emptyCard {
+  border-radius: 48px;
+  box-shadow: 0 0 0 6px #2680eb inset;
+  background: rgba(38, 128, 235, 0.1);
+}
+
+/* ── 하단 내비 / 배너 — Figma 렌더 에셋 미보유 → 좌표 유지 표시전용 플레이스홀더 ── */
+.bottomNav {
+  position: absolute;
+  top: 2821px;
+  left: 0;
+  width: 2160px;
+  height: 446px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* fg-bottomnav 합성 이미지 (스마트관광·AR한복·화장실 3버튼 한 장) — 키오스크 앱과 동일 */
+.bottomNavImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  pointer-events: none;
+}
+
+/* 투명 클릭존 (편집 선택용) — 키오스크 좌표와 동일 */
+.bottomNavZoneLeft,
+.bottomNavZoneCenter,
+.bottomNavZoneRight {
+  position: absolute;
+  cursor: pointer;
+  pointer-events: auto;
+  border-radius: 50%;
+}
+.bottomNavZoneLeft {
+  left: 345px;
+  top: 99px;
+  width: 235px;
+  height: 235px;
+}
+.bottomNavZoneCenter {
+  left: 903px;
+  top: 39px;
+  width: 356px;
+  height: 356px;
+}
+.bottomNavZoneRight {
+  left: 1583px;
+  top: 99px;
+  width: 235px;
+  height: 235px;
+}
+/* 선택 상태 하이라이트 (편집 대상) */
+.bottomNavZoneSel {
+  outline: 8px solid #005ab4;
+  outline-offset: 6px;
+  background: rgba(0, 90, 180, 0.12);
+}
+
+.bottomBanner {
+  position: absolute;
+  top: 3267px;
+  left: 0;
+  width: 2160px;
+  height: 573px;
+  background: repeating-linear-gradient(
+    45deg,
+    #eef3f9,
+    #eef3f9 40px,
+    #e4ecf5 40px,
+    #e4ecf5 80px
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6a7a8c;
+  font-size: 60px;
+  font-weight: 600;
+}
+
+
+/* 언어선택 배지 — .homeCircle 과 공유하는 원형 클립에 잘리지 않게 이 버튼만 푼다 */
+.langBtn {
+  position: relative;
+  overflow: visible;
+}

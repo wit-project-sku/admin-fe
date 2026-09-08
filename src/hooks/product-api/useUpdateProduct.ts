@@ -10,6 +10,7 @@ export type UpdateProductPayload = {
 };
 
 export const useUpdateProduct = () => {
+  
   const { mutate: updateProduct, mutateAsync: updateProductAsync, isPending, error } = useMutation({
     mutationFn: async ({ productId, updatedData, images = [] }: UpdateProductPayload) => {
       const formData = buildProductMultipart(updatedData, images);

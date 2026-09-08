@@ -10,11 +10,12 @@ type ShopsManageTableProps = {
   rows: ShopRow[];
   onEdit: (shop: ShopRow) => void;
   onDelete: (shop: ShopRow) => void;
+  onRowClick?: (shop: ShopRow) => void;
 };
 
 const COL_COUNT = 7;
 
-export function ShopsManageTable({ loading, error, rows, onEdit, onDelete }: ShopsManageTableProps) {
+export function ShopsManageTable({ loading, error, rows, onEdit, onDelete, onRowClick }: ShopsManageTableProps) {
   return (
     <div className={shared.tableResponsive}>
       <table className={shared.table}>
@@ -54,7 +55,12 @@ export function ShopsManageTable({ loading, error, rows, onEdit, onDelete }: Sho
             </tr>
           ) : (
             rows.map((s) => (
-              <tr key={String(s.id)} className={shared.tr}>
+              <tr
+                key={String(s.id)}
+                className={shared.tr}
+                onClick={() => onRowClick?.(s)}
+                style={{ cursor: onRowClick ? 'pointer' : undefined }}
+              >
                 <td className={`${shared.td} ${shared.tdCenter} ${shared.tdMono}`}>
                   #{String(s.id).padStart(3, '0')}
                 </td>
@@ -63,15 +69,15 @@ export function ShopsManageTable({ loading, error, rows, onEdit, onDelete }: Sho
                     {s.imageUrl ? (
                       <img
                         src={s.imageUrl}
-                        alt=""
-                        style={{ width: 36, height: 36, borderRadius: 6, objectFit: 'cover', flexShrink: 0 }}
+                        alt=''
+                        style={{ width: 48, height: 48, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }}
                       />
                     ) : (
                       <div
                         style={{
-                          width: 36,
-                          height: 36,
-                          borderRadius: 6,
+                          width: 48,
+                          height: 48,
+                          borderRadius: 8,
                           background: '#f1f5f9',
                           flexShrink: 0,
                         }}
@@ -89,7 +95,11 @@ export function ShopsManageTable({ loading, error, rows, onEdit, onDelete }: Sho
                   </span>
                 </td>
                 <td className={shared.td}>
-                  <div className={shared.actionGroup} style={{ justifyContent: 'flex-end' }}>
+                  <div
+                    className={shared.actionGroup}
+                    style={{ justifyContent: 'flex-end' }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <EditBtn onClick={() => onEdit(s)} />
                     <DeleteBtn onClick={() => onDelete(s)} />
                   </div>

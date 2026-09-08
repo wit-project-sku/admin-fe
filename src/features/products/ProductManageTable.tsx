@@ -11,6 +11,7 @@ type ProductManageTableProps = {
   rows: ProductRow[];
   onEdit: (product: ProductRow) => void;
   onDelete: (product: ProductRow) => void;
+  onRowClick?: (product: ProductRow) => void;
 };
 
 const COL_COUNT = 7;
@@ -28,7 +29,7 @@ function statusBadge(status: ProductStatus | undefined) {
   }
 }
 
-export function ProductManageTable({ loading, error, rows, onEdit, onDelete }: ProductManageTableProps) {
+export function ProductManageTable({ loading, error, rows, onEdit, onDelete, onRowClick }: ProductManageTableProps) {
   return (
     <div className={shared.tableResponsive}>
       <table className={shared.table}>
@@ -71,7 +72,12 @@ export function ProductManageTable({ loading, error, rows, onEdit, onDelete }: P
               const st = statusBadge(p.status);
               const lowStock = (p.stock ?? 0) === 0 && p.status === 'ON_SALE';
               return (
-                <tr key={String(p.id)} className={shared.tr}>
+                <tr
+                  key={String(p.id)}
+                  className={shared.tr}
+                  onClick={() => onRowClick?.(p)}
+                  style={{ cursor: onRowClick ? 'pointer' : undefined }}
+                >
                   <td className={`${shared.td} ${shared.tdCenter} ${shared.tdMono}`}>
                     #{String(p.id).padStart(3, '0')}
                   </td>
@@ -80,8 +86,8 @@ export function ProductManageTable({ loading, error, rows, onEdit, onDelete }: P
                       {p.images?.[0]?.imageUrl ? (
                         <img
                           src={p.images[0].imageUrl}
-                          alt=""
-                          style={{ width: 36, height: 36, borderRadius: 6, objectFit: 'cover', flexShrink: 0 }}
+                          alt=''
+                          style={{ width: 48, height: 48, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }}
                         />
                       ) : null}
                       <div style={{ minWidth: 0 }}>
@@ -110,7 +116,11 @@ export function ProductManageTable({ loading, error, rows, onEdit, onDelete }: P
                     <span className={`${shared.badge} ${st.cls}`}>{st.label}</span>
                   </td>
                   <td className={shared.td}>
-                    <div className={shared.actionGroup} style={{ justifyContent: 'flex-end' }}>
+                    <div
+                      className={shared.actionGroup}
+                      style={{ justifyContent: 'flex-end' }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <EditBtn onClick={() => onEdit(p)} />
                       <DeleteBtn onClick={() => onDelete(p)} />
                     </div>

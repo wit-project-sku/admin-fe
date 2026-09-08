@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 
 .env
+
+# AI agent working guide (local only)
+CLAUDE.md

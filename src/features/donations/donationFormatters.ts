@@ -19,13 +19,31 @@ export function formatKrw(amount: number | null | undefined): string {
 
 export function formatAmountOptions(options: CampaignAmountOption[] | null | undefined): string {
   if (!options?.length) return '-';
+  return options.map((opt) => formatKrw(opt.amount)).join(' · ');
+}
+
+/** 응답 금액 프리셋(`[{amount}]`)을 오름차순 정수 배열로 변환. */
+export function amountOptionsToNumbers(options: CampaignAmountOption[] | null | undefined): number[] {
+  if (!options?.length) return [];
   return options
-    .map((opt) => {
-      const label = opt.label?.trim();
-      const amount = formatKrw(opt.amount);
-      return label ? `${label} (${amount})` : amount;
-    })
-    .join(' · ');
+    .map((opt) => Number(opt.amount))
+    .filter((n) => Number.isFinite(n) && n > 0)
+    .sort((a, b) => a - b);
+}
+
+/** 테이블/칩용 간결 금액 표기: 10000→1만, 5000→5천, 그 외 원 단위. */
+export function formatAmountShort(amount: number | null | undefined): string {
+  const n = Number(amount);
+  if (!Number.isFinite(n) || n <= 0) return '-';
+  if (n >= 10000) {
+    const man = n / 10000;
+    return `${Number.isInteger(man) ? man : man.toFixed(1)}만`;
+  }
+  if (n >= 1000) {
+    const cheon = n / 1000;
+    return `${Number.isInteger(cheon) ? cheon : cheon.toFixed(1)}천`;
+  }
+  return n.toLocaleString('ko-KR');
 }
 
 export function formatCampaignProgress(

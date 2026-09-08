@@ -8,8 +8,8 @@ import { ReportPageHeader } from '../features/reports/ReportPageHeader';
 import { ReportTabBar } from '../features/reports/ReportTabBar';
 import type { ReportTab } from '../features/reports/reportTypes';
 import {
-  downloadDailyShootingCsv,
-  downloadMonthlyShootingCsv,
+  downloadDailyShootingXlsx,
+  downloadMonthlyShootingXlsx,
 } from '../features/reports/shootingReportExports';
 import { useDailyShootingReport } from '../features/reports/useDailyShootingReport';
 import { useMonthlyShootingReport } from '../features/reports/useMonthlyShootingReport';
@@ -34,30 +34,55 @@ export default function ReportsPage() {
   const daily = useDailyShootingReport(tab === 'daily');
   const outfitFilters = useOutfitReportFilters();
 
-  const handleHeaderExcelDownload = useCallback(() => {
-    if (tab === 'monthly' && !monthly.errorMessage && monthly.rows.length > 0) {
-      downloadMonthlyShootingCsv(monthly.rows, monthly.kioskNames);
-      return;
+  // 엑셀 추출은 현재 페이지가 아니라 조회된 '전체' 데이터를 서버에서 다시 받아오므로 비동기 + 진행상태 관리.
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleHeaderExcelDownload = useCallback(async () => {
+    if (isExporting) return;
+    setIsExporting(true);
+    try {
+      if (tab === 'monthly' && !monthly.errorMessage && monthly.totalElements > 0) {
+        await downloadMonthlyShootingXlsx(monthly.monthSort, monthly.totalElements);
+      } else if (
+        tab === 'daily' &&
+        !daily.errorMessage &&
+        daily.totalElements > 0 &&
+        daily.committedRange.start &&
+        daily.committedRange.end
+      ) {
+        await downloadDailyShootingXlsx(daily.committedRange, daily.totalElements);
+      }
+    } catch {
+      alert('엑셀 추출에 실패했습니다. 잠시 후 다시 시도해주세요.');
+    } finally {
+      setIsExporting(false);
     }
-    if (tab === 'daily' && !daily.errorMessage && daily.rows.length > 0) {
-      downloadDailyShootingCsv(daily.rows, daily.kioskNames, daily.committedRange);
-    }
-  }, [tab, monthly.errorMessage, monthly.rows, monthly.kioskNames, daily]);
+  }, [
+    isExporting,
+    tab,
+    monthly.errorMessage,
+    monthly.totalElements,
+    monthly.monthSort,
+    daily.errorMessage,
+    daily.totalElements,
+    daily.committedRange,
+  ]);
 
   const headerExcelDisabled = useMemo(() => {
+    if (isExporting) return true;
     if (tab === 'monthly') {
-      return Boolean(monthly.errorMessage) || monthly.rows.length === 0;
+      return Boolean(monthly.errorMessage) || monthly.totalElements === 0;
     }
     if (tab === 'daily') {
       return (
         Boolean(daily.errorMessage) ||
-        daily.rows.length === 0 ||
+        daily.totalElements === 0 ||
         !daily.committedRange.start ||
         !daily.committedRange.end
       );
     }
     return true;
-  }, [tab, monthly, daily]);
+  }, [isExporting, tab, monthly, daily]);
 
   return (
     <div>

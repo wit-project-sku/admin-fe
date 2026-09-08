@@ -5,8 +5,6 @@ import {
   useUpdateDonationOrganization,
   type DonationOrganization,
 } from '../../hooks/donation-api/useDonationOrganizations';
-import { DONATION_TYPE_OPTIONS } from '../../features/donations/donationListConfig';
-import type { DonationTypeCode } from '../../hooks/donation-api/donationApiTypes';
 
 type Props = {
   open: boolean;
@@ -16,15 +14,15 @@ type Props = {
   onSuccess: () => void;
 };
 
-type FieldErrors = Partial<Record<'type' | 'name', string>>;
+type FieldErrors = Partial<Record<'name', string>>;
 
 export default function DonationOrganizationManageModal({ open, mode, organization, onClose, onSuccess }: Props) {
   const isEdit = mode === 'edit';
   const { createOrganizationAsync, isPending: isCreating } = useCreateDonationOrganization();
   const { updateOrganizationAsync, isPending: isUpdating } = useUpdateDonationOrganization();
 
-  const [type, setType] = useState<DonationTypeCode | ''>('');
   const [name, setName] = useState('');
+  const [active, setActive] = useState(true);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [saving, setSaving] = useState(false);
 
@@ -33,11 +31,11 @@ export default function DonationOrganizationManageModal({ open, mode, organizati
   useEffect(() => {
     if (!open) return;
     if (isEdit && organization) {
-      setType(organization.type);
       setName(organization.name);
+      setActive(organization.active);
     } else {
-      setType('');
       setName('');
+      setActive(true);
     }
     setErrors({});
   }, [open, isEdit, organization]);
@@ -56,7 +54,6 @@ export default function DonationOrganizationManageModal({ open, mode, organizati
   const handleSubmit = async (e?: FormEvent) => {
     e?.preventDefault();
     const nextErrors: FieldErrors = {};
-    if (!type) nextErrors.type = '기부 종류를 선택해 주세요.';
     if (!name.trim()) nextErrors.name = '단체명을 입력해 주세요.';
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors);
@@ -65,7 +62,7 @@ export default function DonationOrganizationManageModal({ open, mode, organizati
 
     setSaving(true);
     try {
-      const body = { type: type as DonationTypeCode, name: name.trim() };
+      const body = { type: 'NGO' as const, name: name.trim(), active };
       if (isEdit && organization) {
         await updateOrganizationAsync({ id: organization.id, body });
       } else {
@@ -88,27 +85,25 @@ export default function DonationOrganizationManageModal({ open, mode, organizati
       <ModalHeader title={isEdit ? '기부 단체 수정' : '기부 단체 등록'} onClose={onClose} />
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <DropDownField
-            label='기부 종류'
-            required
-            error={errors.type}
-            options={[...DONATION_TYPE_OPTIONS]}
-            value={type}
-            onChange={(e) => {
-              setErrors((prev) => ({ ...prev, type: undefined }));
-              setType(e.target.value as DonationTypeCode | '');
-            }}
-          />
           <InputField
             label='단체명'
             required
             error={errors.name}
-            placeholder='예: 세이브더칠드런 / OO초등학교'
+            placeholder='예: 세이브더칠드런'
             value={name}
             onChange={(e) => {
               setErrors((prev) => ({ ...prev, name: undefined }));
               setName(e.target.value);
             }}
+          />
+          <DropDownField
+            label='상태'
+            options={[
+              { value: 'active', label: '활성' },
+              { value: 'inactive', label: '비활성' },
+            ]}
+            value={active ? 'active' : 'inactive'}
+            onChange={(e) => setActive(e.target.value === 'active')}
           />
         </div>
         <ModalFooter

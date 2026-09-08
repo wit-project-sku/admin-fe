@@ -1,0 +1,39 @@
+.thumbBtn {
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: zoom-in;
+  display: inline-flex;
+  line-height: 0;
+}
+
+.thumb {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.previewModal {
+  max-width: 90vw;
+  width: auto;
+}
+
+.previewBody {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: #0f172a;
+  max-height: 80vh;
+  overflow: auto;
+}
+
+.previewImg {
+  max-width: 86vw;
+  max-height: 74vh;
+  object-fit: contain;
+  border-radius: 8px;
+}

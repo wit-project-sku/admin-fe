@@ -1,0 +1,224 @@
+/* 키오스크별 의상 카테고리 표시 설정 — 표 + 인라인 편집기 */
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.selectLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+}
+
+.select {
+  min-width: 280px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+  background: #fff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.select:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 1px;
+}
+
+.summary {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.hint {
+  margin: 0 0 12px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: #64748b;
+}
+
+.hint b {
+  color: #334155;
+}
+
+.categoryCell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.categoryLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.categoryCode {
+  font-size: 11px;
+  color: #94a3b8;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.labelCell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.labelDefault {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.labelOverridden {
+  font-size: 13px;
+  font-weight: 700;
+  color: #b45309;
+}
+
+.count {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.countZero {
+  color: #b91c1c;
+}
+
+.rowActions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.btnSmall {
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #334155;
+  cursor: pointer;
+}
+
+.btnSmall:hover:not(:disabled) {
+  background: #f1f5f9;
+}
+
+.btnSmall:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btnDanger {
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+.btnDanger:hover:not(:disabled) {
+  background: #fef2f2;
+}
+
+/* ── 인라인 편집기 ── */
+.editorRow > td {
+  background: #f8fafc;
+  padding: 0 !important;
+}
+
+.editor {
+  padding: 16px 18px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.editorHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.editorTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.editorNote {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px 14px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fieldLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.input {
+  padding: 7px 10px;
+  font-size: 13px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #fff;
+  color: #0f172a;
+}
+
+.input::placeholder {
+  color: #cbd5e1;
+}
+
+.input:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 1px;
+}
+
+.editorActions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 14px;
+}
+
+.notice {
+  margin: 0 0 12px;
+  padding: 9px 14px;
+  border-radius: 8px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.error {
+  margin: 0 0 12px;
+  padding: 9px 14px;
+  border-radius: 8px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  font-size: 12px;
+  font-weight: 700;
+}

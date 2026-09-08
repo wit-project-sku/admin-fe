@@ -1,10 +1,16 @@
 .wideModal {
-  width: min(94vw, 960px) !important;
-  max-width: min(94vw, 960px) !important;
+  width: min(94vw, 620px) !important;
+  max-width: min(94vw, 620px) !important;
   max-height: 92vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+
+.effectList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .formShell {
@@ -230,9 +236,8 @@
   padding-top: 4px;
 }
 
-.imageHint,
-.sectionImageHint {
-  margin: -8px 0 0;
+.imageHint {
+  margin: 10px 0 0;
   font-size: 11px;
   color: var(--text-muted, #64748b);
   line-height: 1.4;

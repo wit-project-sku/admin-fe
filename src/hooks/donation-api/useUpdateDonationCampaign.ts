@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { APIService } from '../../utils/axios';
-import { buildDonationCampaignMultipart } from '../../utils/formDataBuilder';
+import { buildDataImageMultipart } from '../../utils/formDataBuilder';
 import type { CampaignWriteBody, DonationCampaignMultipartFiles } from './donationApiTypes';
 import { DONATION_CAMPAIGNS_QUERY_KEY } from './useGetDonationCampaigns';
 
@@ -10,19 +10,17 @@ export type UpdateDonationCampaignPayload = {
 } & DonationCampaignMultipartFiles;
 
 /**
- * PUT `/donations/campaigns/{id}` — multipart/form-data
- * - `data`: full campaign JSON (lists replace existing when sent)
- * - `image`: optional new thumbnail (omit to keep)
- * - `sectionImage_<i>`: optional new image for section index i (omit to keep data.sections[i].img)
- * - `sections[i].img: null` removes section image without uploading a file
+ * PUT `/admin/donations/campaigns/{id}` — multipart/form-data
+ * - `data`: 캠페인 JSON (effects 는 전송 시 통째로 교체, 미전송 시 기존 유지)
+ * - `image`: 새 썸네일(미전송 시 기존 유지)
  */
 export const useUpdateDonationCampaign = () => {
   const queryClient = useQueryClient();
 
   const { mutate, mutateAsync, isPending, error } = useMutation({
-    mutationFn: async ({ campaignId, campaignData, image, sectionImages }: UpdateDonationCampaignPayload) => {
-      const formData = buildDonationCampaignMultipart(campaignData, { image: image ?? null, sectionImages });
-      return await APIService.private.put(`/donations/campaigns/${campaignId}`, formData, {
+    mutationFn: async ({ campaignId, campaignData, image }: UpdateDonationCampaignPayload) => {
+      const formData = buildDataImageMultipart(campaignData, image ?? null);
+      return await APIService.private.put(`/admin/donations/campaigns/${campaignId}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
     },

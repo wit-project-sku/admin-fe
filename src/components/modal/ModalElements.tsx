@@ -50,23 +50,37 @@ type InputFieldProps = {
   error?: string;
 } & InputHTMLAttributes<HTMLInputElement>;
 
-export const InputField = ({ label, required, error, className, ...props }: InputFieldProps) => (
-  <div className={m.field}>
-    <label className={m.label}>
-      {label} {required && <span className={m.required}>*</span>}
-    </label>
-    <input
-      className={[m.input, error ? m.inputError : '', className].filter(Boolean).join(' ')}
-      aria-invalid={error ? true : undefined}
-      {...props}
-    />
-    {error ? (
-      <span className={m.fieldError} role="alert">
-        {error}
-      </span>
-    ) : null}
-  </div>
-);
+export const InputField = ({ label, required, error, className, value, maxLength, ...props }: InputFieldProps) => {
+  // maxLength 가 주어졌을 때만 글자수 카운터 노출(다른 모달의 InputField 는 영향 없음).
+  const showCount = maxLength != null;
+  const len = typeof value === 'string' ? value.length : String(value ?? '').length;
+  return (
+    <div className={m.field}>
+      <div className={m.labelRow}>
+        <label className={m.label}>
+          {label} {required && <span className={m.required}>*</span>}
+        </label>
+        {showCount ? (
+          <span className={[m.counter, len >= maxLength ? m.counterMax : ''].filter(Boolean).join(' ')}>
+            {len}/{maxLength}
+          </span>
+        ) : null}
+      </div>
+      <input
+        className={[m.input, error ? m.inputError : '', className].filter(Boolean).join(' ')}
+        aria-invalid={error ? true : undefined}
+        value={value}
+        maxLength={maxLength}
+        {...props}
+      />
+      {error ? (
+        <span className={m.fieldError} role="alert">
+          {error}
+        </span>
+      ) : null}
+    </div>
+  );
+};
 
 export type SelectOption = { value?: string | number; id?: string | number; label?: string; name?: string };
 
@@ -115,24 +129,38 @@ type TextAreaFieldProps = {
   error?: string;
 } & TextareaHTMLAttributes<HTMLTextAreaElement>;
 
-export const TextAreaField = ({ label, required, error, className, ...props }: TextAreaFieldProps) => (
-  <div className={`${m.field} ${m.fieldFull}`}>
-    <span className={m.label}>
-      {label} {required && <span className={m.required}>*</span>}
-    </span>
-    <textarea
-      className={[m.fieldTextarea, error ? m.textareaError : '', className].filter(Boolean).join(' ')}
-      required={required}
-      aria-invalid={error ? true : undefined}
-      {...props}
-    />
-    {error ? (
-      <span className={m.fieldError} role="alert">
-        {error}
-      </span>
-    ) : null}
-  </div>
-);
+export const TextAreaField = ({ label, required, error, className, value, maxLength, ...props }: TextAreaFieldProps) => {
+  // maxLength 가 주어졌을 때만 글자수 카운터 노출.
+  const showCount = maxLength != null;
+  const len = typeof value === 'string' ? value.length : String(value ?? '').length;
+  return (
+    <div className={`${m.field} ${m.fieldFull}`}>
+      <div className={m.labelRow}>
+        <span className={m.label}>
+          {label} {required && <span className={m.required}>*</span>}
+        </span>
+        {showCount ? (
+          <span className={[m.counter, len >= maxLength ? m.counterMax : ''].filter(Boolean).join(' ')}>
+            {len}/{maxLength}
+          </span>
+        ) : null}
+      </div>
+      <textarea
+        className={[m.fieldTextarea, error ? m.textareaError : '', className].filter(Boolean).join(' ')}
+        required={required}
+        aria-invalid={error ? true : undefined}
+        value={value}
+        maxLength={maxLength}
+        {...props}
+      />
+      {error ? (
+        <span className={m.fieldError} role="alert">
+          {error}
+        </span>
+      ) : null}
+    </div>
+  );
+};
 
 export type MultiSelectItem = { id: string | number; name: string };
 
@@ -144,6 +172,8 @@ type MultiSelectFieldProps = {
   selectedIds?: (string | number)[];
   onChange: (ids: (string | number)[]) => void;
   isEdit?: boolean;
+  /** 라벨 옆에 전체 선택/해제 토글과 선택 개수를 붙인다. */
+  selectAllable?: boolean;
 };
 
 const idKey = (v: string | number) => String(v);
@@ -156,26 +186,52 @@ export const MultiSelectField = ({
   selectedIds = [],
   onChange,
   isEdit = true,
+  selectAllable = false,
 }: MultiSelectFieldProps) => {
   const ids = Array.isArray(selectedIds) ? selectedIds : [];
+  const isSelected = (itemId: string | number) => ids.some((i) => idKey(i) === idKey(itemId));
+  const selectedCount = items.filter((item) => isSelected(item.id)).length;
+  const allSelected = items.length > 0 && selectedCount === items.length;
 
   const toggleItem = (itemId: string | number) => {
     if (!isEdit) return;
     const k = idKey(itemId);
-    const newIds = ids.some((i) => idKey(i) === k)
-      ? ids.filter((i) => idKey(i) !== k)
-      : [...ids, itemId];
+    const newIds = isSelected(itemId) ? ids.filter((i) => idKey(i) !== k) : [...ids, itemId];
     onChange(newIds);
+  };
+
+  /**
+   * 목록에 없는 선택은 건드리지 않는다 — 부모가 걸러 낸 항목(예: 숨긴 테스트 단말)까지
+   * 전체 해제가 지워 버리면, 화면에 보이지도 않는 값이 조용히 사라진다.
+   */
+  const toggleAll = () => {
+    if (!isEdit) return;
+    const kept = ids.filter((i) => !items.some((item) => idKey(item.id) === idKey(i)));
+    onChange(allSelected ? kept : [...kept, ...items.map((item) => item.id)]);
   };
 
   return (
     <div className={`${m.field} ${m.fieldFull}`}>
-      <span className={m.label}>
-        {label} {required && <span className={m.required}>*</span>}
-      </span>
+      <div className={m.labelRow}>
+        <span className={m.label}>
+          {label} {required && <span className={m.required}>*</span>}
+        </span>
+        {selectAllable && items.length > 0 && (
+          <div className={m.selectAllBox}>
+            <span className={m.selectCount}>
+              {selectedCount} / {items.length}
+            </span>
+            {isEdit && (
+              <button type="button" className={m.selectAllBtn} onClick={toggleAll}>
+                {allSelected ? '전체 해제' : '전체 선택'}
+              </button>
+            )}
+          </div>
+        )}
+      </div>
       <div className={[m.itemGrid, error ? m.multiSelectErrorWrap : ''].filter(Boolean).join(' ')}>
         {items.map((item) => {
-          const isActive = ids.some((i) => idKey(i) === idKey(item.id));
+          const isActive = isSelected(item.id);
           return (
             <div
               key={item.id}
@@ -250,13 +306,15 @@ export const ImageUploadField = ({
         ))}
 
         {isEdit && previewUrls.length < maxCount && (
-          <div className={m.uploadArea}>
+          // 박스 전체를 <label>로 감싸 클릭 히트영역을 네이티브 연결(투명 input 오버레이의
+          // z-index/포인터 이슈 없이 어디를 눌러도 파일 선택창이 열린다).
+          <label className={m.uploadArea}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2.5">
               <line x1="12" y1="5" x2="12" y2="19" />
               <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
             <input type="file" className={m.fileInput} onChange={onUpload} accept="image/*" multiple={maxCount > 1} />
-          </div>
+          </label>
         )}
       </div>
       {error ? (

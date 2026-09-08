@@ -12,6 +12,7 @@ type UserManageTableProps = {
   onEdit: (user: UserRow) => void;
   onDelete: (user: UserRow) => void;
   onStatusChange: (user: UserRow, isActive: boolean) => void;
+  onRowClick?: (user: UserRow) => void;
 };
 
 function RoleBadge({ role }: { role: string }) {
@@ -33,7 +34,7 @@ function StatusSelect({ user, onChange }: { user: UserRow; onChange: (isActive: 
   );
 }
 
-export function UserManageTable({ loading, error, rows, onEdit, onDelete, onStatusChange }: UserManageTableProps) {
+export function UserManageTable({ loading, error, rows, onEdit, onDelete, onStatusChange, onRowClick }: UserManageTableProps) {
   return (
     <div className={shared.tableResponsive}>
       <table className={shared.table}>
@@ -74,7 +75,12 @@ export function UserManageTable({ loading, error, rows, onEdit, onDelete, onStat
             </tr>
           ) : (
             rows.map((user) => (
-              <tr key={user.userId} className={shared.tr}>
+              <tr
+                key={user.userId}
+                className={shared.tr}
+                onClick={() => onRowClick?.(user)}
+                style={{ cursor: onRowClick ? 'pointer' : undefined }}
+              >
                 <td className={`${shared.td} ${shared.tdMono}`}>{user.userId}</td>
                 <td className={`${shared.td} ${shared.tdBold}`}>{user.username}</td>
                 <td className={shared.td}>{user.name || '-'}</td>
@@ -83,11 +89,11 @@ export function UserManageTable({ loading, error, rows, onEdit, onDelete, onStat
                 <td className={`${shared.td} ${shared.tdCenter}`}>
                   <RoleBadge role={user.role} />
                 </td>
-                <td className={`${shared.td} ${shared.tdCenter}`}>
+                <td className={`${shared.td} ${shared.tdCenter}`} onClick={(e) => e.stopPropagation()}>
                   <StatusSelect user={user} onChange={(isActive) => onStatusChange(user, isActive)} />
                 </td>
                 <td className={`${shared.td} ${shared.tdRight}`}>
-                  <div className={shared.actionGroup}>
+                  <div className={shared.actionGroup} onClick={(e) => e.stopPropagation()}>
                     <button
                       type="button"
                       className={shared.btnEdit}
