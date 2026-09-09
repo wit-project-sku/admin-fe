@@ -5,6 +5,7 @@ import { useKioskOutfitCategoryPage } from '@/features/outfits/kioskCategory/use
 
 export default function KioskOutfitCategoryPage() {
   const m = useKioskOutfitCategoryPage();
+  const ready = m.kioskId != null && !m.isLoading;
 
   return (
     <div>
@@ -35,21 +36,45 @@ export default function KioskOutfitCategoryPage() {
                 </option>
               ))}
             </select>
-            {m.kioskId != null && !m.isLoading ? (
-              <span className={s.summary}>
-                노출 {m.visibleCount} / {m.settings.length} · 덮어쓴 설정 {m.overrideCount}
-              </span>
-            ) : null}
           </div>
+
+          {ready ? (
+            <div className={s.stats}>
+              <span className={s.stat}>
+                <span className={s.statLabel}>탭 노출</span>
+                <span className={s.statValue}>
+                  {m.visibleCount}
+                  <span className={s.statTotal}>/{m.settings.length}</span>
+                </span>
+              </span>
+              <span className={s.stat}>
+                <span className={s.statLabel}>예외 설정</span>
+                <span className={`${s.statValue} ${m.overrideCount > 0 ? s.statAccent : ''}`}>
+                  {m.overrideCount}
+                </span>
+              </span>
+            </div>
+          ) : null}
         </div>
 
-        <div style={{ padding: '0 20px 4px' }}>
-          <p className={s.hint}>
-            탭 노출은 저장값이 아니라 <b>파생값</b>입니다 — 그 키오스크에 배정된 유효 의상이 1벌 이상인
-            카테고리만 나옵니다. 그래서 <b>배정 의상 0벌이면 숨김과 무관하게 탭이 보이지 않습니다.</b> 여기서
-            거는 설정은 그 규칙에 얹는 <b>예외</b>이고, 되돌리기를 누르면 예외가 사라집니다. 카테고리 코드는
-            앱이 의상 필터로 쓰는 값이라 여기서 바꿀 수 없습니다.
-          </p>
+        <div className={s.notes}>
+          <div className={s.hint}>
+            <p className={s.hintLead}>
+              탭 노출은 저장값이 아니라 <b>파생값</b>입니다.
+            </p>
+            <ul className={s.hintList}>
+              <li>
+                그 키오스크에 배정된 유효 의상이 <b>1벌 이상</b>인 카테고리만 탭으로 나옵니다.
+              </li>
+              <li>
+                배정 의상이 <b>0벌</b>이면 숨김과 무관하게 탭이 보이지 않습니다.
+              </li>
+              <li>
+                여기서 거는 설정은 그 규칙에 얹는 <b>예외</b>이고, 되돌리기를 누르면 예외가 사라집니다.
+              </li>
+              <li>카테고리 코드는 앱이 의상 필터로 쓰는 값이라 여기서 바꿀 수 없습니다.</li>
+            </ul>
+          </div>
 
           {m.notice ? (
             <p className={s.notice} role='status' aria-live='polite'>

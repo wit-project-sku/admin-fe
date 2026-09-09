@@ -1,26 +1,31 @@
-/* 키오스크별 의상 카테고리 표시 설정 — 표 + 인라인 편집기 */
+/* 키오스크별 의상 카테고리 표시 설정 — 표 + 인라인 편집기
+   표의 뼈대(thead/th/tr/td)는 shared.module.css 를 쓴다. 여기에는 이 화면에만
+   있는 것(컬럼 폭·라벨 셀·언어 태그·편집기)만 둔다. */
 
+/* ── 카드 헤더: 키오스크 선택 + 요약 ── */
 .toolbar {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
 .selectLabel {
-  font-size: 12px;
-  font-weight: 700;
-  color: #475569;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted, #64748b);
 }
 
 .select {
-  min-width: 280px;
+  min-width: 260px;
   padding: 8px 12px;
   font-size: 13px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--text-primary, #0f172a);
   background: #fff;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--border, #cbd5e1);
   border-radius: 8px;
   cursor: pointer;
 }
@@ -30,80 +35,242 @@
   outline-offset: 1px;
 }
 
-.summary {
-  font-size: 12px;
-  color: #64748b;
-  font-weight: 600;
+.stats {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
 }
 
-.hint {
-  margin: 0 0 12px;
-  font-size: 12px;
-  line-height: 1.7;
-  color: #64748b;
-}
-
-.hint b {
-  color: #334155;
-}
-
-.categoryCell {
+.stat {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  padding: 6px 14px;
+  border: 1px solid var(--border-subtle, #eef2f7);
+  border-radius: 8px;
+  background: var(--surface-subtle, #f8fafc);
+}
+
+.statLabel {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted, #94a3b8);
+}
+
+.statValue {
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary, #0f172a);
+}
+
+.statTotal {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted, #94a3b8);
+}
+
+.statAccent {
+  color: #b45309;
+}
+
+/* ── 안내문 ── */
+.notes {
+  padding: 14px 20px 0;
+}
+
+.hint {
+  padding: 12px 14px;
+  border: 1px solid var(--border-subtle, #eef2f7);
+  border-left: 3px solid #cbd5e1;
+  border-radius: 8px;
+  background: var(--surface-subtle, #f8fafc);
+}
+
+.hintLead {
+  margin: 0 0 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-secondary, #334155);
+}
+
+.hintList {
+  margin: 0;
+  padding-left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.hintList li {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text-muted, #64748b);
+}
+
+.hintList b,
+.hintLead b {
+  color: var(--text-primary, #0f172a);
+}
+
+/* ── 컬럼 폭 ── */
+.colCategory {
+  width: 22%;
+}
+
+.colLabel {
+  width: auto;
+}
+
+.colCount {
+  width: 104px;
+}
+
+.colStatus {
+  width: 128px;
+}
+
+.colActions {
+  width: 268px;
+}
+
+/* ── 행 ── */
+/* 배정 의상 0벌 = 어차피 탭에 안 나오는 행. 지우지 않고 눌러 둬서 눈이 먼저
+   "쓰이는 행"에 가도록 한다. */
+.rowMuted td {
+  background: #fbfcfd;
+}
+
+.rowMuted .categoryLabel {
+  color: var(--text-muted, #64748b);
+}
+
+/* td 배경이 shared 의 tr:hover 오버레이를 덮으므로 hover 를 여기서 다시 준다. */
+.rowMuted:hover td {
+  background: #f4f6f9;
+}
+
+.rowEditing td {
+  background: #f8fafc;
+}
+
+/* ── 카테고리 셀 ── */
+.categoryCell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: flex-start;
 }
 
 .categoryLabel {
   font-size: 13px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-primary, #0f172a);
 }
 
 .categoryCode {
+  padding: 1px 6px;
   font-size: 11px;
-  color: #94a3b8;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: #64748b;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
 }
 
+/* ── 표시 이름 셀 ── */
 .labelCell {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
 }
 
-.labelDefault {
-  font-size: 12px;
-  color: #94a3b8;
+.labelPlain {
+  font-size: 13px;
+  color: var(--text-primary, #0f172a);
 }
 
+/* 덮어쓴 이름은 색으로 구분한다 — 기본값과 같은 자리에 나오므로 글자만으로는 구분이 안 된다. */
 .labelOverridden {
   font-size: 13px;
   font-weight: 700;
   color: #b45309;
 }
 
-.count {
-  font-variant-numeric: tabular-nums;
-  font-weight: 700;
+.labelMeta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
-.countZero {
+.labelNote {
+  font-size: 11px;
+  color: var(--text-muted, #94a3b8);
+}
+
+.langTags {
+  display: inline-flex;
+  gap: 3px;
+  flex-wrap: wrap;
+}
+
+.langTag {
+  padding: 1px 5px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #92400e;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 4px;
+}
+
+/* ── 배정 의상 수 ── */
+.count {
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary, #0f172a);
+}
+
+.countUnit {
+  margin-left: 1px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted, #94a3b8);
+}
+
+.countZero,
+.countZero .countUnit {
   color: #b91c1c;
 }
 
+/* ── 상태 배지 ── */
+.badgeStack {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+}
+
+/* ── 행 버튼 ── */
 .rowActions {
   display: flex;
   gap: 6px;
   justify-content: flex-end;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .btnSmall {
   padding: 5px 10px;
   font-size: 12px;
   font-weight: 700;
+  white-space: nowrap;
   border-radius: 6px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--border, #cbd5e1);
   background: #fff;
   color: #334155;
   cursor: pointer;
@@ -116,6 +283,17 @@
 .btnSmall:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+/* 편집기가 열린 행의 버튼 — 지금 무엇이 펼쳐져 있는지 표에서 보이게 한다. */
+.btnActive {
+  border-color: #0f172a;
+  background: #0f172a;
+  color: #fff;
+}
+
+.btnActive:hover:not(:disabled) {
+  background: #1e293b;
 }
 
 .btnDanger {
@@ -131,17 +309,18 @@
 .editorRow > td {
   background: #f8fafc;
   padding: 0 !important;
+  border-bottom: 1px solid var(--border-subtle, #eef2f7);
 }
 
 .editor {
-  padding: 16px 18px;
-  border-top: 1px solid #e2e8f0;
+  padding: 16px 20px 18px;
+  border-top: 2px solid #0f172a;
 }
 
 .editorHead {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: baseline;
   gap: 12px;
   flex-wrap: wrap;
   margin-bottom: 12px;
@@ -150,17 +329,17 @@
 .editorTitle {
   font-size: 13px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-primary, #0f172a);
 }
 
 .editorNote {
   font-size: 12px;
-  color: #64748b;
+  color: var(--text-muted, #64748b);
 }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 10px 14px;
 }
 
@@ -171,18 +350,28 @@
 }
 
 .fieldLabel {
+  display: flex;
+  align-items: center;
+  gap: 5px;
   font-size: 11px;
   font-weight: 700;
-  color: #64748b;
+  color: var(--text-muted, #64748b);
 }
 
 .input {
   padding: 7px 10px;
   font-size: 13px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--border, #cbd5e1);
   border-radius: 6px;
   background: #fff;
-  color: #0f172a;
+  color: var(--text-primary, #0f172a);
+}
+
+/* 값이 든 칸 = 기본값을 덮어쓸 칸. 표의 덮어씀 표시와 같은 색을 쓴다. */
+.inputChanged {
+  border-color: #fcd34d;
+  background: #fffdf5;
+  font-weight: 600;
 }
 
 .input::placeholder {
@@ -201,24 +390,24 @@
   margin-top: 14px;
 }
 
-.notice {
-  margin: 0 0 12px;
+/* ── 알림 ── */
+.notice,
+.error {
+  margin: 10px 0 0;
   padding: 9px 14px;
   border-radius: 8px;
-  background: #ecfdf5;
-  border: 1px solid #a7f3d0;
-  color: #065f46;
   font-size: 12px;
   font-weight: 700;
 }
 
+.notice {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+}
+
 .error {
-  margin: 0 0 12px;
-  padding: 9px 14px;
-  border-radius: 8px;
   background: #fef2f2;
   border: 1px solid #fecaca;
   color: #b91c1c;
-  font-size: 12px;
-  font-weight: 700;
 }
