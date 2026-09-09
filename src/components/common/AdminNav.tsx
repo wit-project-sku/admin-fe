@@ -26,6 +26,9 @@ const GOOGLE_DRIVE_HOME_URL = 'https://drive.google.com/drive/home';
 const GOOGLE_SHEETS_ACCOUNT_URL =
   'https://docs.google.com/spreadsheets/d/1UX8ETM2u2892yMIS8PxVp7Tnv4vNRM7re5bsrukbd7g/edit?gid=961778831#gid=961778831';
 
+/** 인사랑(카페24) 쇼핑몰. 우리 앱에 화면이 없고 새 탭으로 넘겨주기만 한다. */
+const INSARANG_SHOP_URL = 'https://witinsarang.cafe24.com/';
+
 const AR_OUTFIT_GROUP: NavGroupDef = {
   label: 'AR 착장 오버뷰',
   items: [
@@ -296,6 +299,18 @@ const WITH_MARKET_GROUP: NavGroupDef = {
           <path d='M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z' />
           <line x1='3' y1='6' x2='21' y2='6' />
           <path d='M16 10a4 4 0 0 1-8 0' />
+        </svg>
+      ),
+    },
+    {
+      label: '인사랑 페이지로 이동',
+      path: '__nav_external_insarang_shop__',
+      externalHref: INSARANG_SHOP_URL,
+      icon: (
+        <svg width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
+          <path d='M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6' />
+          <polyline points='15 3 21 3 21 9' />
+          <line x1='10' y1='14' x2='21' y2='3' />
         </svg>
       ),
     },
