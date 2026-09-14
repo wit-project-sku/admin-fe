@@ -107,8 +107,12 @@
   width: 92px;
 }
 
+.noCol {
+  width: 72px;
+}
+
 .actionCol {
-  width: 160px;
+  width: 220px;
 }
 
 .thumb {
@@ -119,37 +123,9 @@
   border: 1px solid var(--border, #e2e8f0);
 }
 
-.code {
-  font-size: 12.5px;
-  font-weight: 700;
-  color: var(--text-primary, #0f172a);
-}
 
-.badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
 
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 8px;
-  font-size: 12px;
-  font-weight: 700;
-  color: #1e3a8a;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  border-radius: 999px;
-}
 
-.index {
-  font-style: normal;
-  font-size: 11px;
-  font-weight: 700;
-  color: #2563eb;
-}
 
 .muted {
   color: var(--text-muted, #94a3b8);
@@ -193,4 +169,82 @@
 .dangerBtn {
   color: #b91c1c;
   border: 1px solid #fecaca;
+}
+
+/* 등록·수정 폼 — 목록 위에 펼쳐지는 패널. 모달로 띄우지 않는 이유는
+   번호를 정할 때 아래 목록에서 쓰인 번호를 바로 보고 정해야 하기 때문이다. */
+.form {
+  padding: 16px 20px 18px;
+  background: var(--surface-subtle, #f8fafc);
+  border-bottom: 1px solid var(--border-subtle, #eef2f7);
+}
+
+.formTitle {
+  margin-bottom: 12px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-primary, #0f172a);
+}
+
+.formRow {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.formRow .field {
+  flex: 1;
+  min-width: 220px;
+}
+
+.nameGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px 12px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary, #475569);
+}
+
+.input {
+  padding: 8px 10px;
+  font-size: 13px;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text-primary, #0f172a);
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.no {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text-primary, #0f172a);
+}
+
+/* 비한국어 이름 — 한 줄 요약이라 길면 줄인다. */
+.subNames {
+  margin-top: 3px;
+  font-size: 11.5px;
+  color: var(--text-muted, #94a3b8);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 360px;
 }

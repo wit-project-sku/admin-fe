@@ -13,27 +13,36 @@ export const useGetBackgrounds = () => {
   return { backgrounds: unwrapList(data) as Background[], isLoading, error, refetch };
 };
 
-/** 등록 — 파일명이 곧 코드다. 서버가 코드에서 의상을 찾아 연결한다. */
-export const useAddBackgrounds = () => {
+/** 등록 — 사진 1장 + 고유 번호 + 이름. 번호가 겹치면 서버가 거절한다(BG4013). */
+export const useAddBackground = () => {
   const qc = useQueryClient();
   const { mutateAsync, isPending } = useMutation({
-    mutationFn: async ({ body, images }: { body: BackgroundWriteBody; images: File[] }) => {
+    mutationFn: async ({ body, image }: { body: BackgroundWriteBody; image: File }) => {
       const form = new FormData();
       form.append('data', new Blob([JSON.stringify(body)], { type: 'application/json' }));
-      images.forEach((file) => form.append('images', file));
+      form.append('image', image);
       return APIService.private.post('/admin/backgrounds', form, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
   });
-  return { addBackgroundsAsync: mutateAsync, isPending };
+  return { addBackgroundAsync: mutateAsync, isPending };
 };
 
+/** 수정 — 보낸 항목만 바뀐다(이미지는 넣었을 때만 교체). */
 export const useUpdateBackground = () => {
   const qc = useQueryClient();
   const { mutateAsync, isPending } = useMutation({
-    mutationFn: async ({ id, body, image }: { id: number; body: BackgroundWriteBody; image?: File }) => {
+    mutationFn: async ({
+      id,
+      body,
+      image,
+    }: {
+      id: number;
+      body: BackgroundWriteBody;
+      image?: File;
+    }) => {
       const form = new FormData();
       form.append('data', new Blob([JSON.stringify(body)], { type: 'application/json' }));
       if (image) form.append('image', image);
