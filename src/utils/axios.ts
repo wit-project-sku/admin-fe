@@ -7,18 +7,39 @@ const PUBLIC_API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const LOCAL_API_BASE_URL = import.meta.env.VITE_API_LOCAL_URL;
 const PRIVATE_API_BASE_URL = import.meta.env.VITE_APP_API_URL || PUBLIC_API_BASE_URL;
 const REQUEST_TIMEOUT = 30000;
+/**
+ * 파일이 실린 요청(multipart)의 타임아웃 — 2분.
+ *
+ * 조회·저장은 30초면 충분하지만 업로드는 회선이 결정한다. 30초였을 때 의상 사진 교체가 전송 도중
+ * 끊겨, 서버에는 닿지도 못한 채 nginx 에 `400 · 본문 0바이트`로 찍혔다(2026-09-17 운영). 그래서
+ * 파일이 실린 요청만 늘린다 — 전역을 늘리면 응답 없는 조회까지 2분을 기다리게 된다.
+ */
+const UPLOAD_TIMEOUT = 120000;
 const REFRESH_ENDPOINT = '/auths/refresh';
 
-const createApiInstance = (baseURL: string | undefined, options: AxiosRequestConfig = {}): AxiosInstance =>
-  axios.create({
-    baseURL,
-    timeout: REQUEST_TIMEOUT,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(options.headers || {}),
-    },
-    ...options,
+/** FormData(=파일 업로드)면 타임아웃을 늘린다. 업로드 훅이 15곳이라 인스턴스에서 한 번에 건다. */
+const withUploadTimeout = (instance: AxiosInstance): AxiosInstance => {
+  instance.interceptors.request.use((config) => {
+    if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+      config.timeout = UPLOAD_TIMEOUT;
+    }
+    return config;
   });
+  return instance;
+};
+
+const createApiInstance = (baseURL: string | undefined, options: AxiosRequestConfig = {}): AxiosInstance =>
+  withUploadTimeout(
+    axios.create({
+      baseURL,
+      timeout: REQUEST_TIMEOUT,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options.headers || {}),
+      },
+      ...options,
+    }),
+  );
 
 const publicApi = createApiInstance(PUBLIC_API_BASE_URL);
 const localApi = createApiInstance(LOCAL_API_BASE_URL);
