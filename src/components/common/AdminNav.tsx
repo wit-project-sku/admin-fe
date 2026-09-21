@@ -321,6 +321,15 @@ const SYSTEM_GROUP: NavGroupDef = {
   label: '시스템 관리',
   items: [
     {
+      label: '키오스크 현황',
+      path: '/admin/kiosk-health',
+      icon: (
+        <svg width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
+          <polyline points='22 12 18 12 15 21 9 3 6 12 2 12' />
+        </svg>
+      ),
+    },
+    {
       label: '사용자 관리',
       path: '/admin/users',
       icon: (

@@ -25,6 +25,7 @@ const KioskOutfitCategoryPage = lazy(() => import('@pages/KioskOutfitCategoryPag
 const KioskAnalyticsPage = lazy(() => import('@pages/KioskAnalyticsPage'));
 const KioskButtonManagePage = lazy(() => import('@pages/KioskButtonManagePage'));
 const KioskSubtitleGridPage = lazy(() => import('@pages/KioskSubtitleGridPage'));
+const KioskHealthPage = lazy(() => import('@pages/KioskHealthPage'));
 const UserManagePage = lazy(() => import('@pages/UserManagePage'));
 const NotFoundPage = lazy(() => import('@pages/notfound/NotFound'));
 
@@ -139,6 +140,7 @@ export default function AppRouter() {
             <Route path="kiosk-analytics" element={<KioskAnalyticsPage />} />
             <Route path="kiosk-buttons" element={<KioskButtonManagePage />} />
             <Route path="kiosk-subtitles" element={<KioskSubtitleGridPage />} />
+            <Route path="kiosk-health" element={<KioskHealthPage />} />
             <Route path="kiosk-apps" element={<Navigate to="/admin/kiosk-buttons" replace />} />
             <Route path="users" element={<UserManagePage />} />
             <Route path="*" element={<NotFoundPage />} />

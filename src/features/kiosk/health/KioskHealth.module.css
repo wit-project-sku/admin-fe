@@ -1,0 +1,99 @@
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.summaryMeta {
+  margin-left: auto;
+  font-size: 12px;
+  color: #8a8f98;
+}
+
+.nameMain {
+  font-weight: 600;
+}
+
+.nameSub {
+  display: block;
+  font-size: 11px;
+  color: #8a8f98;
+}
+
+.dim {
+  opacity: 0.55;
+}
+
+.hoursCell {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.timeInput {
+  width: 96px;
+  padding: 4px 6px;
+  border: 1px solid #d9dce1;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.smallBtn {
+  padding: 4px 10px;
+  border: 1px solid #d9dce1;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.smallBtn:hover:not(:disabled) {
+  background: #f3f4f6;
+}
+
+.smallBtn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.select {
+  padding: 4px 6px;
+  border: 1px solid #d9dce1;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.maintCell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.notice {
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.noticeOk {
+  background: #ecfdf3;
+  color: #067647;
+}
+
+.noticeErr {
+  background: #fef3f2;
+  color: #b42318;
+}
+
+.help {
+  margin-top: 12px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: #6b7280;
+}
