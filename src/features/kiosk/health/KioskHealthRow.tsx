@@ -76,7 +76,9 @@ export function KioskHealthRow({ row, checkedAt, busy, onSave, onStartMaintenanc
             저장
           </button>
         </div>
-        <span className={s.nameSub}>{open === '' && close === '' ? '비우면 24시간 감시' : '종료가 더 이르면 자정 넘김'}</span>
+        <span className={s.nameSub}>
+          {open === '' && close === '' ? '비우면 24시간 감시' : '종료가 더 이르면 자정 넘김'}
+        </span>
       </td>
       <td className={shared.tdCenter}>
         <input
@@ -92,7 +94,12 @@ export function KioskHealthRow({ row, checkedAt, busy, onSave, onStartMaintenanc
           {inMaintenance ? (
             <>
               <span>~{shortDateTime(row.maintenanceUntil)}</span>
-              <button type='button' className={s.smallBtn} disabled={busy} onClick={() => onEndMaintenance(row.kioskId)}>
+              <button
+                type='button'
+                className={s.smallBtn}
+                disabled={busy}
+                onClick={() => onEndMaintenance(row.kioskId)}
+              >
                 점검 종료
               </button>
             </>

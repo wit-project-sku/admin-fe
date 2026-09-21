@@ -321,7 +321,7 @@ const SYSTEM_GROUP: NavGroupDef = {
   label: '시스템 관리',
   items: [
     {
-      label: '키오스크 현황',
+      label: '키오스크 실행 모니터링',
       path: '/admin/kiosk-health',
       icon: (
         <svg width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>

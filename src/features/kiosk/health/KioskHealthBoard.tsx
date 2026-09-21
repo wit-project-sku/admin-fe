@@ -4,6 +4,7 @@ import shared from '@commons/shared.module.css';
 import { useKioskHealthBoard, useKioskHealthMutations } from '@/hooks/kiosk-api/useKioskHealth';
 import type { KioskHealthDto, KioskHealthSettingsPayload, KioskLiveness } from '@/hooks/kiosk-api/kioskHealthTypes';
 import s from './KioskHealth.module.css';
+import { HelpPopover } from './HelpPopover';
 import { KioskHealthRow } from './KioskHealthRow';
 import { EVENT_LABEL, STATUS_META, shortDateTime, shortKioskName } from './kioskHealthFormat';
 
@@ -14,7 +15,7 @@ const byMonitoredThenId = (a: KioskHealthDto, b: KioskHealthDto) =>
   Number(b.monitored) - Number(a.monitored) || a.kioskId - b.kioskId;
 
 /**
- * 키오스크 현황판. 서버가 요청 시각 기준으로 매번 판정하므로 화면은 1분마다 다시 받기만 한다.
+ * 키오스크 실행 모니터링. 서버가 요청 시각 기준으로 매번 판정하므로 화면은 1분마다 다시 받기만 한다.
  * 텔레그램 알림은 서버 배치(5분)가 상태가 바뀔 때만 보낸다 — 이 화면을 열어 두지 않아도 알림은 간다.
  */
 export function KioskHealthBoard() {
@@ -80,7 +81,22 @@ export function KioskHealthBoard() {
                 <th className={shared.th}>마지막 신호</th>
                 <th className={shared.th}>운영시간</th>
                 <th className={shared.thCenter}>감시</th>
-                <th className={shared.th}>점검 모드</th>
+                <th className={shared.th}>
+                  <span className={s.thWithHelp}>
+                    점검 모드
+                    <HelpPopover label='점검 모드'>
+                      <p>
+                        키오스크 앱을 <b>일부러 끄기 전에</b>(점검·재설치·PC 재부팅 등) 눌러 두면, 정한 시간 동안 꺼져
+                        있어도 알림을 보내지 않습니다.
+                      </p>
+                      <p>
+                        키오스크에 명령을 보내지는 않습니다. 시간이 지나거나 [점검 종료]를 누르면 감시가 다시 켜지고,
+                        재부팅 시간으로 {board.thresholdMinutes}분을 더 기다립니다.
+                      </p>
+                      <p>누르지 않고 끄면 {board.thresholdMinutes}분 뒤 오프라인 알림이 갑니다.</p>
+                    </HelpPopover>
+                  </span>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -99,13 +115,11 @@ export function KioskHealthBoard() {
           </table>
         </div>
         <p className={s.help}>
-          신호 = 키오스크 앱이 약 2.5분마다 보내는 업데이트 확인 요청. 앱·PC·네트워크가 살아 있는지까지만 알 수 있습니다(화면 멈춤은
-          감지하지 못합니다).
+          신호 = 키오스크 앱이 약 2.5분마다 보내는 업데이트 확인 요청. 앱·PC·네트워크가 살아 있는지까지만 알 수
+          있습니다(화면 멈춤은 감지하지 못합니다).
           <br />
-          운영시간 안에서 {board.thresholdMinutes}분 넘게 신호가 없으면 오프라인으로 보고 텔레그램으로 알립니다. 다시 신호가 오면 복구
-          알림을 보냅니다.
-          <br />
-          앱을 일부러 끌 때는 <b>먼저 점검 시작</b>을 누르세요. 끝 시각이 지나면 자동으로 감시가 돌아옵니다.
+          운영시간 안에서 {board.thresholdMinutes}분 넘게 신호가 없으면 오프라인으로 보고 텔레그램으로 알립니다. 다시
+          신호가 오면 복구 알림을 보냅니다.
         </p>
       </div>
 
