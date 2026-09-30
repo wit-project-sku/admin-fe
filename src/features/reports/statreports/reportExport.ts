@@ -93,7 +93,14 @@ function sliceToJpeg(src: HTMLCanvasElement, y: number, h: number): string {
   return c.toDataURL('image/jpeg', 0.92);
 }
 
-export async function exportReportPdf(): Promise<boolean> {
+export type ReportPdfOptions = {
+  /** 저장 파일명(.pdf 포함). 없으면 기존대로 `{data-report-title}_{오늘}.pdf`. */
+  fileName?: string;
+  /** 각 장 오른쪽 아래 여백에 "현재 / 전체" 쪽 번호를 찍는다(기본 끔 — 통계 리포트는 그대로). */
+  pageNumbers?: boolean;
+};
+
+export async function exportReportPdf(options: ReportPdfOptions = {}): Promise<boolean> {
   const root = findReportNode();
   if (!root) return false;
   const title = root.getAttribute('data-report-title') ?? '통계 리포트';
@@ -146,7 +153,17 @@ export async function exportReportPdf(): Promise<boolean> {
     }
   }
 
-  doc.save(`${title}_${todayStamp()}.pdf`);
+  if (options.pageNumbers) {
+    const total = doc.getNumberOfPages();
+    doc.setFontSize(8);
+    doc.setTextColor(148, 163, 184);
+    for (let i = 1; i <= total; i++) {
+      doc.setPage(i);
+      doc.text(`${i} / ${total}`, 210 - MARGIN, 297 - MARGIN / 2, { align: 'right', baseline: 'middle' });
+    }
+  }
+
+  doc.save(options.fileName ?? `${title}_${todayStamp()}.pdf`);
   return true;
 }
 

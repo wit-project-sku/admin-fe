@@ -14,6 +14,8 @@ type SearchableSelectProps = {
   minWidth?: string;
   className?: string;
   'aria-label'?: string;
+  /** 켜면 옵션의 sublabel 을 한 줄 아래 작은 글씨로 보여 준다(기본: "label · sublabel" 한 줄). */
+  stackedSublabel?: boolean;
 };
 
 export default function SearchableSelect({
@@ -26,6 +28,7 @@ export default function SearchableSelect({
   minWidth = '200px',
   className,
   'aria-label': ariaLabel,
+  stackedSublabel = false,
 }: SearchableSelectProps) {
   const uid = useId();
   const listboxId = `${uid}-listbox`;
@@ -119,7 +122,16 @@ export default function SearchableSelect({
                     setOpen(false);
                   }}
                 >
-                  {o.sublabel ? `${o.label} · ${o.sublabel}` : o.label}
+                  {o.sublabel && stackedSublabel ? (
+                    <>
+                      <span className={styles.optionLabel}>{o.label}</span>
+                      <span className={styles.optionSublabel}>{o.sublabel}</span>
+                    </>
+                  ) : o.sublabel ? (
+                    `${o.label} · ${o.sublabel}`
+                  ) : (
+                    o.label
+                  )}
                 </button>
               ))
             )}

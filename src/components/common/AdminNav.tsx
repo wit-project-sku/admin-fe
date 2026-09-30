@@ -11,6 +11,8 @@ type NavItemDef = {
   icon: ReactNode;
   /** Opens in a new tab (e.g. external storage); when set, `path` is only used as a React key. */
   externalHref?: string;
+  /** 하위 경로에서는 활성 표시하지 않는다(예: `/admin/onsite-events` 가 `/stats` 에서 같이 켜지지 않게). */
+  end?: boolean;
 };
 
 type NavGroupDef = {
@@ -163,6 +165,35 @@ const WITH_USAGE_GROUP: NavGroupDef = {
     //     </svg>
     //   ),
     // },
+  ],
+};
+
+const ONSITE_EVENT_GROUP: NavGroupDef = {
+  label: '행사 오버뷰',
+  items: [
+    {
+      label: '행사 촬영 통계',
+      path: '/admin/onsite-events/stats',
+      icon: (
+        <svg width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
+          <path d='M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z' />
+          <circle cx='12' cy='13' r='4' />
+        </svg>
+      ),
+    },
+    {
+      label: '행사 등록 관리',
+      path: '/admin/onsite-events',
+      end: true,
+      icon: (
+        <svg width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
+          <rect x='3' y='4' width='18' height='18' rx='2' />
+          <line x1='16' y1='2' x2='16' y2='6' />
+          <line x1='8' y1='2' x2='8' y2='6' />
+          <line x1='3' y1='10' x2='21' y2='10' />
+        </svg>
+      ),
+    },
   ],
 };
 
@@ -347,6 +378,7 @@ const SYSTEM_GROUP: NavGroupDef = {
 const NAV_GROUPS: NavGroupDef[] = [
   AR_OUTFIT_GROUP,
   WITH_USAGE_GROUP,
+  ONSITE_EVENT_GROUP,
   KIOSK_CONTENT_GROUP,
   DONATION_GROUP,
   WITH_MARKET_GROUP,
@@ -379,6 +411,7 @@ function NavItem({ item, collapsed }: { item: NavItemDef; collapsed: boolean }) 
   return (
     <NavLink
       to={item.path}
+      end={item.end}
       title={collapsed ? item.label : undefined}
       className={({ isActive }) => `${styles.item} ${isActive ? styles.active : ''}`}
     >

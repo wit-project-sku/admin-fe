@@ -6,6 +6,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { APIService } from '@/utils/axios';
+import { kioskLabel } from '@/utils/kioskHelpers'; // 행사 촬영 통계와 함께 쓰는 표시명 변환
 import { buildShootingStatsTableModel } from '../shootingStatsMappers';
 import type { KioskButtonDto } from '@/hooks/kiosk-api/kioskButtonsTypes';
 import type {
@@ -19,12 +20,6 @@ function fmt(d: Date): string {
   const m = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
   return `${y}-${m}-${day}`;
-}
-
-/** 키오스크 표시명 — "#W001-인사동=북인사광장" → "북인사광장" ('=' 뒤만). */
-export function kioskLabel(name: string): string {
-  const i = name.lastIndexOf('=');
-  return i >= 0 ? name.slice(i + 1).trim() : name;
 }
 
 export type WeekRanges = { start: string; end: string; prevStart: string; prevEnd: string };
