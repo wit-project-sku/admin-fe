@@ -5,3 +5,9 @@ export function buildKioskNameById(kiosks: { id: string | number; name: string }
     return acc;
   }, {});
 }
+
+/** 키오스크 표시명 — "#W001-인사동=북인사광장" → "북인사광장" ('=' 뒤만, 없으면 이름 그대로). */
+export function kioskLabel(name: string): string {
+  const i = name.lastIndexOf('=');
+  return i >= 0 ? name.slice(i + 1).trim() : name;
+}

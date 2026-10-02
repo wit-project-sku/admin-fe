@@ -1,0 +1,53 @@
+.form {
+  display: flex;
+  flex-direction: column;
+}
+
+.body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.loading {
+  padding: 48px 20px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+/* 한 줄 2칸(시작일·종료일 / 사용 콘텐츠·촬영 기기) */
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.help {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+
+/* 서버 거절(겹침 409·검증 400) 메시지 */
+.apiError {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(185, 28, 28, 0.25);
+  background: var(--red-bg);
+  color: var(--red-text);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.45;
+}

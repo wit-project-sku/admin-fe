@@ -25,7 +25,10 @@ const KioskOutfitCategoryPage = lazy(() => import('@pages/KioskOutfitCategoryPag
 const KioskAnalyticsPage = lazy(() => import('@pages/KioskAnalyticsPage'));
 const KioskButtonManagePage = lazy(() => import('@pages/KioskButtonManagePage'));
 const KioskSubtitleGridPage = lazy(() => import('@pages/KioskSubtitleGridPage'));
+const KioskHealthPage = lazy(() => import('@pages/KioskHealthPage'));
 const UserManagePage = lazy(() => import('@pages/UserManagePage'));
+const OnsiteEventsPage = lazy(() => import('@pages/OnsiteEventsPage'));
+const OnsiteEventStatsPage = lazy(() => import('@pages/OnsiteEventStatsPage'));
 const NotFoundPage = lazy(() => import('@pages/notfound/NotFound'));
 
 const Loader = () => (
@@ -139,7 +142,11 @@ export default function AppRouter() {
             <Route path="kiosk-analytics" element={<KioskAnalyticsPage />} />
             <Route path="kiosk-buttons" element={<KioskButtonManagePage />} />
             <Route path="kiosk-subtitles" element={<KioskSubtitleGridPage />} />
+            <Route path="kiosk-health" element={<KioskHealthPage />} />
             <Route path="kiosk-apps" element={<Navigate to="/admin/kiosk-buttons" replace />} />
+            {/* 행사 오버뷰 — ROLE_ADMIN 전용(USER_ALLOWED_PATHS 에 없어 RoleGuard 가 막는다) */}
+            <Route path="onsite-events" element={<OnsiteEventsPage />} />
+            <Route path="onsite-events/stats" element={<OnsiteEventStatsPage />} />
             <Route path="users" element={<UserManagePage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>

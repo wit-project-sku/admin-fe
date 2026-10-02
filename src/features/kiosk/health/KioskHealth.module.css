@@ -1,0 +1,151 @@
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.summaryMeta {
+  margin-left: auto;
+  font-size: 12px;
+  color: #8a8f98;
+}
+
+.nameMain {
+  font-weight: 600;
+}
+
+.nameSub {
+  display: block;
+  font-size: 11px;
+  color: #8a8f98;
+}
+
+.dim {
+  opacity: 0.55;
+}
+
+.hoursCell {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.timeInput {
+  width: 96px;
+  padding: 4px 6px;
+  border: 1px solid #d9dce1;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.smallBtn {
+  padding: 4px 10px;
+  border: 1px solid #d9dce1;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.smallBtn:hover:not(:disabled) {
+  background: #f3f4f6;
+}
+
+.smallBtn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.select {
+  padding: 4px 6px;
+  border: 1px solid #d9dce1;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.maintCell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.notice {
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.noticeOk {
+  background: #ecfdf3;
+  color: #067647;
+}
+
+.noticeErr {
+  background: #fef3f2;
+  color: #b42318;
+}
+
+.help {
+  margin-top: 12px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: #6b7280;
+}
+
+.thWithHelp {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.helpBtn {
+  display: inline-flex;
+  padding: 2px;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: #8a8f98;
+  cursor: pointer;
+}
+
+.helpBtn:hover,
+.helpBtn[aria-expanded='true'] {
+  color: #2563eb;
+  background: #eff6ff;
+}
+
+.helpBox {
+  position: fixed;
+  z-index: 1000;
+  padding: 12px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.6;
+  color: #374151;
+  text-align: left;
+  white-space: normal;
+}
+
+.helpBox p {
+  margin: 0 0 6px;
+}
+
+.helpBox p:last-child {
+  margin-bottom: 0;
+}
+
+.helpTitle {
+  display: block;
+  margin-bottom: 6px;
+  color: #111827;
+}
