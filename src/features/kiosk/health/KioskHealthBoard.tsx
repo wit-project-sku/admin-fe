@@ -16,7 +16,7 @@ const byMonitoredThenId = (a: KioskHealthDto, b: KioskHealthDto) =>
 
 /**
  * 키오스크 실행 모니터링. 서버가 요청 시각 기준으로 매번 판정하므로 화면은 1분마다 다시 받기만 한다.
- * 텔레그램 알림은 서버 배치(5분)가 상태가 바뀔 때만 보낸다 — 이 화면을 열어 두지 않아도 알림은 간다.
+ * 텔레그램 알림은 서버 배치(1분)가 상태가 바뀔 때만 보낸다 — 이 화면을 열어 두지 않아도 알림은 간다.
  */
 export function KioskHealthBoard() {
   const { board, isPending, isError, refetch, isFetching } = useKioskHealthBoard();
@@ -76,12 +76,12 @@ export function KioskHealthBoard() {
           <table className={shared.table}>
             <thead className={shared.thead}>
               <tr>
-                <th className={shared.th}>키오스크</th>
-                <th className={shared.th}>상태</th>
-                <th className={shared.th}>마지막 신호</th>
-                <th className={shared.th}>운영시간</th>
-                <th className={shared.thCenter}>감시</th>
-                <th className={shared.th}>
+                <th className={`${shared.th} ${shared.thCenter}`}>키오스크</th>
+                <th className={`${shared.th} ${shared.thCenter}`}>상태</th>
+                <th className={`${shared.th} ${shared.thCenter}`}>마지막 신호</th>
+                <th className={`${shared.th} ${shared.thCenter}`}>운영시간</th>
+                <th className={`${shared.th} ${shared.thCenter}`}>감시</th>
+                <th className={`${shared.th} ${shared.thCenter}`}>
                   <span className={s.thWithHelp}>
                     점검 모드
                     <HelpPopover label='점검 모드'>
@@ -91,7 +91,7 @@ export function KioskHealthBoard() {
                       </p>
                       <p>
                         키오스크에 명령을 보내지는 않습니다. 시간이 지나거나 [점검 종료]를 누르면 감시가 다시 켜지고,
-                        재부팅 시간으로 {board.thresholdMinutes}분을 더 기다립니다.
+                        재부팅 시간으로 {board.bootGraceMinutes ?? board.thresholdMinutes}분을 더 기다립니다.
                       </p>
                       <p>누르지 않고 끄면 {board.thresholdMinutes}분 뒤 오프라인 알림이 갑니다.</p>
                     </HelpPopover>
@@ -115,7 +115,7 @@ export function KioskHealthBoard() {
           </table>
         </div>
         <p className={s.help}>
-          신호 = 키오스크 앱이 약 2.5분마다 보내는 업데이트 확인 요청. 앱·PC·네트워크가 살아 있는지까지만 알 수
+          신호 = 키오스크 앱이 약 5분마다 보내는 업데이트 확인 요청. 앱·PC·네트워크가 살아 있는지까지만 알 수
           있습니다(화면 멈춤은 감지하지 못합니다).
           <br />
           운영시간 안에서 {board.thresholdMinutes}분 넘게 신호가 없으면 오프라인으로 보고 텔레그램으로 알립니다. 다시
@@ -134,19 +134,19 @@ export function KioskHealthBoard() {
             <table className={shared.table}>
               <thead className={shared.thead}>
                 <tr>
-                  <th className={shared.th}>시각</th>
-                  <th className={shared.th}>키오스크</th>
-                  <th className={shared.th}>구분</th>
-                  <th className={shared.th}>내용</th>
+                  <th className={`${shared.th} ${shared.thCenter}`}>시각</th>
+                  <th className={`${shared.th} ${shared.thCenter}`}>키오스크</th>
+                  <th className={`${shared.th} ${shared.thCenter}`}>구분</th>
+                  <th className={`${shared.th} ${shared.thCenter}`}>내용</th>
                 </tr>
               </thead>
               <tbody>
                 {board.recentEvents.map((e, i) => (
                   <tr key={`${e.occurredAt}-${e.kioskId}-${i}`} className={shared.tr}>
-                    <td className={shared.tdMono}>{shortDateTime(e.occurredAt)}</td>
+                    <td className={`${shared.td} ${shared.tdMono}`}>{shortDateTime(e.occurredAt)}</td>
                     <td className={shared.td}>{shortKioskName(e.kioskName)}</td>
                     <td className={shared.td}>{EVENT_LABEL[e.type]}</td>
-                    <td className={shared.tdMuted}>{e.detail ?? ''}</td>
+                    <td className={`${shared.td} ${shared.tdMuted}`}>{e.detail ?? ''}</td>
                   </tr>
                 ))}
               </tbody>
