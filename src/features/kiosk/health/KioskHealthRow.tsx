@@ -80,7 +80,7 @@ export function KioskHealthRow({ row, checkedAt, busy, onSave, onStartMaintenanc
           {open === '' && close === '' ? '비우면 24시간 감시' : '종료가 더 이르면 자정 넘김'}
         </span>
       </td>
-      <td className={shared.tdCenter}>
+      <td className={`${shared.td} ${shared.tdCenter}`}>
         <input
           type='checkbox'
           checked={row.monitored}

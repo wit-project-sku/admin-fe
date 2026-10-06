@@ -30,6 +30,8 @@ export type KioskHealthEventDto = {
 export type KioskHealthBoardDto = {
   checkedAt: string;
   thresholdMinutes: number;
+  /** 감시 시작·운영 시작·점검 종료 뒤 첫 신호를 기다리는 시간(분). 구버전 서버엔 없다. */
+  bootGraceMinutes?: number;
   kiosks: KioskHealthDto[];
   recentEvents: KioskHealthEventDto[];
 };
