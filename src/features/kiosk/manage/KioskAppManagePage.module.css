@@ -673,27 +673,6 @@
   color: var(--text);
 }
 
-/* 드래그 가능한 채워진 슬롯 */
-.slotDraggable {
-  cursor: grab;
-}
-.slotDraggable:active {
-  cursor: grabbing;
-}
-
-/* 드래그 중인 원본 슬롯 */
-.slotDragging {
-  opacity: 0.4;
-}
-
-/* 드롭 대상으로 hover 중인 슬롯 */
-.slotDropOver {
-  border-style: solid;
-  border-color: var(--color-primary, #2563eb);
-  box-shadow: 0 0 0 2px var(--color-primary, #2563eb) inset;
-  background: var(--bg-primary-soft, rgba(37, 99, 235, 0.08));
-}
-
 .slot img {
   width: 100%;
   height: 100%;
@@ -779,10 +758,6 @@
   border: 1px solid transparent;
 }
 .mirrorTileWide { flex-direction: row; justify-content: center; gap: 8px; }
-.mirrorDraggable { cursor: grab; }
-.mirrorDraggable:active { cursor: grabbing; }
-.mirrorDragging { opacity: 0.4; }
-.mirrorDropOver { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25); }
 .mirrorTileIcon {
   border-radius: 10px; display: inline-flex; align-items: center; justify-content: center;
   color: #fff; flex-shrink: 0;
@@ -903,7 +878,7 @@
 /* 실기기(kiosk-electron/Figma) 비율 참고: 아이콘·줄 사이 간격을 넉넉히 */
 .mGrid { display: flex; flex-direction: column; gap: 30px; }
 .mGridRow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 38px; }
-/* 타일의 모든 하위(카드·이미지·라벨)는 이벤트를 받지 않아, 드래그/클릭이 항상 타일에 잡힌다 */
+/* 타일의 모든 하위(카드·이미지·라벨)는 이벤트를 받지 않아, 클릭이 항상 타일에 잡힌다 */
 .mTile * { pointer-events: none; }
 /* 그리드 타일 — 아이콘이 꽉 차게(흰 여백/배경 없음), 라벨은 아래 */
 .mTile {
@@ -913,8 +888,6 @@
 }
 .mTile:hover { transform: translateY(-1px); }
 .mTileSel { border-radius: 18px; }
-.mDragging { opacity: 0.4; }
-.mOver { outline: 3px dashed #2563eb; outline-offset: 2px; border-radius: 18px; }
 /* 라운드 색 카드 + 아이콘(contain) — 정사각/세로형 어떤 비율이든 크롭 없이 담는다 */
 .mFillCard {
   width: 100%; border-radius: 18px; overflow: hidden; display: flex;
@@ -1012,8 +985,6 @@
 .editForm { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
 .editField { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #475569; }
 .editField > span { font-weight: 600; }
-.editRow { display: flex; gap: 8px; }
-.editRow .editField { flex: 1; min-width: 0; }
 
 /* ===== 상세 박스 padding (개선2) ===== */
 .detailBox { padding: 18px 20px 20px; }

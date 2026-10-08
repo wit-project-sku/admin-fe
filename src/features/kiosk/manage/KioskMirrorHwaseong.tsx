@@ -1,19 +1,14 @@
-import { useRef, useState, type DragEvent } from 'react';
 import { KioskAppIconGlyph } from '../kioskAppIcons';
 import { ButtonStatBadge, type ButtonStatMap } from './kioskButtonStatOverlay';
 import type { KioskButtonDto } from '@/hooks/kiosk-api/kioskButtonsTypes';
 import { GRID_FIRST_LINE, GRID_LAST_LINE, SLOTS_PER_LINE, tileBgFor } from './constants';
 import { kioskButtonLabel, resolveKioskButtonIconKey } from './kioskButtonDisplay';
-import type { MoveRequest } from './KioskMirrorPreview';
-import { setScaledDragImage } from './scaledDragImage';
 import styles from './KioskMirrorHwaseong.module.css';
 
 type Props = {
   buttons: KioskButtonDto[];
-  onMove: (req: MoveRequest) => void;
   onSelect?: (button: KioskButtonDto) => void;
   selectedId?: number | null;
-  disabled?: boolean;
   /** 통계 리포트 전용 — buttonType 별 기간 집계를 타일 위에 덧그린다(관리 화면은 미전달). */
   stats?: ButtonStatMap;
   /** 리포트에서는 표시 전용 배너 구간을 뺀다(통계가 없는 영역이라 지면 낭비). */
@@ -42,13 +37,10 @@ function spanOf(b: KioskButtonDto): number {
 /**
  * 화성휴게소 실기기 메인 화면 미러 — kiosk-electron HwaseongHome 의 마크업/CSS 를
  * 그대로 이식하고, 타일 슬롯만 관리자 API 버튼 데이터로 채운다.
- * 헤더/공지/날씨/검색바/하단내비/배너는 표시 전용, 3~6열 그리드만 드래그·클릭 편집.
+ * 보기 전용 — 위치는 바꾸지 않는다(키오스크 앱이 서버 위치를 쓰지 않음). 버튼 클릭 = 선택만.
  */
-export function KioskMirrorHwaseong({ buttons, onMove, onSelect, selectedId, disabled, stats, hideBanner }: Props) {
+export function KioskMirrorHwaseong({ buttons, onSelect, selectedId, stats, hideBanner }: Props) {
   const today = formatDate(new Date());
-  const dragIdRef = useRef<number | null>(null);
-  const [dragId, setDragId] = useState<number | null>(null);
-  const [overKey, setOverKey] = useState<string | null>(null);
 
   const fixedAt = (line: number, position: number) =>
     buttons.find((b) => b.placement === 'FIXED' && b.line === line && b.position === position) ??
@@ -61,34 +53,6 @@ export function KioskMirrorHwaseong({ buttons, onMove, onSelect, selectedId, dis
   // 배지 농도 기준(최댓값). 위치는 그대로 두고 색으로만 사용량을 표현한다.
   const maxClicks = stats ? Math.max(0, ...[...stats.values()].map((v) => v.clicks)) : 0;
   const mainButtons = buttons.filter((b) => (b.placement ?? 'MAIN') === 'MAIN' && b.line >= 1);
-
-  const finishDrop = (targetLine: number, targetPos: number) => {
-    const id = dragIdRef.current;
-    dragIdRef.current = null;
-    setDragId(null);
-    setOverKey(null);
-    if (id == null) return;
-    const src = mainButtons.find((b) => b.id === id);
-    if (!src) return;
-    if (src.line === targetLine && src.position === targetPos) return;
-    onMove({ sourceId: id, targetLine, targetPosition: targetPos });
-  };
-
-  const dropHandlers = (key: string, line: number, pos: number) =>
-    disabled
-      ? {}
-      : {
-          onDragOver: (e: DragEvent) => {
-            if (dragIdRef.current == null) return;
-            e.preventDefault();
-            if (overKey !== key) setOverKey(key);
-          },
-          onDragLeave: () => setOverKey((k) => (k === key ? null : k)),
-          onDrop: (e: DragEvent) => {
-            e.preventDefault();
-            finishDrop(line, pos);
-          },
-        };
 
   const tileInner = (b: KioskButtonDto) =>
     b.imageUrl ? (
@@ -120,40 +84,17 @@ export function KioskMirrorHwaseong({ buttons, onMove, onSelect, selectedId, dis
       <div key={line} className={styles.menuRow}>
         {cells.map(({ pos: p, b, span }) => {
           const key = `${line}:${p}`;
-          const over = overKey === key && dragId != null;
           if (!b) {
-            return (
-              <div
-                key={key}
-                className={`${styles.emptyCard} ${over ? styles.over : ''}`}
-                {...dropHandlers(key, line, p)}
-              />
-            );
+            return <div key={key} className={styles.emptyCard} />;
           }
           const wide = span === 2;
           const selected = selectedId === b.id;
           return (
             <div
               key={key}
-              className={`${wide ? styles.tileWrapWide : styles.tileWrap} ${
-                selected ? styles.tileSel : ''
-              } ${dragId === b.id ? styles.dragging : ''} ${over ? styles.over : ''}`}
-              draggable={!disabled}
+              className={`${wide ? styles.tileWrapWide : styles.tileWrap} ${selected ? styles.tileSel : ''}`}
               title={`${b.buttonType} · ${line}열 ${p}${wide ? `~${p + 1}` : ''}`}
               onClick={() => onSelect?.(b)}
-              onDragStart={(e) => {
-                setScaledDragImage(e, e.currentTarget);
-                dragIdRef.current = b.id;
-                setDragId(b.id);
-                e.dataTransfer.effectAllowed = 'move';
-                e.dataTransfer.setData('text/plain', String(b.id));
-              }}
-              onDragEnd={() => {
-                dragIdRef.current = null;
-                setDragId(null);
-                setOverKey(null);
-              }}
-              {...dropHandlers(key, line, p)}
             >
               <div className={wide ? styles.tileCardWide : styles.tileCard}>{tileInner(b)}
         <ButtonStatBadge stat={stats?.get(b.buttonType)} max={maxClicks} unit='board' /></div>

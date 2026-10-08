@@ -381,18 +381,6 @@
   border-radius: 48px;
 }
 
-.dragging {
-  opacity: 0.4;
-}
-
-.over .tileCard,
-.over .tileCardWide,
-.over.emptyCard {
-  border-radius: 48px;
-  box-shadow: 0 0 0 6px #2680eb inset;
-  background: rgba(38, 128, 235, 0.1);
-}
-
 /* ── 하단 내비 / 배너 — Figma 렌더 에셋 미보유 → 좌표 유지 표시전용 플레이스홀더 ── */
 .bottomNav {
   position: absolute;

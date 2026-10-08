@@ -4,16 +4,12 @@ import SearchableSelect from '@components/common/SearchableSelect';
 import { KioskAppIconVisual } from '../kioskAppIcons';
 import type { KioskButtonDto } from '@/hooks/kiosk-api/kioskButtonsTypes';
 import { useUpdateKioskButton } from '@/hooks/kiosk-api/useUpdateKioskButton';
-import {
-  useUpdateKioskButtonPlacement,
-  type ButtonPlacement,
-} from '@/hooks/kiosk-api/useUpdateKioskButtonPlacement';
 import { useKioskButtonImage } from '@/hooks/kiosk-api/useKioskButtonImage';
 import { useDeleteKioskButton } from '@/hooks/kiosk-api/useDeleteKioskButton';
-import { KioskMirrorPreview, type MoveRequest } from './KioskMirrorPreview';
+import { KioskMirrorPreview } from './KioskMirrorPreview';
 import { KioskMirrorHwaseong } from './KioskMirrorHwaseong';
 import { KioskMirrorGridApp, INSADONG_SKIN, OSAN_SKIN } from './KioskMirrorGridApp';
-import { PLACEMENT_OPTIONS, SPAN_OPTIONS, positionLabel } from './constants';
+import { placementLabel, positionLabel } from './constants';
 import { resolveKioskButtonIconKey } from './kioskButtonDisplay';
 import { formatUsageDaysHours, formatUsageExact } from '../kioskFormatters';
 import styles from './KioskAppManagePage.module.css';
@@ -44,24 +40,17 @@ export function KioskButtonByKioskPanel({
   onNotice,
 }: Props) {
   const { updateKioskButtonAsync } = useUpdateKioskButton();
-  const { updatePlacementAsync } = useUpdateKioskButtonPlacement();
   const { uploadImageAsync } = useKioskButtonImage();
   const { deleteKioskButtonAsync } = useDeleteKioskButton();
-  const [moving, setMoving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const fileRef = useRef<HTMLInputElement | null>(null);
 
-  // 드래그 SWAP 확인 대기
-  const [pendingMove, setPendingMove] = useState<MoveRequest | null>(null);
-
   // 인라인 편집 폼 상태
   const [buttonType, setButtonType] = useState('');
   const [buttonName, setButtonName] = useState('');
   const [iconKey, setIconKey] = useState('');
-  const [placement, setPlacement] = useState<ButtonPlacement>('MAIN');
-  const [span, setSpan] = useState(1);
 
   const selected = buttons.find((b) => b.id === selectedId) ?? null;
   // 미표시(OFF_MAIN) 아이콘 — 미러에 안 나오므로 별도 목록으로 표시
@@ -75,38 +64,7 @@ export function KioskButtonByKioskPanel({
     setButtonType(selected.buttonType ?? '');
     setButtonName(selected.buttonName ?? '');
     setIconKey(selected.iconKey ?? '');
-    setPlacement((selected.placement as ButtonPlacement) ?? 'MAIN');
-    setSpan(selected.span === 2 ? 2 : 1);
   }, [selectedId, selected]);
-
-  const requestMove = (req: MoveRequest) => setPendingMove(req);
-
-  const confirmMove = async () => {
-    const req = pendingMove;
-    setPendingMove(null);
-    if (!req) return;
-    const src = buttons.find((b) => b.id === req.sourceId);
-    if (!src) return;
-    try {
-      setMoving(true);
-      await updateKioskButtonAsync({
-        buttonId: src.id,
-        payload: {
-          buttonType: src.buttonType,
-          buttonName: src.buttonName ?? '',
-          line: req.targetLine,
-          position: req.targetPosition,
-          span: src.span === 2 ? 2 : 1,
-          iconKey: src.iconKey ?? null,
-        },
-      });
-      onNotice?.('버튼 위치를 변경했습니다.');
-    } catch (err) {
-      onNotice?.(err instanceof Error ? err.message : '위치 변경에 실패했습니다.');
-    } finally {
-      setMoving(false);
-    }
-  };
 
   const saveEdit = async () => {
     if (!selected) return;
@@ -118,21 +76,15 @@ export function KioskButtonByKioskPanel({
     }
     try {
       setSaving(true);
+      // 위치(line·position)·폭(span)은 보내지 않는다 — 서버가 기존 값을 그대로 둔다.
       await updateKioskButtonAsync({
         buttonId: selected.id,
         payload: {
           buttonType: typeTrim,
           buttonName: nameTrim,
-          line: selected.line,
-          position: selected.position,
-          span,
           iconKey: iconKey.trim() ? iconKey.trim() : null,
         },
       });
-      const originalPlacement = (selected.placement as ButtonPlacement) ?? 'MAIN';
-      if (placement !== originalPlacement) {
-        await updatePlacementAsync({ buttonId: selected.id, placement });
-      }
       onNotice?.('버튼 정보가 저장되었습니다.');
     } catch (err) {
       onNotice?.(err instanceof Error ? err.message : '저장하지 못했습니다.');
@@ -169,19 +121,6 @@ export function KioskButtonByKioskPanel({
     }
   };
 
-  // 확인 모달 메시지용: 이동 대상/교환 상대
-  const moveSource = pendingMove ? buttons.find((b) => b.id === pendingMove.sourceId) : null;
-  const moveTarget =
-    pendingMove &&
-    buttons.find(
-      (b) =>
-        (b.placement ?? 'MAIN') === 'MAIN' &&
-        b.line === pendingMove.targetLine &&
-        b.id !== pendingMove.sourceId &&
-        pendingMove.targetPosition >= b.position &&
-        pendingMove.targetPosition <= b.position + (b.span === 2 ? 2 : 1) - 1,
-    );
-
   return (
     <div className={styles.byKioskPanel}>
       <div className={styles.byKioskSelectRow}>
@@ -203,7 +142,7 @@ export function KioskButtonByKioskPanel({
         <div className={styles.mirrorLeft}>
         <div>
           <div className={styles.previewLabel}>
-            {kioskName} — 실기기 메인 화면 미리보기 · 3~6열 아이콘을 드래그해 서로 위치를 교환 · 아이콘 클릭 시 정보 편집
+            {kioskName} — 실기기 메인 화면 미리보기(보기 전용) · 아이콘 클릭 시 정보 편집
           </div>
           {isLoading ? (
             <p className={styles.emptyState}>불러오는 중…</p>
@@ -219,10 +158,8 @@ export function KioskButtonByKioskPanel({
                 return (
                   <KioskMirrorHwaseong
                     buttons={buttons}
-                    onMove={requestMove}
                     onSelect={onSelectButton}
                     selectedId={selectedId}
-                    disabled={moving}
                   />
                 );
               }
@@ -231,10 +168,8 @@ export function KioskButtonByKioskPanel({
                   <KioskMirrorGridApp
                     buttons={buttons}
                     skin={isOsan ? OSAN_SKIN : INSADONG_SKIN}
-                    onMove={requestMove}
                     onSelect={onSelectButton}
                     selectedId={selectedId}
-                    disabled={moving}
                   />
                 );
               }
@@ -243,10 +178,8 @@ export function KioskButtonByKioskPanel({
                   buttons={buttons}
                   kioskId={kioskId}
                   kioskName={kioskName}
-                  onMove={requestMove}
                   onSelect={onSelectButton}
                   selectedId={selectedId}
-                  disabled={moving}
                 />
               );
             })()
@@ -257,7 +190,7 @@ export function KioskButtonByKioskPanel({
         {offMainButtons.length > 0 ? (
           <div className={styles.offMainSection}>
             <div className={styles.previewLabel}>
-              미표시 아이콘 ({offMainButtons.length}) — 클릭 후 배치를 ‘그리드’로 바꾸면 다시 표시됩니다
+              미표시 아이콘 ({offMainButtons.length}) — 키오스크 화면에 나오지 않는 버튼 · 클릭 시 정보 편집
             </div>
             <div className={styles.offMainList}>
               {offMainButtons.map((b) => (
@@ -319,6 +252,10 @@ export function KioskButtonByKioskPanel({
               <table className={styles.detailTable}>
                 <tbody>
                   <tr>
+                    <td>배치</td>
+                    <td>{placementLabel(selected.placement)}</td>
+                  </tr>
+                  <tr>
                     <td>총 클릭</td>
                     <td>{(selected.totalClicks ?? 0).toLocaleString()}회</td>
                   </tr>
@@ -350,49 +287,17 @@ export function KioskButtonByKioskPanel({
                     disabled={saving}
                   />
                 </label>
-                <div className={styles.editRow}>
-                  <label className={styles.editField}>
-                    <span>아이콘 key</span>
-                    <input
-                      className={styles.input}
-                      value={iconKey}
-                      onChange={(e) => setIconKey(e.target.value)}
-                      placeholder='비우면 미지정'
-                      autoComplete='off'
-                      disabled={saving}
-                    />
-                  </label>
-                  <label className={styles.editField}>
-                    <span>배치</span>
-                    <select
-                      className={styles.select}
-                      value={placement}
-                      onChange={(e) => setPlacement(e.target.value as ButtonPlacement)}
-                      disabled={saving}
-                    >
-                      {PLACEMENT_OPTIONS.map((o) => (
-                        <option key={o.value} value={o.value}>
-                          {o.label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className={styles.editField}>
-                    <span>가로 폭</span>
-                    <select
-                      className={styles.select}
-                      value={span}
-                      onChange={(e) => setSpan(Number(e.target.value))}
-                      disabled={saving || placement !== 'MAIN'}
-                    >
-                      {SPAN_OPTIONS.map((o) => (
-                        <option key={o.value} value={o.value}>
-                          {o.label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
+                <label className={styles.editField}>
+                  <span>아이콘 key</span>
+                  <input
+                    className={styles.input}
+                    value={iconKey}
+                    onChange={(e) => setIconKey(e.target.value)}
+                    placeholder='비우면 미지정'
+                    autoComplete='off'
+                    disabled={saving}
+                  />
+                </label>
                 <div className={styles.editField}>
                   <span>아이콘 이미지 {selected.imageUrl ? '(등록됨)' : '(미등록)'}</span>
                   <input
@@ -441,53 +346,6 @@ export function KioskButtonByKioskPanel({
           )}
         </div>
       </div>
-
-      {/* 드래그 SWAP 확인 모달 */}
-      {pendingMove && moveSource ? (
-        <div className={styles.overlay} role='presentation' onClick={() => setPendingMove(null)}>
-          <div
-            className={styles.modal}
-            role='dialog'
-            aria-modal='true'
-            aria-labelledby='kiosk-swap-title'
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className={styles.modalHead}>
-              <span id='kiosk-swap-title' className={styles.modalTitle}>
-                아이콘 위치 변경
-              </span>
-              <button type='button' className={shared.btnOutline} onClick={() => setPendingMove(null)} aria-label='닫기'>
-                ×
-              </button>
-            </div>
-            <div className={styles.modalBody}>
-              {moveTarget ? (
-                <p className={styles.formHint}>
-                  <strong>{moveSource.buttonType}</strong> 와 <strong>{moveTarget.buttonType}</strong> 의 위치를 서로
-                  바꿉니다.
-                  {moveSource.span === 2 || moveTarget.span === 2
-                    ? ' (2칸 아이콘은 인접 아이콘과 함께 교환됩니다.)'
-                    : ''}
-                </p>
-              ) : (
-                <p className={styles.formHint}>
-                  <strong>{moveSource.buttonType}</strong> 를{' '}
-                  {positionLabel(pendingMove.targetLine, pendingMove.targetPosition, moveSource.span)} 위치로 이동합니다.
-                </p>
-              )}
-              <p className={styles.formHint}>진행하시겠습니까?</p>
-            </div>
-            <div className={styles.modalFooter}>
-              <button type='button' className={shared.btnOutline} onClick={() => setPendingMove(null)} disabled={moving}>
-                취소
-              </button>
-              <button type='button' className={shared.btnPrimary} onClick={() => void confirmMove()} disabled={moving}>
-                {moving ? '변경 중…' : '위치 바꾸기'}
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 }

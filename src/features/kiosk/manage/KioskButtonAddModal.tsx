@@ -3,7 +3,6 @@ import type { AxiosError } from 'axios';
 import shared from '@commons/shared.module.css';
 import SearchableSelect from '@components/common/SearchableSelect';
 import { useCreateKioskButton } from '@/hooks/kiosk-api/useCreateKioskButton';
-import { SPAN_OPTIONS } from '@/features/kiosk/manage/constants';
 import styles from '@/features/kiosk/manage/KioskAppManagePage.module.css';
 
 export type KioskSelectOption = { value: string; label: string; sublabel?: string };
@@ -36,7 +35,6 @@ export function KioskButtonAddModal({ open, onClose, kioskOptions, defaultKioskI
   const [buttonType, setButtonType] = useState('');
   const [buttonName, setButtonName] = useState('');
   const [kioskId, setKioskId] = useState('');
-  const [span, setSpan] = useState<number>(1);
   const [iconKey, setIconKey] = useState('');
   const [fieldErrors, setFieldErrors] = useState<FormErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
@@ -50,7 +48,6 @@ export function KioskButtonAddModal({ open, onClose, kioskOptions, defaultKioskI
     setFormError(null);
     setButtonType('');
     setButtonName('');
-    setSpan(1);
     setIconKey('');
     const initial =
       defaultKioskId && kioskOptions.some((o) => o.value === defaultKioskId)
@@ -85,13 +82,12 @@ export function KioskButtonAddModal({ open, onClose, kioskOptions, defaultKioskI
       const kid = Number(kioskId);
       const iconTrim = iconKey.trim();
       try {
-        // 위치(열/칸)·상태는 보내지 않는다 — 서버가 다음 빈 칸에 자동 배치한다.
+        // 위치(열/칸)·폭·배치는 보내지 않는다 — 서버가 그리드의 다음 빈 칸에 1칸으로 자동 배치한다.
         // iconKey 는 비우면 null(미지정) — 추후 수정에서 지정 가능.
         await createKioskButtonAsync({
           kioskId: kid,
           buttonType: typeTrim,
           buttonName: nameTrim,
-          span,
           iconKey: iconTrim ? iconTrim : null,
         });
         onClose();
@@ -99,7 +95,7 @@ export function KioskButtonAddModal({ open, onClose, kioskOptions, defaultKioskI
         setFormError(messageFromError(err));
       }
     },
-    [kioskId, buttonType, buttonName, span, iconKey, kioskOptions, createKioskButtonAsync, onClose],
+    [kioskId, buttonType, buttonName, iconKey, kioskOptions, createKioskButtonAsync, onClose],
   );
 
   if (!open) return null;
@@ -183,23 +179,6 @@ export function KioskButtonAddModal({ open, onClose, kioskOptions, defaultKioskI
                   {fieldErrors.buttonType ? <p className={styles.fieldError}>{fieldErrors.buttonType}</p> : null}
                 </div>
                 <div className={styles.field}>
-                  <label className={styles.fieldLabel} htmlFor={`${uid}-span`}>
-                    폭
-                  </label>
-                  <select
-                    id={`${uid}-span`}
-                    className={styles.select}
-                    value={span}
-                    onChange={(e) => setSpan(Number(e.target.value))}
-                  >
-                    {SPAN_OPTIONS.map((o) => (
-                      <option key={o.value} value={o.value}>
-                        {o.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className={styles.field}>
                   <label className={styles.fieldLabel} htmlFor={`${uid}-icon`}>
                     아이콘 key (선택)
                   </label>
@@ -214,7 +193,7 @@ export function KioskButtonAddModal({ open, onClose, kioskOptions, defaultKioskI
                   />
                 </div>
                 <p className={styles.formHint} style={{ marginTop: 0 }}>
-                  위치는 지정하지 않아도 됩니다 — 그리드의 다음 빈 칸에 자동 배치됩니다.
+                  위치는 지정하지 않습니다 — 그리드의 다음 빈 칸에 자동 배치됩니다.
                 </p>
               </>
             )}

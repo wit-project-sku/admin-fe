@@ -44,7 +44,7 @@ export default function KioskButtonManagePage() {
       <div className={shared.pageHeader}>
         <div>
           <h1 className={shared.pageTitle}>WITH 버튼 관리</h1>
-          <p className={shared.pageSubtitle}>키오스크 별 아이콘 배치 · 정보 · 자막/영상</p>
+          <p className={shared.pageSubtitle}>키오스크 별 아이콘 정보 · 자막/영상</p>
         </div>
         <div className={shared.actionGroup}>
           {/* 키오스크 데스크톱 앱 즉시 업데이트(주간 점검 창과 별개의 수동 트리거). */}
@@ -56,8 +56,8 @@ export default function KioskButtonManagePage() {
       </div>
 
       <p className={styles.tabBarHint} style={{ margin: '0 0 12px' }}>
-        위치는 열(1~8)·칸(1~4) · 3~6열 아이콘을 드래그해 배치(2칸 와이드 포함) · 아이콘을 클릭하면 정보·옵션이
-        표시됩니다 · 자막/영상은 아래 시트에서 전 언어를 한 번에 편집
+        아이콘을 클릭하면 정보가 표시됩니다(이름·별칭·아이콘·이미지 수정, 삭제) · 위치는 보기 전용 · 자막/영상은
+        아래 시트에서 전 언어를 한 번에 편집
       </p>
 
       {modal === 'add' ? (
