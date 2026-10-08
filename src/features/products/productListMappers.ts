@@ -19,6 +19,8 @@ export type ProductRow = {
   id: number | string;
   name: string;
   subTitle?: string;
+  /** 숨김 상품 수정 창을 목록 항목으로 채울 때 쓴다(공개 단건 조회는 숨김 상품을 404 로 감춘다). */
+  description?: string;
   images?: { imageUrl?: string }[];
   categoryName?: string;
   price?: number;
@@ -43,6 +45,7 @@ export function mapProductListItemToRow(raw: unknown): ProductRow {
   const id = o.id ?? o.productId ?? '';
   const name = firstStr(o.name, o.title, o.productName) || '-';
   const subTitle = firstStr(o.subTitle, o.sub_title);
+  const description = firstStr(o.description);
   const cat = o.category as Record<string, unknown> | undefined;
   const categoryName = firstStr(cat?.name, o.categoryName, o.category_name) || '-';
 
@@ -76,6 +79,7 @@ export function mapProductListItemToRow(raw: unknown): ProductRow {
     id,
     name,
     subTitle: subTitle || undefined,
+    description: description || undefined,
     images,
     categoryName,
     price: Number.isFinite(price) ? price : 0,
