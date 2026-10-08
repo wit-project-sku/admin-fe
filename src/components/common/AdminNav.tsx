@@ -155,19 +155,21 @@ const WITH_USAGE_GROUP: NavGroupDef = {
         </svg>
       ),
     },
-    // 2026-08-31 재활성화. 제주 3지점 버튼 배치가 확정되어 보류(2026-08-12) 사유가 해소됐다.
-    {
-      label: '아이콘 등록 관리',
-      path: '/admin/kiosk-buttons',
-      icon: (
-        <svg width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
-          <rect x='3' y='3' width='7' height='7' rx='1' />
-          <rect x='14' y='3' width='7' height='7' rx='1' />
-          <rect x='14' y='14' width='7' height='7' rx='1' />
-          <rect x='3' y='14' width='7' height='7' rx='1' />
-        </svg>
-      ),
-    },
+    // 숨김(2026-10-08): '아이콘 등록 관리' 메뉴. 키오스크 앱이 서버 위치를 쓰지 않고 고정 화면을 그리게 되어
+    // (인사동 리뉴얼) 관리자 웹의 실사 미러가 실제 화면과 달라졌다. 페이지/라우트(/admin/kiosk-buttons)는 유지 —
+    // 재활성화하려면 아래 항목 주석 해제. (2026-08-31 재활성화 → 2026-10-08 다시 숨김)
+    // {
+    //   label: '아이콘 등록 관리',
+    //   path: '/admin/kiosk-buttons',
+    //   icon: (
+    //     <svg width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
+    //       <rect x='3' y='3' width='7' height='7' rx='1' />
+    //       <rect x='14' y='3' width='7' height='7' rx='1' />
+    //       <rect x='14' y='14' width='7' height='7' rx='1' />
+    //       <rect x='3' y='14' width='7' height='7' rx='1' />
+    //     </svg>
+    //   ),
+    // },
     // 보류(2026-07-10): '언어 텍스트 관리'(엑셀형 자막 그리드) 메뉴 숨김. 페이지/라우트/백엔드는 유지 —
     // 재활성화하려면 아래 항목 주석 해제.
     // {
