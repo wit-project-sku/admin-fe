@@ -1,0 +1,683 @@
+/*
+ * 인사동 리뉴얼 홈 미러(통계 리포트 전용).
+ * 좌표는 kiosk-electron InsadongHomeRenewal.module.css 의 Figma 실좌표(2160×3840, 1px = Figma 1px)를 그대로 옮겼다.
+ * 보드는 container-type: size 라 클릭 배지(unit='cq', 1cqw = 21.6px)가 기존 인사동 미러와 같은 크기로 그려진다.
+ */
+
+.scaleWrap {
+  position: relative;
+  overflow: hidden;
+  margin: 0 auto;
+  border-radius: 18px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+  background: #fbf8f3;
+}
+
+.board {
+  --accent: #fe6c50;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2160px;
+  height: 3840px;
+  overflow: hidden;
+  transform-origin: top left;
+  container-type: size;
+  background: #fbf8f3;
+  font-family: 'Pretendard', 'Noto Sans KR', 'Noto Sans', sans-serif;
+  color: #232323;
+}
+
+/* 버튼 행이 없는 칸 — 고정 배치라 비우지 않고 회색으로 그린다. 배지(0회)는 흐리지 않는다. */
+.missing .tileArt,
+.missing .tileCaption,
+.missing .quickArt,
+.missing .quickCopy,
+.missing .circleClip,
+.missing .temp,
+.missing .weatherEmoji,
+.missing .inputPlaceholder,
+.missing .searchIcon,
+.missing .kdramaBox,
+.missing .cameraCircle,
+.missing .restroomCircle {
+  filter: grayscale(1);
+  opacity: 0.4;
+}
+
+/* 작은 원·검색창·K-DRAMA 는 우상단 배지가 글자/그림을 다 덮는다 → 배지를 50px 위로 올려 붙인다 */
+.liftBadge {
+  position: absolute;
+  left: 0;
+  top: -50px;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* 검색 배지는 언어선택(KR) 배지와 겹치지 않게 검색창 오른쪽 끝에서 안쪽으로 당긴다 */
+.liftBadgeSearch {
+  width: calc(100% - 140px);
+}
+
+/* ── 상단 위치/날짜 — x84 y125 2000×83 ── */
+.header {
+  position: absolute;
+  left: 84px;
+  top: 125px;
+  width: 2000px;
+  height: 83px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 68px;
+  line-height: 1;
+}
+
+.pin {
+  width: 63px;
+  height: 82px;
+}
+
+.date {
+  font-weight: 700;
+  font-size: 68px;
+  line-height: 1;
+  white-space: pre;
+}
+
+/* ── 공지 / 날씨 — x80 y297 2000×429 ── */
+.infoCard {
+  position: absolute;
+  left: 80px;
+  top: 297px;
+  width: 2000px;
+  height: 429px;
+  border-radius: 45px;
+  background: rgba(108, 90, 70, 0.1);
+}
+
+.noticeRule {
+  position: absolute;
+  left: 91px;
+  top: 93px;
+  width: 6.4px;
+  height: 242px;
+  border-radius: 3.2px;
+  background: var(--accent);
+}
+
+.noticeText {
+  position: absolute;
+  left: 140px;
+  top: 0;
+  width: 1080px;
+  height: 100%;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  font-size: 60px;
+  line-height: 70px;
+  color: #000;
+  word-break: keep-all;
+}
+
+.weather {
+  position: absolute;
+  left: 1260px;
+  top: 49px;
+  width: 665px;
+  height: 332px;
+  border-radius: 45px;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.temp {
+  position: absolute;
+  left: 38px;
+  top: 21px;
+  font-size: 145px;
+  font-weight: 700;
+  line-height: 1;
+  color: #333;
+}
+
+.weatherEmoji {
+  position: absolute;
+  left: 260px;
+  top: 30px;
+  font-size: 240px;
+  line-height: 1;
+}
+
+/* ── 검색장 — x80 y778 2000×182 ── */
+.searchRow {
+  position: absolute;
+  left: 80px;
+  top: 778px;
+  width: 2000px;
+  height: 182px;
+}
+
+.homeBtn,
+.krBtn {
+  position: absolute;
+  top: 0;
+  width: 180px;
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+}
+
+.homeBtn {
+  left: 0;
+}
+
+.krBtn {
+  left: 1820px;
+  font-weight: 700;
+  font-size: 60px;
+  line-height: 1;
+}
+
+/* 배지가 원 밖으로 나가야 해서 이미지 클립은 안쪽 원에 둔다 */
+.circleClip {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.circleClip img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.homeGlyph {
+  width: 58%;
+  height: 58%;
+}
+
+.searchInput {
+  position: absolute;
+  left: 232px;
+  top: 0;
+  width: 1536px;
+  height: 182px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  border: 4.29px solid var(--accent);
+  border-radius: 120px;
+  padding: 0 75px;
+}
+
+.inputPlaceholder {
+  font-size: 60px;
+  font-weight: 500;
+  line-height: 1.1;
+  white-space: nowrap;
+  color: #999;
+}
+
+.searchIcon {
+  width: 71px;
+  height: 68px;
+  color: var(--accent);
+}
+
+/* ── 퀵 카드 3종 — x120 y1012 1926×278, 폭 750 / 540 / 540 ── */
+.quickRow {
+  position: absolute;
+  left: 120px;
+  top: 1012px;
+  width: 1926px;
+  height: 278px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.quickCard {
+  position: relative;
+  height: 278px;
+  border-radius: 30px;
+}
+
+.quick_ai {
+  width: 750px;
+  background: #f5f1ef;
+}
+
+.quick_insarang {
+  width: 540px;
+  background: #f3eae3;
+}
+
+.quick_events {
+  width: 540px;
+  background: #f5efe9;
+}
+
+.quickArt {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.quickArt img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.quick_ai .quickArt {
+  left: 53px;
+  top: 32px;
+  width: 249px;
+  height: 214px;
+}
+
+.quick_insarang .quickArt {
+  left: 330px;
+  top: 31px;
+  width: 190px;
+  height: 216px;
+}
+
+.quick_events .quickArt {
+  left: 330px;
+  top: 40px;
+  width: 190px;
+  height: 197px;
+}
+
+/* 클릭 배지의 기준 박스 — 각 카드의 그림 칸과 같은 자리(배지는 이 박스의 우상단에 붙는다) */
+.quickBadgeAnchor {
+  position: absolute;
+}
+
+.quick_ai .quickBadgeAnchor {
+  left: 53px;
+  top: 20px;
+  width: 249px;
+  height: 214px;
+}
+
+.quick_insarang .quickBadgeAnchor,
+.quick_events .quickBadgeAnchor {
+  left: 330px;
+  top: 20px;
+  width: 190px;
+  height: 216px;
+}
+
+.quickCopy {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 29px;
+}
+
+.quick_ai .quickCopy {
+  left: 426px;
+  top: 72px;
+  width: 290px;
+}
+
+.quick_insarang .quickCopy {
+  left: 57px;
+  top: 80px;
+  width: 270px;
+}
+
+.quick_events .quickCopy {
+  left: 40px;
+  top: 108px;
+  width: 290px;
+}
+
+.quickTitle {
+  font-size: 45px;
+  font-weight: 700;
+  line-height: 1;
+  color: #000;
+  word-break: keep-all;
+}
+
+.quickSub {
+  font-size: 38px;
+  line-height: 1;
+  color: #999;
+  word-break: keep-all;
+}
+
+/* ── 메인 그리드 카드 — x135 y1342 1889×1494, 타일 300 · 열간격 180 · 행간격 80 ── */
+.gridCard {
+  position: absolute;
+  left: 135px;
+  top: 1342px;
+  width: 1889px;
+  height: 1494px;
+  border-radius: 50px;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.grid {
+  position: absolute;
+  left: 68px;
+  top: 49px;
+  width: 1741px;
+  height: 1396px;
+  display: grid;
+  grid-template-columns: repeat(4, 300px);
+  grid-auto-rows: 412px;
+  column-gap: 180px;
+  row-gap: 80px;
+}
+
+.tile {
+  position: relative; /* 클릭 배지의 기준 박스 */
+  width: 300px;
+  height: 412px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 35px;
+}
+
+.tileArt {
+  flex: none;
+  width: 300px;
+  height: 300px;
+  border-radius: 85.8px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tileArt img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* 이미지 없는 버튼 — 아이콘 키 글리프를 파스텔 판 위에 */
+.glyphPlate {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 버튼 행이 없는 칸 — 앱의 tileFallback 과 같은 판에 이름만 */
+.missingPlate {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e5e1dc;
+  border: 6px dashed #b9b2aa;
+  border-radius: inherit;
+  font-size: 34px;
+  font-weight: 600;
+  text-align: center;
+  color: #7a736b;
+  word-break: keep-all;
+}
+
+.quickArt .missingPlate {
+  border-radius: 30px;
+}
+
+.tileCaption {
+  flex: none;
+  width: 300px;
+  height: 77px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.tileLabel {
+  font-size: 38px;
+  font-weight: 500;
+  line-height: 1;
+  text-align: center;
+  color: #000;
+  white-space: nowrap;
+}
+
+.tileSub {
+  font-size: 25px;
+  line-height: 1;
+  text-align: center;
+  color: #000;
+  opacity: 0.3;
+  white-space: nowrap;
+}
+
+/* ── 왼쪽 플로팅 내비(표시 전용) ── */
+.leftNav {
+  position: absolute;
+  left: 46px;
+  top: 2040px;
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+
+.leftNavBtn {
+  width: 84px;
+  height: 84px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 5px solid var(--accent);
+  background: #fff;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 50px;
+  line-height: 1;
+}
+
+.leftNavBtn svg {
+  width: 52px;
+  height: 52px;
+}
+
+/* ── 하단 3종 — 앱 Figma 좌표 그대로 ── */
+.navItem {
+  position: absolute; /* 클릭 배지의 기준 박스를 겸한다 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* K-DRAMA — x304 y2921 381×235 */
+.navKdrama {
+  left: 304px;
+  top: 2921px;
+  width: 381px;
+  height: 235px;
+}
+
+.kdramaBox {
+  width: 100%;
+  height: 100%;
+  border-radius: 30px;
+  background: #0a5cc2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.kdramaK {
+  font-size: 96px;
+  font-weight: 900;
+  color: #fff;
+}
+
+.kdramaWord {
+  font-size: 60px;
+  font-weight: 900;
+  color: #9fd2ff;
+}
+
+/* 사진촬영 — x950 y2871 353×355 */
+.navCamera {
+  left: 950px;
+  top: 2871px;
+  width: 353px;
+  height: 355px;
+}
+
+.cameraCircle {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cameraCircle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cameraGlyph {
+  width: 42%;
+  height: 42%;
+}
+
+/* 화장실 — x1632 y2922 233×234 */
+.navRestroom {
+  left: 1632px;
+  top: 2922px;
+  width: 233px;
+  height: 234px;
+}
+
+.restroomCircle {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #2f2f2f;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 120px;
+}
+
+.restroomCircle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.navLabel {
+  position: absolute;
+  top: 3181px;
+  font-size: 38px;
+  line-height: 1;
+  color: #000;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.navLabelKdrama {
+  left: 294px;
+  width: 400px;
+}
+
+.navLabelRestroom {
+  left: 1648px;
+  width: 200px;
+}
+
+/* ── 하단 배너 — x0 y3267 2160×573 (표시 전용) ── */
+.banner {
+  position: absolute;
+  left: 0;
+  top: 3267px;
+  width: 2160px;
+  height: 573px;
+  background: #f6efe6;
+  overflow: hidden;
+}
+
+.bannerStripe {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 34px;
+  background: repeating-linear-gradient(
+    90deg,
+    #f7a07e 0 180px,
+    #a6dc7a 180px 360px,
+    #fbe98a 360px 540px,
+    #8fdcdc 540px 720px,
+    #c9a7e8 720px 900px
+  );
+}
+
+.bannerCopy {
+  position: absolute;
+  left: 540px;
+  top: 150px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.bannerTag {
+  font-size: 34px;
+  font-weight: 600;
+  color: #8a7f74;
+}
+
+.bannerTitle {
+  font-size: 88px;
+  font-weight: 800;
+  line-height: 1.15;
+  color: #3a332d;
+}
+
+.homeBtn.missing,
+.krBtn.missing {
+  background: #c9c4be;
+}
