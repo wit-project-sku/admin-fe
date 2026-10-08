@@ -6,6 +6,8 @@ type DeleteModalProps = {
   /** Modal heading, e.g. "상품을 삭제하시겠습니까?" */
   title?: string;
   target?: string | null;
+  /** 대상 아래 안내 문구. 기본 "삭제 이후에는 복구할 수 없습니다." */
+  description?: string;
   loading?: boolean;
   onConfirm?: () => void;
   onClose?: () => void;
@@ -15,6 +17,7 @@ export default function DeleteModal({
   open,
   title = '이 항목을 삭제하시겠습니까?',
   target,
+  description = '삭제 이후에는 복구할 수 없습니다.',
   loading,
   onConfirm,
   onClose,
@@ -55,7 +58,7 @@ export default function DeleteModal({
           <p className={styles.deleteDesc}>
             <span className={styles.deleteTarget}>&quot;{target ?? '이 항목'}&quot;</span>
             <br />
-            삭제 이후에는 복구할 수 없습니다.
+            {description}
           </p>
         </div>
 

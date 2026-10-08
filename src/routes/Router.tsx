@@ -20,6 +20,7 @@ const DeliveryManagePage = lazy(() => import('@pages/DeliveryManagePage'));
 const RefundManagePage = lazy(() => import('@pages/RefundManagePage'));
 const ReportsPage = lazy(() => import('@pages/ReportsPage'));
 const StatReportsPage = lazy(() => import('@pages/StatReportsPage'));
+const BodyMeasurementPage = lazy(() => import('@pages/BodyMeasurementPage'));
 const OutfitsPage = lazy(() => import('@pages/OutfitsPage'));
 const KioskOutfitCategoryPage = lazy(() => import('@pages/KioskOutfitCategoryPage'));
 const KioskAnalyticsPage = lazy(() => import('@pages/KioskAnalyticsPage'));
@@ -136,6 +137,8 @@ export default function AppRouter() {
             <Route path="deliveries" element={<DeliveryManagePage />} />
             <Route path="refunds" element={<RefundManagePage />} />
             <Route path="reports" element={<ReportsPage />} />
+            {/* 체형 측정 데이터 — ROLE_ADMIN 전용(USER_ALLOWED_PATHS 에 없어 RoleGuard 가 막는다) */}
+            <Route path="reports/body-measurements" element={<BodyMeasurementPage />} />
             <Route path="stat-reports" element={<StatReportsPage />} />
             <Route path="outfits" element={<OutfitsPage />} />
             <Route path="outfit-categories" element={<KioskOutfitCategoryPage />} />

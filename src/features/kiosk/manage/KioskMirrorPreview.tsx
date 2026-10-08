@@ -1,22 +1,16 @@
-import { useRef, useState, type DragEvent } from 'react';
 import { KioskAppIconGlyph } from '../kioskAppIcons';
 import type { KioskButtonDto } from '@/hooks/kiosk-api/kioskButtonsTypes';
 import { GRID_FIRST_LINE, GRID_LAST_LINE, SLOTS_PER_LINE, kioskTheme, tileBgFor } from './constants';
 import { resolveKioskButtonIconKey } from './kioskButtonDisplay';
 import styles from './KioskAppManagePage.module.css';
 
-export type MoveRequest = { sourceId: number; targetLine: number; targetPosition: number };
-
 type Props = {
   buttons: KioskButtonDto[];
   kioskId?: number;
   kioskName?: string;
-  /** 그리드 타일을 드롭했을 때 (백엔드가 삽입+재배치) */
-  onMove: (req: MoveRequest) => void;
   /** 타일 클릭 → 해당 버튼 선택(정보 표시) */
   onSelect?: (button: KioskButtonDto) => void;
   selectedId?: number | null;
-  disabled?: boolean;
 };
 
 function spanOf(b: KioskButtonDto): number {
@@ -25,22 +19,18 @@ function spanOf(b: KioskButtonDto): number {
 
 const TODAY = '2026-06-30(Tue)';
 
-/** 실기기 메인 화면 미러 — 1열 공지·날씨 / 2열 홈·검색·언어 / 3~6열 그리드 / 7열 카메라 / 8열 배너. */
+/**
+ * 실기기 메인 화면 미러 — 1열 공지·날씨 / 2열 홈·검색·언어 / 3~6열 그리드 / 7열 카메라 / 8열 배너.
+ * 보기 전용 — 위치는 바꾸지 않는다(키오스크 앱이 서버 위치를 쓰지 않음). 타일 클릭 = 선택만.
+ */
 export function KioskMirrorPreview({
   buttons,
   kioskId,
   kioskName,
-  onMove,
   onSelect,
   selectedId,
-  disabled,
 }: Props) {
   const t = kioskTheme(kioskId, kioskName);
-  // 드래그 소스는 ref 로 보관 — onDragOver/onDrop 핸들러가 항상 최신 값을 읽어
-  // preventDefault 누락(=드롭 거부)이나 stale 클로저 레이스를 없앤다. state 는 시각 표시용.
-  const dragIdRef = useRef<number | null>(null);
-  const [dragId, setDragId] = useState<number | null>(null);
-  const [overKey, setOverKey] = useState<string | null>(null);
 
   const fixedAt = (line: number, position: number) =>
     buttons.find((b) => b.placement === 'FIXED' && b.line === line && b.position === position) ??
@@ -73,7 +63,7 @@ export function KioskMirrorPreview({
   // 그리드 타일 아이콘 — 라운드 색 카드 위에 아이콘. span=2 는 가로 2칸.
   //   · object-fit:contain 으로 어떤 비율(정사각/세로형)이든 크롭 없이 담는다.
   //   · 파스텔 카드 배경: 투명 캐릭터(오색)는 카드색이 보이고, 색 카드가 박힌 이미지(화성/인사동)는 카드가 덮는다.
-  //   · draggable=false + CSS pointer-events:none 으로 이미지가 타일 드래그를 가로채지 않게 한다.
+  //   · CSS pointer-events:none 으로 이미지가 타일 클릭을 가로채지 않게 한다.
   const gridVisual = (b: KioskButtonDto) => {
     const ratio = b.span === 2 ? '2.05 / 1' : '1 / 1';
     const bg = tileBgFor(b.id);
@@ -90,34 +80,6 @@ export function KioskMirrorPreview({
       </span>
     );
   };
-
-  const finishDrop = (targetLine: number, targetPos: number) => {
-    const id = dragIdRef.current;
-    dragIdRef.current = null;
-    setDragId(null);
-    setOverKey(null);
-    if (id == null) return;
-    const src = mainButtons.find((b) => b.id === id);
-    if (!src) return;
-    if (src.line === targetLine && src.position === targetPos) return;
-    onMove({ sourceId: id, targetLine, targetPosition: targetPos });
-  };
-
-  const dropHandlers = (key: string, line: number, pos: number) =>
-    disabled
-      ? {}
-      : {
-          onDragOver: (e: DragEvent) => {
-            if (dragIdRef.current == null) return;
-            e.preventDefault();
-            if (overKey !== key) setOverKey(key);
-          },
-          onDragLeave: () => setOverKey((k) => (k === key ? null : k)),
-          onDrop: (e: DragEvent) => {
-            e.preventDefault();
-            finishDrop(line, pos);
-          },
-        };
 
   const renderGridRow = (line: number) => {
     const rowButtons = mainButtons
@@ -139,43 +101,20 @@ export function KioskMirrorPreview({
       <div key={line} className={styles.mGridRow}>
         {cells.map(({ pos: p, b, span }) => {
           const key = `${line}:${p}`;
-          const over = overKey === key && dragId != null;
           if (!b) {
-            return (
-              <div
-                key={key}
-                className={`${styles.mEmpty} ${over ? styles.mOver : ''}`}
-                style={{ gridColumn: `${p} / span 1` }}
-                {...dropHandlers(key, line, p)}
-              />
-            );
+            return <div key={key} className={styles.mEmpty} style={{ gridColumn: `${p} / span 1` }} />;
           }
           const selected = selectedId === b.id;
           return (
             <div
               key={key}
-              className={`${styles.mTile} ${selected ? styles.mTileSel : ''} ${
-                dragId === b.id ? styles.mDragging : ''
-              } ${over ? styles.mOver : ''}`}
+              className={`${styles.mTile} ${selected ? styles.mTileSel : ''}`}
               style={{
                 gridColumn: `${p} / span ${span}`,
                 ...(selected ? { outline: `3px solid ${t.accent}`, outlineOffset: '2px' } : {}),
               }}
-              draggable={!disabled}
               title={`${b.buttonType} · ${line}열 ${p}${span === 2 ? `~${p + 1}` : ''}`}
               onClick={() => onSelect?.(b)}
-              onDragStart={(e) => {
-                dragIdRef.current = b.id;
-                setDragId(b.id);
-                e.dataTransfer.effectAllowed = 'move';
-                e.dataTransfer.setData('text/plain', String(b.id));
-              }}
-              onDragEnd={() => {
-                dragIdRef.current = null;
-                setDragId(null);
-                setOverKey(null);
-              }}
-              {...dropHandlers(key, line, p)}
             >
               {gridVisual(b)}
               <span className={styles.mTileLabel}>{b.buttonType}</span>

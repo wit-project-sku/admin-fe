@@ -70,6 +70,7 @@ const AR_OUTFIT_GROUP: NavGroupDef = {
     {
       label: '상세 분석 리포트',
       path: '/admin/reports',
+      end: true,
       icon: (
         <svg width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
           <line x1='18' y1='20' x2='18' y2='10' />
@@ -87,6 +88,20 @@ const AR_OUTFIT_GROUP: NavGroupDef = {
           <polyline points='14 2 14 8 20 8' />
           <line x1='8' y1='13' x2='16' y2='13' />
           <line x1='8' y1='17' x2='13' y2='17' />
+        </svg>
+      ),
+    },
+    // 최고 관리자 전용 — AR_OUTFIT_GROUP 은 NAV_GROUPS(ROLE_ADMIN)에만 들어가 ROLE_USER 에게는 안 보인다.
+    {
+      label: '체형 측정 데이터',
+      path: '/admin/reports/body-measurements',
+      icon: (
+        <svg width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
+          <circle cx='12' cy='4.5' r='2.5' />
+          <path d='M12 7v7' />
+          <path d='M7 10h10' />
+          <path d='M12 14l-3 7' />
+          <path d='M12 14l3 7' />
         </svg>
       ),
     },

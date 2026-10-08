@@ -1,11 +1,9 @@
-import { useRef, useState, type CSSProperties, type DragEvent, type ReactElement } from 'react';
+import type { CSSProperties, ReactElement } from 'react';
 import { KioskAppIconGlyph } from '../kioskAppIcons';
 import { ButtonStatBadge, type ButtonStatMap } from './kioskButtonStatOverlay';
 import type { KioskButtonDto } from '@/hooks/kiosk-api/kioskButtonsTypes';
 import { GRID_FIRST_LINE, GRID_LAST_LINE, SLOTS_PER_LINE, tileBgFor } from './constants';
 import { kioskButtonLabel, resolveKioskButtonIconKey } from './kioskButtonDisplay';
-import type { MoveRequest } from './KioskMirrorPreview';
-import { setScaledDragImage } from './scaledDragImage';
 import styles from './KioskMirrorGridApp.module.css';
 
 /** 스킨 = kiosk-electron 의 키오스크별 차이(테마색·공지배경·브랜드·타일처리). */
@@ -40,10 +38,8 @@ export const OSAN_SKIN: GridAppSkin = {
 type Props = {
   buttons: KioskButtonDto[];
   skin: GridAppSkin;
-  onMove: (req: MoveRequest) => void;
   onSelect?: (button: KioskButtonDto) => void;
   selectedId?: number | null;
-  disabled?: boolean;
   /** 통계 리포트 전용 — buttonType 별 기간 집계를 타일 위에 덧그린다(관리 화면은 미전달). */
   stats?: ButtonStatMap;
   /** 리포트에서는 표시 전용 배너 구간을 뺀다(통계가 없는 영역이라 지면 낭비). */
@@ -68,13 +64,11 @@ function spanOf(b: KioskButtonDto): number {
 /**
  * 인사동·오색 실기기 메인 화면 미러 — kiosk-electron InsadongHome/OsanHome 의
  * 마크업/CSS 를 그대로 이식(4열 그리드·AI 와이드·헤더/공지/검색/하단).
- * 타일 슬롯만 관리자 API 버튼 데이터로 채우고, 3~6열만 드래그·선택 편집.
+ * 타일 슬롯만 관리자 API 버튼 데이터로 채운다. 보기 전용 — 위치는 바꾸지 않는다
+ * (키오스크 앱이 서버 위치를 쓰지 않음). 타일 클릭 = 선택만. 통계 리포트도 이 화면을 그대로 쓴다.
  */
-export function KioskMirrorGridApp({ buttons, skin, onMove, onSelect, selectedId, disabled, stats, hideBanner }: Props) {
+export function KioskMirrorGridApp({ buttons, skin, onSelect, selectedId, stats, hideBanner }: Props) {
   const today = formatDate(new Date());
-  const dragIdRef = useRef<number | null>(null);
-  const [dragId, setDragId] = useState<number | null>(null);
-  const [overKey, setOverKey] = useState<string | null>(null);
 
   const fixedAt = (line: number, position: number) =>
     buttons.find((b) => b.placement === 'FIXED' && b.line === line && b.position === position) ??
@@ -87,34 +81,6 @@ export function KioskMirrorGridApp({ buttons, skin, onMove, onSelect, selectedId
   // 배지 농도 기준(최댓값). 위치는 그대로 두고 색으로만 사용량을 표현한다.
   const maxClicks = stats ? Math.max(0, ...[...stats.values()].map((v) => v.clicks)) : 0;
   const mainButtons = buttons.filter((b) => (b.placement ?? 'MAIN') === 'MAIN' && b.line >= 1);
-
-  const finishDrop = (targetLine: number, targetPos: number) => {
-    const id = dragIdRef.current;
-    dragIdRef.current = null;
-    setDragId(null);
-    setOverKey(null);
-    if (id == null) return;
-    const src = mainButtons.find((b) => b.id === id);
-    if (!src) return;
-    if (src.line === targetLine && src.position === targetPos) return;
-    onMove({ sourceId: id, targetLine, targetPosition: targetPos });
-  };
-
-  const dropHandlers = (key: string, line: number, pos: number) =>
-    disabled
-      ? {}
-      : {
-          onDragOver: (e: DragEvent) => {
-            if (dragIdRef.current == null) return;
-            e.preventDefault();
-            if (overKey !== key) setOverKey(key);
-          },
-          onDragLeave: () => setOverKey((k) => (k === key ? null : k)),
-          onDrop: (e: DragEvent) => {
-            e.preventDefault();
-            finishDrop(line, pos);
-          },
-        };
 
   const tileInner = (b: KioskButtonDto) => {
     if (skin.tileMode === 'box') {
@@ -146,45 +112,21 @@ export function KioskMirrorGridApp({ buttons, skin, onMove, onSelect, selectedId
   // 한 슬롯을 CSS 그리드 위 (line,position) 좌표에 배치. line 3→row1.
   const renderCell = (line: number, p: number, b: KioskButtonDto | null, span: number) => {
     const key = `${line}:${p}`;
-    const over = overKey === key && dragId != null;
     const gridStyle: CSSProperties = {
       gridColumn: `${p} / span ${span}`,
       gridRow: `${line - GRID_FIRST_LINE + 1}`,
     };
     if (!b) {
-      return (
-        <div
-          key={key}
-          className={`${styles.emptyCell} ${over ? styles.over : ''}`}
-          style={gridStyle}
-          {...dropHandlers(key, line, p)}
-        />
-      );
+      return <div key={key} className={styles.emptyCell} style={gridStyle} />;
     }
     const selected = selectedId === b.id;
     return (
       <div
         key={key}
-        className={`${styles.tile} ${span === 2 ? styles.tileWide : ''} ${
-          selected ? styles.selected : ''
-        } ${dragId === b.id ? styles.dragging : ''} ${over ? styles.over : ''}`}
+        className={`${styles.tile} ${span === 2 ? styles.tileWide : ''} ${selected ? styles.selected : ''}`}
         style={gridStyle}
-        draggable={!disabled}
         title={`${b.buttonType} · ${line}열 ${p}${span === 2 ? `~${p + 1}` : ''}`}
         onClick={() => onSelect?.(b)}
-        onDragStart={(e) => {
-          setScaledDragImage(e, e.currentTarget);
-          dragIdRef.current = b.id;
-          setDragId(b.id);
-          e.dataTransfer.effectAllowed = 'move';
-          e.dataTransfer.setData('text/plain', String(b.id));
-        }}
-        onDragEnd={() => {
-          dragIdRef.current = null;
-          setDragId(null);
-          setOverKey(null);
-        }}
-        {...dropHandlers(key, line, p)}
       >
         {tileInner(b)}
         <ButtonStatBadge stat={stats?.get(b.buttonType)} max={maxClicks} unit='cq' />

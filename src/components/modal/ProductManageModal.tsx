@@ -137,7 +137,17 @@ export default function ProductManageModal({ open, mode, product, onClose, onSuc
   const categories = useMemo(() => unwrapList(categoriesData) as SelectOption[], [categoriesData]);
   const { data: kiosksData } = useGetKiosks();
   const kiosks = unwrapList(kiosksData) as MultiSelectItem[];
-  const { data: detailData, isLoading: loading } = useGetProductById(open && mode === 'edit' ? product?.id : null);
+  // 숨김 상품은 공개 단건 조회(GET /products/{id})가 404 다 — 서버가 HIDDEN 을 감춘다(admin-be·Nest 같음).
+  // 관리자 목록 항목에 같은 필드가 다 있으므로 그때는 목록 항목으로 수정 창을 채운다.
+  const isHiddenProduct = mode === 'edit' && product?.status === 'HIDDEN';
+  const { data: detailData, isLoading: detailLoading } = useGetProductById(
+    open && mode === 'edit' && !isHiddenProduct ? product?.id : null,
+  );
+  const loading = isHiddenProduct ? false : detailLoading;
+  const detailSource = useMemo<Record<string, unknown> | null>(() => {
+    if (isHiddenProduct) return product ? ({ ...product } as Record<string, unknown>) : null;
+    return detailData ? unwrapDetailBody(detailData) : null;
+  }, [isHiddenProduct, product, detailData]);
   const { addProductAsync } = useAddProduct();
   const { updateProductAsync } = useUpdateProduct();
   const [saving, setSaving] = useState(false);
@@ -161,8 +171,8 @@ export default function ProductManageModal({ open, mode, product, onClose, onSuc
   }, [open, mode]);
 
   useEffect(() => {
-    if (!open || mode !== 'edit' || !detailData || product?.id == null) return;
-    const d = unwrapDetailBody(detailData);
+    if (!open || mode !== 'edit' || !detailSource || product?.id == null) return;
+    const d = detailSource;
     if (d.id != null && String(d.id) !== String(product.id)) return;
 
     setForm({
@@ -193,7 +203,7 @@ export default function ProductManageModal({ open, mode, product, onClose, onSuc
     setPreviewUrls(urls);
     setServerPreviewCount(urls.length);
     setImages([]);
-  }, [open, mode, detailData, product?.id, product?.kioskIds, categories]);
+  }, [open, mode, detailSource, product?.id, product?.kioskIds, categories]);
 
   useEffect(() => {
     if (!open) return;

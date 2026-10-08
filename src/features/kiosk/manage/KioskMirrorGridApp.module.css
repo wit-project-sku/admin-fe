@@ -342,17 +342,6 @@
   border-radius: 3.97cqw;
 }
 
-.dragging {
-  opacity: 0.4;
-}
-
-.over .tileArt,
-.over .tileBox,
-.over.emptyCell {
-  box-shadow: 0 0 0 6px var(--accent) inset;
-  border-radius: 3.97cqw;
-}
-
 /* ── Bottom row (Figma 좌표, 스캘럽 바 에셋 미보유 → 표시전용 아이템만) ── */
 .bottomRow {
   position: absolute;

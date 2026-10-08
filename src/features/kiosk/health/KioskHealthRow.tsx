@@ -28,7 +28,10 @@ export function KioskHealthRow({ row, checkedAt, busy, onSave, onStartMaintenanc
   const meta = STATUS_META[row.status];
   const hoursChanged = open !== (row.openTime ?? '') || close !== (row.closeTime ?? '');
   const hoursValid = (open === '' && close === '') || (open !== '' && close !== '' && open !== close);
-  const inMaintenance = row.status === 'MAINTENANCE';
+  // 감시를 끈 키오스크는 점검 중이어도 상태가 UNMONITORED 로 온다(서버가 감시 여부를 먼저 본다) — 점검 기한으로도 판단한다.
+  // 같은 "yyyy-MM-dd HH:mm:ss" KST 문자열이라 서버 checkedAt 과 글자 비교로 충분하다.
+  const inMaintenance =
+    row.status === 'MAINTENANCE' || (row.maintenanceUntil != null && row.maintenanceUntil > checkedAt);
 
   const save = (monitored: boolean) =>
     onSave(row.kioskId, { monitored, openTime: open || null, closeTime: close || null });

@@ -69,11 +69,14 @@ export type CreateKioskButtonApiResponse = {
   data?: KioskButtonDto;
 };
 
-/** Body for `PUT /admin/kiosks/button/{buttonId}` */
+/**
+ * Body for `PUT /admin/kiosks/button/{buttonId}`
+ * 관리자 웹은 line·position·span 을 보내지 않는다(위치 변경 기능 제거) — 서버가 기존 값을 유지한다.
+ */
 export type UpdateKioskButtonPayload = {
   buttonType: string;
   buttonName: string;
-  /** 화면 열(1-based). 미지정 시 기존 줄 유지. 드래그 SWAP 시 목표 줄로 지정. */
+  /** 화면 열(1-based). 미지정 시 기존 줄 유지. */
   line?: number;
   /** 시작 칸(1-based, 1~4). 미지정 시 기존 위치 유지. */
   position?: number;
