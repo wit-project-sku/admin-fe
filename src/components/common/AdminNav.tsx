@@ -214,6 +214,45 @@ const ONSITE_EVENT_GROUP: NavGroupDef = {
   ],
 };
 
+const WITS_APP_GROUP: NavGroupDef = {
+  label: 'WITS 앱 관리',
+  items: [
+    {
+      label: '이벤트 관리',
+      path: '/admin/wits-events',
+      icon: (
+        <svg width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
+          <polyline points='20 12 20 22 4 22 4 12' />
+          <rect x='2' y='7' width='20' height='5' />
+          <line x1='12' y1='22' x2='12' y2='7' />
+          <path d='M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z' />
+          <path d='M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z' />
+        </svg>
+      ),
+    },
+    {
+      label: '알림 관리',
+      path: '/admin/wits-notifications',
+      icon: (
+        <svg width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
+          <path d='M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9' />
+          <path d='M13.73 21a2 2 0 0 1-3.46 0' />
+        </svg>
+      ),
+    },
+    {
+      label: '광고 관리',
+      path: '/admin/ads',
+      icon: (
+        <svg width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
+          <path d='M3 11l18-5v12L3 14v-3z' />
+          <path d='M11.6 16.8a3 3 0 1 1-5.8-1.6' />
+        </svg>
+      ),
+    },
+  ],
+};
+
 const KIOSK_CONTENT_GROUP: NavGroupDef = {
   label: '키오스크 컨텐츠 관리',
   items: [
@@ -396,6 +435,8 @@ const NAV_GROUPS: NavGroupDef[] = [
   AR_OUTFIT_GROUP,
   WITH_USAGE_GROUP,
   ONSITE_EVENT_GROUP,
+  // WITS 앱 관리 — ROLE_ADMIN 전용(USER_NAV_GROUPS 에 없고 USER_ALLOWED_PATHS 에도 없다)
+  WITS_APP_GROUP,
   KIOSK_CONTENT_GROUP,
   DONATION_GROUP,
   WITH_MARKET_GROUP,
