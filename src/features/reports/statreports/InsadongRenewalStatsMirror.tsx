@@ -8,6 +8,7 @@
 // - 버튼 id 는 하드코딩하지 않는다(기부는 stage·prod id 가 다르다). buttonType + 키오스크 id(10번 칸)만 쓴다.
 // - 칸에 맞는 버튼이 없으면 회색 칸 + 이름 + 0회로 그린다(레이아웃은 고정이므로 비워 두지 않는다).
 // - 화면에 없는 버튼(혼자찍기·같이찍기·OFF_MAIN)은 미러에 그리지 않는다 — 옆 표에는 그대로 남는다.
+// - 홈 칸에는 배지를 달지 않는다 — 홈은 터치 기록 대상이 아니다(앱은 홈으로 돌아올 때 직전 메뉴의 '이용 끝' 시각만 보낸다).
 import type { CSSProperties, ReactNode } from 'react';
 import { KioskAppIconGlyph } from '@/features/kiosk/kioskAppIcons';
 import { tileBgFor } from '@/features/kiosk/manage/constants';
@@ -161,7 +162,7 @@ export function InsadongRenewalStatsMirror({ kioskId, buttons, stats }: Props) {
                 </svg>
               )}
             </span>
-            <span className={styles.liftBadge}>{badge(FIXED.home)}</span>
+            {/* 홈은 터치 기록 대상이 아니라(앱이 보내지 않는다 — 홈은 '이용 끝' 시각만 찍는다) 늘 0회였다 → 배지를 그리지 않는다(2026-10-19 사용자 요청). */}
           </span>
           <div className={`${styles.searchInput} ${missingCls(search)}`} title={tip(FIXED.search, search)}>
             <span className={styles.inputPlaceholder}>인사동에 대해 검색해보세요!</span>
