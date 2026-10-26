@@ -4,6 +4,7 @@
 // 그래서 DB 좌표로 타일을 까는 KioskMirrorGridApp 은 리뉴얼 이전 배치가 되어 버린다.
 // 여기서는 앱과 같은 고정 배치(Figma `인사동 리뉴얼` 7516:63421 / 7574:68827)를 그대로 옮기고,
 // 각 칸을 DB `button_type`(V173 이후 이름)으로 찾아 클릭 수 배지만 얹는다. 읽기 전용.
+// 버튼 그림은 Figma 프레임을 1:1 로 잘라 둔 것(reportHomeArt, 2026-10-26) — 없으면 DB 이미지·아이콘 키로 그린다.
 //
 // - 버튼 id 는 하드코딩하지 않는다(기부는 stage·prod id 가 다르다). buttonType + 키오스크 id(10번 칸)만 쓴다.
 // - 칸에 맞는 버튼이 없으면 회색 칸 + 이름 + 0회로 그린다(레이아웃은 고정이므로 비워 두지 않는다).
@@ -19,6 +20,7 @@ import {
   type ButtonStatMap,
 } from '@/features/kiosk/manage/kioskButtonStatOverlay';
 import type { KioskButtonDto } from '@/hooks/kiosk-api/kioskButtonsTypes';
+import { reportHomeArt } from './reportHomeArt';
 import styles from './InsadongRenewalStatsMirror.module.css';
 
 /** 리뉴얼 홈을 그리는 키오스크(북인사광장·인사동쉼터·남인사광장). */
@@ -98,8 +100,11 @@ export function InsadongRenewalStatsMirror({ kioskId, buttons, stats }: Props) {
   const slot10 = DONATION_SLOT_KIOSK_IDS.has(kioskId) ? SLOT10_DONATION : SLOT10_MAP;
   const gridSlots = [...GRID_HEAD, slot10, ...GRID_TAIL];
 
-  /** 버튼 이미지(DB) → 아이콘 키 글리프 → (버튼 없음) 이름 칸. */
-  const art = (b: KioskButtonDto | null, label: string, glyphSize: number): ReactNode => {
+  const fig = (name: string) => reportHomeArt('insadong', name);
+  /** Figma 그림 → 버튼 이미지(DB) → 아이콘 키 글리프 → (버튼 없음) 이름 칸. */
+  const art = (figName: string, b: KioskButtonDto | null, label: string, glyphSize: number): ReactNode => {
+    const src = fig(figName);
+    if (src) return <img src={src} alt='' draggable={false} />;
     if (b?.imageUrl) return <img src={b.imageUrl} alt='' draggable={false} />;
     if (b) {
       return (
@@ -144,7 +149,13 @@ export function InsadongRenewalStatsMirror({ kioskId, buttons, stats }: Props) {
           <p className={styles.noticeText}>인사동 안내 문구가 이 영역에 표시됩니다. (표시 전용)</p>
           <div className={`${styles.weather} ${missingCls(weather)}`} title={tip(FIXED.weather, weather)}>
             <span className={styles.temp}>18°</span>
-            <span className={styles.weatherEmoji}>⛅</span>
+            {fig('weather') ? (
+              <span className={styles.weatherArt}>
+                <img src={fig('weather')} alt='' draggable={false} />
+              </span>
+            ) : (
+              <span className={styles.weatherEmoji}>⛅</span>
+            )}
             {badge(FIXED.weather)}
           </div>
         </div>
@@ -153,7 +164,9 @@ export function InsadongRenewalStatsMirror({ kioskId, buttons, stats }: Props) {
         <div className={styles.searchRow}>
           <span className={`${styles.homeBtn} ${missingCls(home)}`} title={tip(FIXED.home, home)}>
             <span className={styles.circleClip}>
-              {home?.imageUrl ? (
+              {fig('home') ? (
+                <img src={fig('home')} alt='' draggable={false} />
+              ) : home?.imageUrl ? (
                 <img src={home.imageUrl} alt='' draggable={false} />
               ) : (
                 <svg className={styles.homeGlyph} viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinejoin='round'>
@@ -173,14 +186,20 @@ export function InsadongRenewalStatsMirror({ kioskId, buttons, stats }: Props) {
             <span className={`${styles.liftBadge} ${styles.liftBadgeSearch}`}>{badge(FIXED.search)}</span>
           </div>
           <span className={`${styles.krBtn} ${missingCls(lang)}`} title={tip(FIXED.language, lang)}>
-            KR
+            {fig('lang') ? (
+              <span className={styles.circleClip}>
+                <img src={fig('lang')} alt='' draggable={false} />
+              </span>
+            ) : (
+              'KR'
+            )}
             <span className={styles.liftBadge}>{badge(FIXED.language)}</span>
           </span>
         </div>
 
         {/* ── 퀵 카드 3종 ── */}
         <div className={styles.quickRow}>
-          {QUICK.map((q) => {
+          {QUICK.map((q, qi) => {
             const b = find(q.type);
             return (
               <div
@@ -188,7 +207,7 @@ export function InsadongRenewalStatsMirror({ kioskId, buttons, stats }: Props) {
                 className={`${styles.quickCard} ${styles[`quick_${q.variant}`]} ${missingCls(b)}`}
                 title={tip(q.type, b)}
               >
-                <span className={styles.quickArt}>{art(b, q.label, 160)}</span>
+                <span className={styles.quickArt}>{art(`card${qi}`, b, q.label, 160)}</span>
                 <span className={styles.quickCopy}>
                   <span className={styles.quickTitle}>{q.label}</span>
                   <span className={styles.quickSub}>{q.sub}</span>
@@ -203,11 +222,13 @@ export function InsadongRenewalStatsMirror({ kioskId, buttons, stats }: Props) {
         {/* ── 메인 그리드 4×3 ── */}
         <div className={styles.gridCard}>
           <div className={styles.grid}>
-            {gridSlots.map((g) => {
+            {gridSlots.map((g, gi) => {
               const b = find(g.type);
+              // 10번 칸(index 9)은 지도판·기부판 그림이 다르다
+              const figName = gi === 9 && g.type === SLOT10_MAP.type ? 'tile-map' : `tile-${gi}`;
               return (
                 <div key={g.type} className={`${styles.tile} ${missingCls(b)}`} title={tip(g.type, b)}>
-                  <span className={styles.tileArt}>{art(b, g.label, 170)}</span>
+                  <span className={styles.tileArt}>{art(figName, b, g.label, 170)}</span>
                   <span className={styles.tileCaption}>
                     <span className={styles.tileLabel}>{g.label}</span>
                     <span className={styles.tileSub}>{g.sub}</span>
@@ -220,36 +241,44 @@ export function InsadongRenewalStatsMirror({ kioskId, buttons, stats }: Props) {
         </div>
 
         {/* ── 왼쪽 플로팅 내비(표시 전용 — 버튼 행 없음) ── */}
-        <div className={styles.leftNav} aria-hidden>
-          <span className={styles.leftNavBtn}>
-            <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.2' strokeLinejoin='round'>
-              <path d='M3 11 12 3l9 8' />
-              <path d='M5 9.5V21h5v-6h4v6h5V9.5' />
-            </svg>
-          </span>
-          <span className={styles.leftNavBtn}>
-            <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.4' strokeLinecap='round' strokeLinejoin='round'>
-              <path d='m14 6-6 6 6 6' />
-            </svg>
-          </span>
-          <span className={styles.leftNavBtn}>
-            <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.2' strokeLinecap='round' strokeLinejoin='round'>
-              <circle cx='12' cy='4' r='1.6' fill='currentColor' stroke='none' />
-              <path d='M10 8h4l-1 5h4l2 6' />
-              <path d='M9.2 11.2a5 5 0 1 0 6.3 7.3' />
-            </svg>
-          </span>
-        </div>
+        {fig('leftnav') ? (
+          <img className={styles.leftNavArt} src={fig('leftnav')} alt='' aria-hidden draggable={false} />
+        ) : (
+          <div className={styles.leftNav} aria-hidden>
+            <span className={styles.leftNavBtn}>
+              <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.2' strokeLinejoin='round'>
+                <path d='M3 11 12 3l9 8' />
+                <path d='M5 9.5V21h5v-6h4v6h5V9.5' />
+              </svg>
+            </span>
+            <span className={styles.leftNavBtn}>
+              <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.4' strokeLinecap='round' strokeLinejoin='round'>
+                <path d='m14 6-6 6 6 6' />
+              </svg>
+            </span>
+            <span className={styles.leftNavBtn}>
+              <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.2' strokeLinecap='round' strokeLinejoin='round'>
+                <circle cx='12' cy='4' r='1.6' fill='currentColor' stroke='none' />
+                <path d='M10 8h4l-1 5h4l2 6' />
+                <path d='M9.2 11.2a5 5 0 1 0 6.3 7.3' />
+              </svg>
+            </span>
+          </div>
+        )}
 
         {/* ── 하단 3종: Promotion(K-DRAMA) · 사진촬영 · 화장실 ── */}
         <div
           className={`${styles.navItem} ${styles.navKdrama} ${missingCls(promo)}`}
           title={tip(FIXED.promotion, promo)}
         >
-          <span className={styles.kdramaBox}>
-            <span className={styles.kdramaK}>K</span>
-            <span className={styles.kdramaWord}>DRAMA</span>
-          </span>
+          {fig('promo') ? (
+            <img className={styles.fill} src={fig('promo')} alt='' draggable={false} />
+          ) : (
+            <span className={styles.kdramaBox}>
+              <span className={styles.kdramaK}>K</span>
+              <span className={styles.kdramaWord}>DRAMA</span>
+            </span>
+          )}
           <span className={styles.liftBadge}>{badge(FIXED.promotion)}</span>
         </div>
         <div
@@ -257,7 +286,9 @@ export function InsadongRenewalStatsMirror({ kioskId, buttons, stats }: Props) {
           title={tip(FIXED.camera, camera)}
         >
           <span className={styles.cameraCircle}>
-            {camera?.imageUrl ? (
+            {fig('camera') ? (
+              <img src={fig('camera')} alt='' draggable={false} />
+            ) : camera?.imageUrl ? (
               <img src={camera.imageUrl} alt='' draggable={false} />
             ) : (
               <svg className={styles.cameraGlyph} viewBox='0 0 24 24' fill='currentColor'>
@@ -272,7 +303,13 @@ export function InsadongRenewalStatsMirror({ kioskId, buttons, stats }: Props) {
           title={tip(FIXED.restroom, restroom)}
         >
           <span className={styles.restroomCircle}>
-            {restroom?.imageUrl ? <img src={restroom.imageUrl} alt='' draggable={false} /> : '🚻'}
+            {fig('restroom') ? (
+              <img src={fig('restroom')} alt='' draggable={false} />
+            ) : restroom?.imageUrl ? (
+              <img src={restroom.imageUrl} alt='' draggable={false} />
+            ) : (
+              '🚻'
+            )}
           </span>
           <span className={styles.liftBadge}>{badge(FIXED.restroom)}</span>
         </div>
@@ -280,13 +317,17 @@ export function InsadongRenewalStatsMirror({ kioskId, buttons, stats }: Props) {
         <span className={`${styles.navLabel} ${styles.navLabelRestroom}`}>화장실</span>
 
         {/* ── 하단 배너(표시 전용 — 회전 배너 이미지는 앱 번들에만 있다) ── */}
-        <div className={styles.banner} aria-hidden>
-          <span className={styles.bannerStripe} />
-          <span className={styles.bannerCopy}>
-            <span className={styles.bannerTag}>배너 · 표시 전용</span>
-            <span className={styles.bannerTitle}>가상 한복 착장을 경험해보세요</span>
-          </span>
-        </div>
+        {fig('banner') ? (
+          <img className={styles.bannerArt} src={fig('banner')} alt='' aria-hidden draggable={false} />
+        ) : (
+          <div className={styles.banner} aria-hidden>
+            <span className={styles.bannerStripe} />
+            <span className={styles.bannerCopy}>
+              <span className={styles.bannerTag}>배너 · 표시 전용</span>
+              <span className={styles.bannerTitle}>가상 한복 착장을 경험해보세요</span>
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );
