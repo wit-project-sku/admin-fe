@@ -1,10 +1,11 @@
 // 지점별 상세 — 키오스크 홈 화면을 '실제 배치 그대로' 그리고 버튼마다 기간 통계를 얹는다.
 // 레이아웃은 아이콘 등록 관리의 실사 미러를 그대로 재사용한다(레이아웃 진실의 원천을 하나로 유지).
-// 단, 인사동 1·2·3 은 앱이 서버 좌표 없이 고정 리뉴얼 화면을 그리므로 리포트 전용 리뉴얼 미러를 쓴다.
+// 단, 인사동 1·2·3 과 오색시장·화성휴게소(2026-10 새 홈)는 앱이 서버 좌표 없이 고정 화면을 그리므로 리포트 전용 미러를 쓴다.
 // 표를 대체하는 화면이므로 선택(onSelect)을 넘기지 않아 읽기 전용으로만 쓴다.
 import { KioskMirrorGridApp, INSADONG_SKIN, OSAN_SKIN } from '@/features/kiosk/manage/KioskMirrorGridApp';
 import { KioskMirrorHwaseong } from '@/features/kiosk/manage/KioskMirrorHwaseong';
 import { InsadongRenewalStatsMirror, INSADONG_RENEWAL_KIOSK_IDS } from './InsadongRenewalStatsMirror';
+import { RedesignHomeStatsMirror, redesignSiteOf } from './RedesignHomeStatsMirror';
 import type { ButtonStat, ButtonStatMap } from '@/features/kiosk/manage/kioskButtonStatOverlay';
 import type { KioskButtonDto } from '@/hooks/kiosk-api/kioskButtonsTypes';
 import s from './StatReports.module.css';
@@ -31,6 +32,8 @@ export function KioskHomeStatsMirror({
   const isOsan = kioskId === 4 || kioskName.includes('오색') || kioskName.includes('오산');
   // 인사동 리뉴얼(1·2·3)은 DB line/position 이 아니라 앱의 고정 배치로 그린다.
   const renewalKioskId = kioskId != null && INSADONG_RENEWAL_KIOSK_IDS.has(kioskId) ? kioskId : null;
+  // 오색시장·화성휴게소 새 홈(2026-10) — 버튼 이름(#W004_아이콘NN)으로 칸을 찾는다.
+  const redesignSite = renewalKioskId == null ? redesignSiteOf(kioskId, kioskName) : null;
 
   return (
     <div className={s.mirrorWrap}>
@@ -40,6 +43,8 @@ export function KioskHomeStatsMirror({
       <div className={s.mirrorBoard}>
         {renewalKioskId != null ? (
           <InsadongRenewalStatsMirror kioskId={renewalKioskId} buttons={buttons} stats={stats} />
+        ) : redesignSite ? (
+          <RedesignHomeStatsMirror site={redesignSite} buttons={buttons} stats={stats} />
         ) : isHwaseong ? (
           <KioskMirrorHwaseong buttons={buttons} stats={stats} hideBanner />
         ) : (

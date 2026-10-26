@@ -9,6 +9,8 @@ import { buildButtonAi, buildShootingAi } from './aiAnalysis';
 import { chunkKioskCols } from './ShootingReportView';
 import { kioskButtonLabel } from '@/features/kiosk/manage/kioskButtonDisplay';
 import { KioskHomeStatsMirror } from './KioskHomeStatsMirror';
+import { isOnRedesignHome, redesignSiteOf } from './RedesignHomeStatsMirror';
+import type { KioskButtonDto } from '@/hooks/kiosk-api/kioskButtonsTypes';
 import { fmtMD, type KpiItem } from './statReportsMockData';
 import { NewOutfitsSection } from './NewOutfitsSection';
 import {
@@ -594,6 +596,50 @@ export type ReportKioskOption = { id: number; name: string };
 
 type KioskRow = NonNullable<KioskButtonStatsSummaryBlock['kioskButtonDetails']>[number];
 
+/** 오색시장·화성휴게소는 2026-10 새 홈에 없는 버튼을 집계하지 않는다(사용자 결정) — 그 행을 빼고 합계도 다시 맞춘다. */
+function isCountedRow(row: { kioskId: number; kioskName: string; buttonName?: string | null; buttonType: string }, catalog?: Record<string, KioskButtonDto[]>): boolean {
+  const site = redesignSiteOf(row.kioskId, row.kioskName);
+  return !site || isOnRedesignHome(site, row, catalog?.[row.kioskName] ?? []);
+}
+
+function withoutOffScreenButtons(
+  block: KioskButtonStatsSummaryBlock | null | undefined,
+  catalog?: Record<string, KioskButtonDto[]>,
+): KioskButtonStatsSummaryBlock | null {
+  if (!block) return null;
+  const rows = block.kioskButtonDetails ?? [];
+  const dropped = rows.filter((row) => !isCountedRow(row, catalog));
+  if (dropped.length === 0) return block;
+
+  // 버튼타입별 전 지점 합계(buttonDetails)에서도 뺀 만큼 덜어 낸다 — 같은 이름이 다른 지점에도 있을 수 있어 행째 지우지 않는다.
+  const minus = new Map<string, { clicks: number; duration: number }>();
+  for (const row of dropped) {
+    const cu = minus.get(row.buttonType) ?? { clicks: 0, duration: 0 };
+    cu.clicks += row.totalClicks;
+    cu.duration += row.totalDuration;
+    minus.set(row.buttonType, cu);
+  }
+  const buttonDetails = block.buttonDetails
+    .map((d) => {
+      const m = minus.get(d.buttonType);
+      if (!m) return d;
+      const totalClicks = Math.max(0, d.totalClicks - m.clicks);
+      const totalDuration = Math.max(0, d.totalDuration - m.duration);
+      return { ...d, totalClicks, totalDuration, avgDuration: totalClicks > 0 ? totalDuration / totalClicks : 0 };
+    })
+    .filter((d) => d.totalClicks > 0);
+  const totalClicks = Math.max(0, block.totalClicks - dropped.reduce((a, r) => a + r.totalClicks, 0));
+  const totalDuration = Math.max(0, block.totalDuration - dropped.reduce((a, r) => a + r.totalDuration, 0));
+  return {
+    ...block,
+    totalClicks,
+    totalDuration,
+    avgDuration: totalClicks > 0 ? totalDuration / totalClicks : 0,
+    buttonDetails,
+    kioskButtonDetails: rows.filter((row) => isCountedRow(row, catalog)),
+  };
+}
+
 export function ButtonLiveView({
   variant,
   anchor,
@@ -614,8 +660,15 @@ export function ButtonLiveView({
 }) {
   const r = variant === 'weekly' ? weekRangesOf(anchor) : monthRangesOf(ym);
   const prevLabel = variant === 'weekly' ? '전주' : '전월';
-  const { cur, prev, cum } = useButtonsLive(r.start, r.end, r.prevStart, r.prevEnd, true);
+  const live = useButtonsLive(r.start, r.end, r.prevStart, r.prevEnd, true);
   const catalog = useReportKioskButtons(true); // 홈 버튼 전체(클릭 0 포함)
+  // 오색·화성은 새 홈에 없는 버튼을 뺀 수치로 리포트 전체(합계·그래프·표·AI)를 만든다.
+  const curData = useMemo(() => withoutOffScreenButtons(live.cur.data, catalog.data), [live.cur.data, catalog.data]);
+  const prevData = useMemo(() => withoutOffScreenButtons(live.prev.data, catalog.data), [live.prev.data, catalog.data]);
+  const cumData = useMemo(() => withoutOffScreenButtons(live.cum.data, catalog.data), [live.cum.data, catalog.data]);
+  const cur = { ...live.cur, data: curData };
+  const prev = { ...live.prev, data: prevData };
+  const cum = { ...live.cum, data: cumData };
   // 그래프 계열 선택은 그래프 옆에 두므로 이 뷰가 갖는다. 지점 선택은 상단 바(패널)에서 내려온다.
   const [metric, setMetric] = useState<UsageMetric>('ALL');
   const effKiosk: 'ALL' | number = exportMode ? 'ALL' : kioskSel;
@@ -778,6 +831,8 @@ export function ButtonLiveView({
             });
             for (const hb of catalog.data?.[k] ?? []) {
               if (seen.has(hb.buttonType)) continue;
+              // 새 홈에 없는 버튼은 0회 행으로도 넣지 않는다(오색·화성).
+              if (!isCountedRow({ kioskId: kioskOrder.get(k) ?? -1, kioskName: k, buttonName: hb.buttonName, buttonType: hb.buttonType }, catalog.data)) continue;
               seen.add(hb.buttonType);
               merged.push({ key: hb.buttonType, label: kioskButtonLabel(hb.buttonType), clicks: 0, duration: 0, avg: 0, line: hb.line, position: hb.position });
             }
