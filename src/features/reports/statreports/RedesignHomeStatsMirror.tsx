@@ -19,18 +19,22 @@ import {
   type ButtonStatMap,
 } from '@/features/kiosk/manage/kioskButtonStatOverlay';
 import type { KioskButtonDto } from '@/hooks/kiosk-api/kioskButtonsTypes';
+import { reportHomeArt, type ReportHomeSite } from './reportHomeArt';
 import styles from './RedesignHomeStatsMirror.module.css';
 
 /** 칸 하나 = DB button_name 꼬리(조인 키) + 화면 표기(앱의 한국어 문구). */
 type Slot = { name: string; label: string; sub?: string; plate?: string };
 
+/** 카드 안 그림·글자 자리(카드 기준 px, Figma 값). */
+type CardGeom = { art: [number, number, number, number]; text: [number, number] };
+
 type Site = {
+  key: ReportHomeSite;
   /** button_name 머리 — `#W004_` */
   prefix: string;
   brand: string;
   accent: string;
-  /** 카드 3장의 바탕색(왼쪽부터) */
-  cardBg: readonly [string, string, string];
+  cardGeom: readonly [CardGeom, CardGeom, CardGeom];
   boardTitle: string;
   searchPlaceholder: string;
   promoText: string;
@@ -53,10 +57,15 @@ const FIXED = {
 const PHOTO_FLOW = ['혼자찍기', '같이찍기'] as const;
 
 const OSAEK: Site = {
+  key: 'osaek',
   prefix: '#W004_',
   brand: 'OSAEK MARKET',
   accent: '#1a4d7e',
-  cardBg: ['#f5f1ef', '#f3eae3', '#f5efe9'],
+  cardGeom: [
+    { art: [53, 57, 238, 205], text: [426, 104] },
+    { art: [328, 57, 127, 196], text: [57, 108] },
+    { art: [331, 68, 174, 174], text: [40, 108] },
+  ],
   boardTitle: '오늘의 상점',
   searchPlaceholder: '오색시장에 대해 검색해보세요!',
   promoText: 'K-DRAMA',
@@ -84,10 +93,15 @@ const OSAEK: Site = {
 };
 
 const HWASEONG: Site = {
+  key: 'hwaseong',
   prefix: '#W005_',
   brand: 'HWASEONG S/A',
   accent: '#005ab4',
-  cardBg: ['#ffffff', '#ffffff', '#ffffff'],
+  cardGeom: [
+    { art: [81, 59, 238, 205], text: [363, 104] },
+    { art: [294, 69, 196, 172], text: [57, 108] },
+    { art: [331, 68, 174, 174], text: [40, 108] },
+  ],
   boardTitle: '도로교통상황',
   searchPlaceholder: '화성휴게소에 대해 검색해보세요!',
   promoText: '스마트관광',
@@ -175,9 +189,12 @@ export function RedesignHomeStatsMirror({ site, buttons, stats }: Props) {
   const badge = (b: KioskButtonDto | null) => <ButtonStatBadge stat={statOf(b)} max={maxClicks} unit='cq' />;
   const missingCls = (b: KioskButtonDto | null) => (b ? '' : styles.missing);
   const tip = (b: KioskButtonDto | null, label: string) => (b ? b.buttonType : `${label} · 등록된 버튼 없음`);
+  const fig = (name: string) => reportHomeArt(site.key, name);
 
-  /** 버튼 이미지(DB) → 아이콘 키 글리프 → (버튼 없음) 이름. */
-  const art = (b: KioskButtonDto | null, label: string, glyphSize: number, plate?: string): ReactNode => {
+  /** Figma 그림 → 버튼 이미지(DB) → 아이콘 키 글리프 → (버튼 없음) 이름. */
+  const art = (figName: string, b: KioskButtonDto | null, label: string, glyphSize: number, plate?: string): ReactNode => {
+    const src = fig(figName);
+    if (src) return <img src={src} alt='' draggable={false} />;
     if (b?.imageUrl) return <img src={b.imageUrl} alt='' draggable={false} />;
     if (b) {
       return (
@@ -187,6 +204,11 @@ export function RedesignHomeStatsMirror({ site, buttons, stats }: Props) {
       );
     }
     return <span className={styles.missingPlate}>{label}</span>;
+  };
+  /** 고정 버튼(홈·언어·하단 3)은 Figma 그림을 그대로 쓰고, 없으면 대체 모양을 그린다. */
+  const figOr = (name: string, fallback: ReactNode): ReactNode => {
+    const src = fig(name);
+    return src ? <img src={src} alt='' draggable={false} /> : fallback;
   };
 
   const weather = find(FIXED.weather);
@@ -198,6 +220,7 @@ export function RedesignHomeStatsMirror({ site, buttons, stats }: Props) {
   const restroom = find(FIXED.restroom);
 
   const boardStyle = { transform: `scale(${SCALE})`, '--accent': site.accent } as CSSProperties;
+  const px = ([x, y, w, h]: readonly number[]) => ({ left: x, top: y, width: w, height: h }) as CSSProperties;
 
   return (
     <div className={styles.scaleWrap} style={{ width: TARGET_WIDTH, height: Math.round(3840 * SCALE) }}>
@@ -216,10 +239,12 @@ export function RedesignHomeStatsMirror({ site, buttons, stats }: Props) {
         {/* ── 공지 + 날씨 — x80 y297 2000×750 ── */}
         <div className={styles.notice}>
           <span className={styles.noticeRule} />
-          <p className={styles.noticeText}>공지 문구가 이 영역에 표시됩니다. (표시 전용)</p>
+          <p className={styles.noticeText}>
+            <b>키오스크 공지 문구</b>가 이 영역에 표시됩니다. 관리자 웹에서 등록한 <b>안내 문구</b>가 그대로 나옵니다.
+          </p>
           <div className={`${styles.weather} ${missingCls(weather)}`} title={tip(weather, '날씨')}>
             <span className={styles.temp}>18°</span>
-            <span className={styles.weatherEmoji}>⛅</span>
+            <span className={styles.weatherArt}>{figOr('weather', <span className={styles.weatherEmoji}>⛅</span>)}</span>
             {badge(weather)}
           </div>
         </div>
@@ -228,15 +253,35 @@ export function RedesignHomeStatsMirror({ site, buttons, stats }: Props) {
         <div className={styles.infoBoard} aria-hidden>
           <span className={styles.infoBoardTitle}>{site.boardTitle}</span>
           <span className={styles.infoBoardRule} />
+          {[
+            ['상점명', 454, 156],
+            ['카테고리', 712, 132],
+            ['위치', 946, 590],
+            ['현황', 1638, 117],
+          ].map(([label, left, width]) => (
+            <span key={label} className={styles.infoBoardCol} style={{ left, width } as CSSProperties}>
+              <span className={styles.infoBoardHead}>{label}</span>
+              <span className={styles.infoBoardValue}>—</span>
+            </span>
+          ))}
         </div>
+        <span className={styles.more}>
+          <svg viewBox='0 0 81 51' className={styles.moreArrow} aria-hidden>
+            <path d='M0 0h81L40.5 51Z' fill='currentColor' />
+          </svg>
+          상점 정보 더보기
+        </span>
 
         {/* ── 검색줄: 홈 · 검색 · 언어선택 — x80 y1136 ── */}
         <div className={styles.searchRow}>
           <span className={`${styles.homeBtn} ${missingCls(home)}`} title={tip(home, '홈')}>
-            <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinejoin='round'>
-              <path d='M3 11 12 3l9 8' />
-              <path d='M5 9.5V21h5v-6h4v6h5V9.5' />
-            </svg>
+            {figOr(
+              'home',
+              <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinejoin='round'>
+                <path d='M3 11 12 3l9 8' />
+                <path d='M5 9.5V21h5v-6h4v6h5V9.5' />
+              </svg>,
+            )}
           </span>
           <div className={`${styles.searchField} ${missingCls(search)}`} title={tip(search, '검색')}>
             <span className={styles.placeholder}>{site.searchPlaceholder}</span>
@@ -247,7 +292,7 @@ export function RedesignHomeStatsMirror({ site, buttons, stats }: Props) {
             <span className={`${styles.liftBadge} ${styles.liftBadgeSearch}`}>{badge(search)}</span>
           </div>
           <span className={`${styles.langBtn} ${missingCls(lang)}`} title={tip(lang, '언어선택')}>
-            KR
+            {figOr('lang', 'KR')}
             <span className={styles.liftBadge}>{badge(lang)}</span>
           </span>
         </div>
@@ -256,19 +301,19 @@ export function RedesignHomeStatsMirror({ site, buttons, stats }: Props) {
         <div className={styles.cards}>
           {site.cards.map((c, i) => {
             const b = find(c.name);
+            const g = site.cardGeom[i];
             return (
-              <div
-                key={c.name}
-                className={`${styles.card} ${styles[`card${i}`]} ${missingCls(b)}`}
-                style={{ background: site.cardBg[i] }}
-                title={tip(b, c.label)}
-              >
-                <span className={styles.cardCopy}>
+              <div key={c.name} className={`${styles.card} ${styles[`card${i}`]} ${missingCls(b)}`} title={tip(b, c.label)}>
+                <span className={styles.cardArt} style={px(g.art)}>
+                  {art(`card${i}`, b, c.label, 140)}
+                </span>
+                <span className={styles.cardCopy} style={{ left: g.text[0], top: g.text[1] }}>
                   <span className={styles.cardTitle}>{c.label}</span>
                   <span className={styles.cardSub}>{c.sub}</span>
                 </span>
-                <span className={styles.cardArt}>{art(b, c.label, 140)}</span>
-                {badge(b)}
+                <span className={styles.cardBadgeAnchor} style={px(g.art)}>
+                  {badge(b)}
+                </span>
               </div>
             );
           })}
@@ -281,7 +326,7 @@ export function RedesignHomeStatsMirror({ site, buttons, stats }: Props) {
           const pos = { left: 203 + (i % 4) * COL_STEP, top: 1821 + Math.floor(i / 4) * ROW_STEP } as CSSProperties;
           return (
             <div key={g.name} className={`${styles.tile} ${missingCls(b)}`} style={pos} title={tip(b, g.label)}>
-              <span className={styles.tileArt}>{art(b, g.label, 170, g.plate)}</span>
+              <span className={styles.tileArt}>{art(`tile-${g.name.replace('아이콘', '')}`, b, g.label, 170, g.plate)}</span>
               <span className={styles.tileText}>
                 <span className={styles.tileTitle}>{g.label}</span>
                 <span className={styles.tileSub}>{g.sub}</span>
@@ -291,28 +336,30 @@ export function RedesignHomeStatsMirror({ site, buttons, stats }: Props) {
           );
         })}
 
+        {/* ── 왼쪽 떠 있는 내비(홈·뒤로·교통약자) — 표시 전용, 버튼 행 없음 ── */}
+        <span className={styles.leftNav} aria-hidden>
+          {figOr('leftnav', null)}
+        </span>
+
         {/* ── 하단 3: 프로모션/스마트관광 · 사진촬영 · 화장실 ── */}
         <div className={`${styles.promo} ${missingCls(promo)}`} title={tip(promo, site.promoLabel)}>
-          <span className={styles.promoText}>{site.promoText}</span>
+          {figOr('promo', <span className={styles.promoText}>{site.promoText}</span>)}
           <span className={styles.liftBadge}>{badge(promo)}</span>
         </div>
         <span className={`${styles.actionLabel} ${styles.labelPromo}`}>{site.promoLabel}</span>
         <div className={`${styles.camera} ${missingCls(camera)}`} title={tip(camera, '사진촬영')}>
           <span className={styles.cameraCircle}>
-            {camera?.imageUrl ? (
-              <img src={camera.imageUrl} alt='' draggable={false} />
-            ) : (
+            {figOr(
+              'camera',
               <svg viewBox='0 0 24 24' fill='currentColor'>
                 <path d='M9 4 7.5 6H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-2.5L15 4H9Zm3 4.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9Zm0 2.2a2.3 2.3 0 1 0 0 4.6 2.3 2.3 0 0 0 0-4.6Z' />
-              </svg>
+              </svg>,
             )}
           </span>
           {badge(camera)}
         </div>
         <div className={`${styles.restroom} ${missingCls(restroom)}`} title={tip(restroom, '화장실')}>
-          <span className={styles.restroomCircle}>
-            {restroom?.imageUrl ? <img src={restroom.imageUrl} alt='' draggable={false} /> : '🚻'}
-          </span>
+          <span className={styles.restroomCircle}>{figOr('restroom', '🚻')}</span>
           <span className={styles.liftBadge}>{badge(restroom)}</span>
         </div>
         <span className={`${styles.actionLabel} ${styles.labelRestroom}`}>화장실</span>

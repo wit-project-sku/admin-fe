@@ -292,23 +292,23 @@
 
 .quick_ai .quickArt {
   left: 53px;
-  top: 32px;
-  width: 249px;
-  height: 214px;
+  top: 25px;
+  width: 238px;
+  height: 205px;
 }
 
 .quick_insarang .quickArt {
-  left: 330px;
-  top: 31px;
-  width: 190px;
-  height: 216px;
+  left: 328px;
+  top: 30px;
+  width: 127px;
+  height: 196px;
 }
 
 .quick_events .quickArt {
-  left: 330px;
-  top: 40px;
-  width: 190px;
-  height: 197px;
+  left: 331px;
+  top: 68px;
+  width: 174px;
+  height: 174px;
 }
 
 /* 클릭 배지의 기준 박스 — 각 카드의 그림 칸과 같은 자리(배지는 이 박스의 우상단에 붙는다) */
@@ -680,4 +680,40 @@
 .homeBtn.missing,
 .krBtn.missing {
   background: #c9c4be;
+}
+
+/* ── Figma 그림(reportHomeArt) 자리 ── */
+.weatherArt {
+  position: absolute;
+  left: 207px;
+  top: 21px;
+  width: 420px;
+  height: 291px;
+}
+
+.weatherArt img,
+.fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* 왼쪽 떠 있는 내비(홈·뒤로·교통약자) — Figma x48 y2043 85×325 */
+.leftNavArt {
+  position: absolute;
+  left: 48px;
+  top: 2043px;
+  width: 85px;
+  height: 325px;
+}
+
+/* 하단 배너 — Figma x0 y3267 2160×573 */
+.bannerArt {
+  position: absolute;
+  left: 0;
+  top: 3267px;
+  width: 2160px;
+  height: 573px;
+  object-fit: cover;
 }

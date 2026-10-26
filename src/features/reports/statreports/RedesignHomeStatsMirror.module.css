@@ -1,8 +1,8 @@
 /*
  * 오색시장·화성휴게소 2026-10 새 홈 미러(통계 리포트 전용).
- * 좌표는 kiosk-electron OsanHome / HwaseongHome .module.css 의 Figma 실좌표(2160×3840, 1px = Figma 1px)를 그대로 옮겼다.
- * 두 지점은 같은 틀이고 색(--accent)·문구만 다르다. 보드는 container-type: size 라 클릭 배지(unit='cq')가
- * 다른 미러와 같은 크기로 그려진다.
+ * 좌표·색은 Figma 홈 프레임(오색 7812:106458 · 화성 7904:104580, 2160×3840, 1px = Figma 1px)과 같다.
+ * 버튼 그림은 같은 프레임을 1:1 로 잘라 둔 것(reportHomeArt). 두 지점은 같은 틀이고 --accent·문구만 다르다.
+ * 보드는 container-type: size 라 클릭 배지(unit='cq')가 다른 미러와 같은 크기로 그려진다.
  */
 
 .scaleWrap {
@@ -29,16 +29,23 @@
   color: #232323;
 }
 
+.board img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 /* 버튼 행이 없는 칸 — 고정 배치라 비우지 않고 회색으로 그린다. 배지(0회)는 흐리지 않는다. */
 .missing .tileArt,
 .missing .tileText,
 .missing .cardArt,
 .missing .cardCopy,
 .missing .temp,
-.missing .weatherEmoji,
+.missing .weatherArt,
 .missing .placeholder,
 .missing .searchIcon,
-.missing .promoText,
+.missing > img,
 .missing .cameraCircle,
 .missing .restroomCircle {
   filter: grayscale(1);
@@ -100,7 +107,7 @@
   width: 2000px;
   height: 750px;
   border-radius: 45px;
-  background: rgba(108, 90, 70, 0.1);
+  background: #e5e8e8;
 }
 
 .noticeRule {
@@ -115,12 +122,17 @@
 .noticeText {
   position: absolute;
   left: 140px;
-  top: 114px;
+  top: 130px;
   width: 977px;
   margin: 0;
   font-size: 60px;
-  line-height: 1.35;
-  color: #6b6b6b;
+  line-height: 1.4;
+  font-weight: 400;
+  color: #000;
+}
+
+.noticeText b {
+  font-weight: 700;
 }
 
 .weather {
@@ -130,17 +142,25 @@
   width: 665px;
   height: 332px;
   border-radius: 45px;
-  background: rgba(255, 255, 255, 0.5);
-  display: flex;
-  align-items: center;
-  gap: 40px;
-  padding-left: 38px;
+  background: #f2f4f3;
 }
 
 .temp {
+  position: absolute;
+  left: 38px;
+  top: 21px;
   font-size: 145px;
   font-weight: 700;
+  line-height: 1;
   color: #333;
+}
+
+.weatherArt {
+  position: absolute;
+  left: 207px;
+  top: 21px;
+  width: 420px;
+  height: 291px;
 }
 
 .weatherEmoji {
@@ -156,25 +176,68 @@
   width: 1850px;
   height: 206px;
   border-radius: 45px;
-  background: rgba(255, 255, 255, 0.5);
+  background: #f2f4f4;
 }
 
 .infoBoardTitle {
   position: absolute;
   left: 57px;
-  top: 62px;
-  font-size: 64px;
+  top: 72px;
+  font-size: 55px;
   font-weight: 700;
-  color: var(--accent);
+  color: #000;
+  white-space: nowrap;
 }
 
 .infoBoardRule {
   position: absolute;
   left: 422px;
-  top: 94px;
+  top: 97px;
   width: 1376px;
   height: 3px;
   background: #c8bda9;
+}
+
+.infoBoardCol {
+  position: absolute;
+  top: 38px;
+  height: 125px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.infoBoardHead {
+  font-size: 38px;
+  line-height: 38px;
+  color: #c8bda9;
+  white-space: nowrap;
+}
+
+.infoBoardValue {
+  margin-top: 42px;
+  font-size: 45px;
+  line-height: 45px;
+  color: #232323;
+}
+
+.more {
+  position: absolute;
+  left: 910px;
+  top: 963px;
+  height: 51px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  font-size: 38px;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.moreArrow {
+  width: 62px;
+  height: 39px;
+  color: var(--accent);
 }
 
 /* ── 검색줄 — x80 y1136 2000×182 ── */
@@ -193,6 +256,7 @@
   width: 180px;
   height: 180px;
   border-radius: 50%;
+  overflow: hidden;
   background: var(--accent);
   color: #fff;
   display: grid;
@@ -217,7 +281,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 70px;
+  padding: 0 70px 0 75px;
 }
 
 .placeholder {
@@ -239,6 +303,7 @@
   width: 180px;
   height: 180px;
   border-radius: 50%;
+  overflow: hidden;
   background: var(--accent);
   color: #fff;
   font-size: 60px;
@@ -247,7 +312,7 @@
   place-items: center;
 }
 
-/* ── 카드 3장 — x120 y1407 1926×310 ── */
+/* ── 카드 3장 — x120 y1407 1926×310, 흰 바탕 ── */
 .cards {
   position: absolute;
   left: 120px;
@@ -261,27 +326,33 @@
   top: 0;
   height: 310px;
   border-radius: 30px;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 40px 0 56px;
-  box-sizing: border-box;
+  background: #fff;
 }
 
 .card0 { left: 0; width: 750px; }
 .card1 { left: 798px; width: 540px; }
 .card2 { left: 1386px; width: 540px; }
 
+.cardArt,
+.cardBadgeAnchor {
+  position: absolute;
+}
+
+.cardBadgeAnchor {
+  pointer-events: none;
+  white-space: nowrap; /* 좁은 카드 그림(위드마켓 127px)에서 'NN회' 가 두 줄로 꺾이지 않게 */
+}
+
 .cardCopy {
+  position: absolute;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  min-width: 0;
+  gap: 29px;
 }
 
 .cardTitle {
   font-size: 45px;
+  line-height: 45px;
   font-weight: 700;
   color: #000;
   white-space: nowrap;
@@ -289,22 +360,9 @@
 
 .cardSub {
   font-size: 38px;
+  line-height: 38px;
   color: #999;
   white-space: nowrap;
-}
-
-.cardArt {
-  flex: 0 0 auto;
-  width: 190px;
-  height: 190px;
-  display: grid;
-  place-items: center;
-}
-
-.cardArt img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
 }
 
 /* ── 격자 4×3 — 판 x135 y1772 1889×1494, 칸 300×412 ── */
@@ -315,7 +373,7 @@
   width: 1889px;
   height: 1494px;
   border-radius: 50px;
-  background: rgba(255, 255, 255, 0.7);
+  background: #fcfdfe;
 }
 
 .tile {
@@ -336,12 +394,6 @@
   place-items: center;
 }
 
-.tileArt img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
 .tileText {
   position: absolute;
   left: 0;
@@ -350,12 +402,13 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 14px;
   text-align: center;
 }
 
 .tileTitle {
   font-size: 38px;
+  line-height: 38px;
   font-weight: 500;
   color: #000;
   white-space: nowrap;
@@ -363,7 +416,8 @@
 
 .tileSub {
   font-size: 25px;
-  color: #000;
+  line-height: 25px;
+  color: #999;
   white-space: nowrap;
 }
 
@@ -394,6 +448,15 @@
   box-sizing: border-box;
 }
 
+/* ── 왼쪽 떠 있는 내비 — x48 y2043 85×325 (표시 전용) ── */
+.leftNav {
+  position: absolute;
+  left: 48px;
+  top: 2043px;
+  width: 85px;
+  height: 325px;
+}
+
 /* ── 하단 3 — 프로모션 x304 y3389 · 사진촬영 x950 y3338 · 화장실 x1632 y3389 ── */
 .promo {
   position: absolute;
@@ -402,16 +465,21 @@
   width: 381px;
   height: 235px;
   border-radius: 50px;
-  background: #ff4444;
+  overflow: visible;
   display: grid;
   place-items: center;
 }
 
 .promoText {
+  width: 100%;
+  height: 100%;
+  border-radius: 50px;
+  background: #ff4444;
   color: #fff;
   font-size: 56px;
   font-weight: 800;
-  letter-spacing: 1px;
+  display: grid;
+  place-items: center;
 }
 
 .camera {
@@ -438,19 +506,12 @@
   height: 170px;
 }
 
-.cameraCircle img,
-.restroomCircle img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
 .restroom {
   position: absolute;
   left: 1632px;
   top: 3389px;
   width: 234px;
-  height: 234px;
+  height: 235px;
 }
 
 .restroomCircle {
@@ -458,8 +519,6 @@
   height: 100%;
   border-radius: 50%;
   overflow: hidden;
-  background: #fff;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
   display: grid;
   place-items: center;
   font-size: 120px;
