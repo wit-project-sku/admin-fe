@@ -197,6 +197,8 @@ export function useBodyMeasurementPage() {
     setSelectedEventId((cur) => (cur === eventId ? null : eventId));
   }, []);
 
+  const closeDetail = useCallback(() => setSelectedEventId(null), []);
+
   const changeStart = useCallback((start: string) => {
     setRange((r) => ({ start, end: start && r.end && start > r.end ? start : r.end }));
   }, []);
@@ -322,6 +324,7 @@ export function useBodyMeasurementPage() {
     selectedEventId,
     selectedRow,
     toggleRow,
+    closeDetail,
     detail: detail.detail,
     detailPending: detail.isPending,
     detailError: detail.isError,

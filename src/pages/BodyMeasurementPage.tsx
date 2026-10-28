@@ -5,7 +5,7 @@ import shared from '@commons/shared.module.css';
 import SearchBar from '@components/common/SearchBar';
 import Pagination from '@components/common/Pagination';
 import DeleteModal from '@modals/DeleteModal';
-import { BodyMeasurementDetailPanel } from '../features/body-measurements/BodyMeasurementDetailPanel';
+import { BodyMeasurementDetailModal } from '../features/body-measurements/BodyMeasurementDetailModal';
 import { BodyMeasurementFilterChips } from '../features/body-measurements/BodyMeasurementFilterChips';
 import { BodyMeasurementTable } from '../features/body-measurements/BodyMeasurementTable';
 import { fmtShotSecond, kioskShortName } from '../features/body-measurements/bodyMeasurementFormat';
@@ -89,7 +89,7 @@ export default function BodyMeasurementPage() {
       </div>
 
       {row ? (
-        <BodyMeasurementDetailPanel
+        <BodyMeasurementDetailModal
           row={row}
           detail={p.detail}
           detailPending={p.detailPending}
@@ -99,6 +99,7 @@ export default function BodyMeasurementPage() {
           onCopyEventId={p.copyEventId}
           onDelete={p.openDelete}
           deleting={p.isDeleting}
+          onClose={p.closeDetail}
         />
       ) : null}
 

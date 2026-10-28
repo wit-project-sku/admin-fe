@@ -35,7 +35,7 @@ const COLUMNS: { label: string; num?: boolean; center?: boolean }[] = [
   { label: '성별·국적' },
 ];
 
-/** 체형 측정 목록. 숫자는 받은 값 그대로(반올림 없음), null 은 `—`. 행을 누르면 아래 상세가 열린다. */
+/** 체형 측정 목록. 숫자는 받은 값 그대로(반올림 없음), null 은 `—`. 행을 누르면 상세 모달이 열린다. */
 export function BodyMeasurementTable({
   loading,
   errorMessage,
