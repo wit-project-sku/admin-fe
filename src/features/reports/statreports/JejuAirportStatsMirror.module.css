@@ -1,0 +1,513 @@
+/*
+ * 제주국제공항 홈 미러 — 좌표·크기는 키오스크 앱 JejuHome.module.css / JejuFlightBoard.module.css 의 Figma 값(2160×3840) 그대로.
+ * 보드는 container-type: size 라 클릭 배지(unit='cq')가 다른 미러와 같은 크기로 그려진다.
+ */
+
+.scaleWrap {
+  position: relative;
+  overflow: hidden;
+  margin: 0 auto;
+  border-radius: 18px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+  background: #fbf8f3;
+}
+
+.board {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2160px;
+  height: 3840px;
+  overflow: hidden;
+  transform-origin: top left;
+  container-type: size;
+  background: #fbf8f3;
+  font-family: 'Noto Sans KR', 'Pretendard', 'Noto Sans', sans-serif;
+  color: #232323;
+}
+
+.board img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.board .bgImage {
+  position: absolute;
+  inset: 0;
+  object-fit: cover;
+}
+
+/* 버튼 행이 없는 칸 — 고정 배치라 비우지 않고 회색으로 그린다. 배지(0회)는 흐리지 않는다. */
+.missing .tileArt,
+.missing .tileText,
+.missing .cardArt,
+.missing .cardTitle,
+.missing .cardSub,
+.missing .searchPlaceholder,
+.missing .searchIcon,
+.missing > img {
+  filter: grayscale(1);
+  opacity: 0.4;
+}
+
+/* 작은 원·검색창은 우상단 배지가 그림을 덮는다 → 배지를 50px 위로 올린다 */
+.liftBadge {
+  position: absolute;
+  left: 0;
+  top: -50px;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* 검색 배지는 언어선택(KR) 배지와 겹치지 않게 안쪽으로 당긴다 */
+.liftBadgeSearch {
+  width: calc(100% - 140px);
+}
+
+/* ── 위치 · 날짜 ── */
+.topBar {
+  position: absolute;
+  left: 84px;
+  top: 125px;
+  width: 2000px;
+  height: 83px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.topLeft {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+}
+
+.board .locationIcon {
+  width: 63px;
+  height: 82px;
+}
+
+.siteName {
+  font-size: 68px;
+  font-weight: 700;
+  line-height: 1;
+  color: #ff7f0f;
+}
+
+.dateTime {
+  font-size: 68px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: pre;
+}
+
+/* ── 공지 + 날씨 ── */
+.notice {
+  position: absolute;
+  left: 80px;
+  top: 297px;
+  width: 2000px;
+  height: 750px;
+  border-radius: 45px;
+  background: rgba(108, 90, 70, 0.1);
+  overflow: hidden;
+}
+
+.noticeLead {
+  position: absolute;
+  left: 91px;
+  top: 114px;
+  display: flex;
+  align-items: center;
+  gap: 42px;
+  height: 242px;
+}
+
+.noticeRule {
+  flex: none;
+  width: 6px;
+  height: 100%;
+  border-radius: 4px;
+  background: #ff7f0f;
+}
+
+.noticeText {
+  width: 977px;
+  margin: 0;
+  font-size: 60px;
+  line-height: 70px;
+  color: #000;
+}
+
+.weather {
+  position: absolute;
+  left: 1260px;
+  top: 69px;
+  width: 665px;
+  height: 332px;
+  border-radius: 45px;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.weatherTemp {
+  position: absolute;
+  left: 38px;
+  top: 21px;
+  font-size: 145px;
+  font-weight: 700;
+  line-height: 1;
+  color: #333;
+}
+
+.board .weatherIcon {
+  position: absolute;
+  left: 208px;
+  top: 21px;
+  width: 419px;
+  height: 290px;
+}
+
+/* ── 운항 정보 보드 ── */
+.flightBoard {
+  position: absolute;
+  left: 155px;
+  top: 732px;
+  width: 1850px;
+  height: 206px;
+  border-radius: 45px;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.flightTitle {
+  position: absolute;
+  left: 57px;
+  top: 76px;
+  font-size: 55px;
+  font-weight: 700;
+  line-height: 1;
+  color: #000;
+}
+
+.flightRule {
+  position: absolute;
+  left: 330px;
+  top: 97px;
+  width: 1462px;
+  height: 3px;
+  background: #c8bda9;
+}
+
+.flightCol {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.flightHead {
+  position: absolute;
+  top: 38px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 38px;
+  font-weight: 600;
+  line-height: 1;
+  color: #c8bda9;
+}
+
+.flightValue {
+  position: absolute;
+  top: 118px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 45px;
+  line-height: 1;
+  color: #333;
+}
+
+.more {
+  position: absolute;
+  left: 895px;
+  top: 955px;
+  height: 78px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-size: 38px;
+  font-weight: 500;
+  color: #6c5a46;
+  white-space: nowrap;
+}
+
+.moreArrow {
+  width: 41px;
+  height: 26px;
+  color: #ff7f0f;
+}
+
+/* ── 검색줄 ── */
+.searchRow {
+  position: absolute;
+  left: 80px;
+  top: 1136px;
+  width: 2000px;
+  height: 182px;
+}
+
+.searchHome {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 180px;
+  height: 179px;
+}
+
+.searchField {
+  position: absolute;
+  left: 232px;
+  top: 0;
+  width: 1536px;
+  height: 182px;
+  box-sizing: border-box;
+  padding: 55px 75px;
+  border: 4.29px solid #ff7f0f;
+  border-radius: 120px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.searchPlaceholder {
+  font-size: 60px;
+  font-weight: 500;
+  line-height: 1.1;
+  color: #999;
+}
+
+.board .searchIcon {
+  flex: none;
+  width: 71px;
+  height: 68px;
+}
+
+.langBtn {
+  position: absolute;
+  left: 1820px;
+  top: 1px;
+  width: 180px;
+  height: 180px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #ff7f0f;
+  color: #fff;
+  font-size: 60px;
+  font-weight: 700;
+}
+
+/* ── 카드 3장 ── */
+.cards {
+  position: absolute;
+  left: 120px;
+  top: 1407px;
+  width: 1926px;
+  height: 310px;
+}
+
+.card {
+  position: absolute;
+  top: 0;
+  height: 310px;
+  border-radius: 30px;
+}
+
+.cardTitle {
+  position: absolute;
+  font-size: 45px;
+  font-weight: 700;
+  line-height: 1;
+  color: #000;
+  white-space: nowrap;
+}
+
+.cardSub {
+  position: absolute;
+  font-size: 38px;
+  line-height: 1;
+  color: #999;
+  white-space: nowrap;
+}
+
+.cardArt,
+.cardBadgeAnchor {
+  position: absolute;
+}
+
+.cardBadgeAnchor {
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.cardAi {
+  left: 0;
+  width: 670px;
+  background: #f5f1ef;
+}
+.cardAi .cardTitle { left: 356px; top: 104px; }
+.cardAi .cardSub { left: 356px; top: 178px; }
+.cardAi .cardArt,
+.cardAi .cardBadgeAnchor { left: 53px; top: 48px; width: 249px; height: 214px; }
+
+.cardTamnao {
+  left: 718px;
+  width: 570px;
+  background: #f3eae3;
+}
+.cardTamnao .cardTitle { left: 57px; top: 108px; }
+.cardTamnao .cardSub { left: 57px; top: 182px; }
+.cardTamnao .cardArt,
+.cardTamnao .cardBadgeAnchor { left: 352px; top: 65px; width: 180px; height: 180px; }
+.cardTamnao .cardArt { border-radius: 45px; overflow: hidden; }
+
+.cardEvents {
+  left: 1336px;
+  width: 590px;
+  background: #f5efe9;
+}
+.cardEvents .cardTitle { left: 50px; top: 108px; }
+.cardEvents .cardSub { left: 50px; top: 182px; }
+.cardEvents .cardArt,
+.cardEvents .cardBadgeAnchor { left: 365px; top: 88px; width: 177px; height: 177px; }
+
+/* ── 격자 ── */
+.panel {
+  position: absolute;
+  left: 135px;
+  top: 1772px;
+  width: 1889px;
+  height: 1494px;
+  border-radius: 50px;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.tile {
+  position: absolute;
+  width: 300px;
+  height: 412px;
+  text-align: center;
+}
+
+.tileArt {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 300px;
+  height: 300px;
+  border-radius: 86px;
+  overflow: hidden;
+}
+
+/* '준비중' 칸 — 앱처럼 그림 대신 회색 판, 제목도 회색. */
+.tilePlateBlank {
+  background: #e3e3e3;
+}
+
+.tileComingSoon .tileTitle {
+  color: #9a9a9a;
+}
+
+.tileText {
+  position: absolute;
+  left: 0;
+  top: 335px;
+  width: 300px;
+}
+
+.tileTitle {
+  display: block;
+  font-size: 38px;
+  font-weight: 700;
+  line-height: 1;
+  color: #000;
+  word-break: keep-all;
+}
+
+.tileSub {
+  display: block;
+  margin-top: 14px;
+  font-size: 25px;
+  line-height: 1;
+  color: #000;
+  opacity: 0.3;
+}
+
+/* ── 왼쪽 내비 · 교통약자 ── */
+.leftNav {
+  position: absolute;
+  left: 50px;
+  top: 2043px;
+  width: 85px;
+  height: 205px;
+}
+
+.accessibility {
+  position: absolute;
+  left: 50px;
+  top: 2283px;
+  width: 85px;
+  height: 85px;
+}
+
+/* ── 하단 3 ── */
+.fillme {
+  position: absolute;
+  left: 305px;
+  top: 3389px;
+  width: 379px;
+  height: 234px;
+}
+
+.camera {
+  position: absolute;
+  left: 950px;
+  top: 3338px;
+  width: 353px;
+  height: 355px;
+}
+
+.restroom {
+  position: absolute;
+  left: 1632px;
+  top: 3389px;
+  width: 233px;
+  height: 234px;
+}
+
+.board .round {
+  border-radius: 50%;
+}
+
+.actionLabel {
+  position: absolute;
+  top: 3648px;
+  width: 400px;
+  font-size: 38px;
+  font-weight: 700;
+  line-height: 1;
+  color: #000;
+  text-align: center;
+}
+
+.labelFillme {
+  left: 294px;
+}
+
+.labelRestroom {
+  left: 1549px;
+}
