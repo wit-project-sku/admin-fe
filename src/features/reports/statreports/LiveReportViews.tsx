@@ -26,9 +26,12 @@ import {
   useOutfitTopLive,
   useShootingDailyLive,
   useShootingMonthlyLive,
+  useShotsGender,
   useShotsHourly,
   useShotsWeekday,
   type CategoryTop,
+  type GenderCounts,
+  type ShotGenderData,
   type LiveOutfitCard,
   type OutfitByKioskData,
   type OutfitMonthlyData,
@@ -42,22 +45,23 @@ function winnerCell(w: { name: string; code: string; count: number } | null): st
   return w ? `${w.name} / ${w.count}건` : '—';
 }
 
-/** 카테고리별 1위 표 (전체 · 키오스크별) — 실데이터 */
-function LiveCatWinners({ rows }: { rows: CategoryTop[] }) {
+/** 카테고리별 1위 표 (전체 · 키오스크별) — 실데이터. 지점 리포트는 overallLabel 에 지점명을 넘겨 '전체' 대신 쓴다. */
+function LiveCatWinners({ rows, overallLabel = '전체' }: { rows: CategoryTop[]; overallLabel?: string }) {
   if (rows.length === 0) return <EmptyNote title='기간 내 카테고리 촬영 데이터가 없습니다' />;
   // 키오스크 열 = 전체 카테고리에 등장하는 키오스크 합집합(순서 안정)
   const kioskMap = new Map<number, string>();
   for (const r of rows) for (const k of r.byKiosk) if (!kioskMap.has(k.kioskId)) kioskMap.set(k.kioskId, k.kioskName);
-  const kiosks = [...kioskMap.entries()].map(([id, name]) => ({ id, name }));
+  // 열 순서는 키오스크 번호순 — 등장 순서로 두면 첫 카테고리에 나온 지점(예: 제주)이 맨 앞에 섰다
+  const kiosks = [...kioskMap.entries()].sort(([a], [b]) => a - b).map(([id, name]) => ({ id, name }));
   const idxChunks = chunkKioskCols(kiosks.map((_, i) => i));
   return (
     <>
       {idxChunks.map((chunk, ci) => (
-        <table key={ci} className={s.table} style={ci > 0 ? { marginTop: 10 } : undefined}>
+        <table key={ci} className={`${s.table} ${s.tableFixed}`} style={ci > 0 ? { marginTop: 10 } : undefined}>
           <thead>
             <tr>
               <th style={{ textAlign: 'left' }}>카테고리</th>
-              {ci === 0 ? <th>전체</th> : null}
+              {ci === 0 ? <th>{overallLabel}</th> : null}
               {chunk.map((i) => <th key={kiosks[i].id}>{kiosks[i].name}</th>)}
             </tr>
           </thead>
@@ -184,6 +188,34 @@ function LoadingCard({ text }: { text: string }) {
 }
 
 /** 빈 데이터 표시 — 집계 자체가 없는 구간을 명확히 알린다 */
+/* ── 지점별 상세의 성별 — 고른 의상 기준(남자 의상=남, 여자 의상=여, 2026-10-28 사용자 결정) ── */
+const GENDER_NOTE = '성별의 경우 선택한 의상(남성, 여성 전용)으로 판별. 성별 구분이 없는 의상은 총 건수에만 포함.';
+
+/** 지점(표시명)의 성별 집계. 이름을 빼면 전체 합계. 집계가 아직 없으면 undefined(건수만 표시). */
+function genderOf(d: ShotGenderData | undefined, kioskName?: string): GenderCounts | undefined {
+  if (!d) return undefined;
+  if (!kioskName) return d;
+  return d.kiosks.find((k) => k.kioskName === kioskName) ?? { male: 0, female: 0, unspecified: 0 };
+}
+
+/** "628건 (남 191 / 여 410)" */
+function CountWithGender({ count, g }: { count: number; g?: GenderCounts }) {
+  return (
+    <>
+      {count.toLocaleString()}건
+      {g ? <span className={s.genderSplit}> (남 {g.male.toLocaleString()} / 여 {g.female.toLocaleString()})</span> : null}
+    </>
+  );
+}
+
+/** 남·여 중 비율 "31.8% : 68.2%" — 남녀 모두 0 이면 — */
+function genderRatio(g?: GenderCounts): string {
+  const mf = g ? g.male + g.female : 0;
+  if (!g || mf === 0) return '—';
+  const m = Math.round((g.male / mf) * 1000) / 10;
+  return `${m}% : ${Math.round((100 - m) * 10) / 10}%`;
+}
+
 export function EmptyNote({ title, hint }: { title?: string; hint?: string | null }) {
   // hint === null 이면 서브텍스트를 아예 표시하지 않음. undefined면 기본 문구.
   const sub = hint === undefined ? '해당 기간에 수집된 데이터가 없어 표시할 내용이 없습니다.' : hint;
@@ -196,16 +228,17 @@ export function EmptyNote({ title, hint }: { title?: string; hint?: string | nul
 }
 
 /* ── 의상 TOP 10 (실물 사진) ── */
+/** 인기 의상 TOP 10 사진 카드. 순위표는 2026-10-28 사용자 요청으로 뺐다(카테고리별 1위는 다음 페이지). */
 function LiveOutfitGallery({ cards }: { cards: LiveOutfitCard[] }) {
   if (cards.length === 0) return <EmptyNote title='기간 내 의상 촬영 데이터가 없습니다' hint='의상 촬영이 집계되면 실물 사진과 함께 표시됩니다.' />;
   return (
     <>
-      <div className={s.gal}>
+      <div className={`${s.gal} ${s.galTop}`}>
         {cards.map((o) => (
           <div key={`${o.rank}-${o.code}`} className={s.gcard}>
             <span className={s.gcardRank}>{o.rank}</span>
             {o.imageUrl ? (
-              <img src={o.imageUrl} alt={o.name} className={s.gcardImg} style={{ objectFit: 'contain', width: '100%' }} />
+              <img src={o.imageUrl} alt={o.name} className={s.gcardImg} style={{ objectFit: 'contain' }} />
             ) : (
               <div className={s.gcardImg} style={{ background: 'linear-gradient(135deg, #e2e8f0, #f1f5f9)' }}>👘</div>
             )}
@@ -220,22 +253,6 @@ function LiveOutfitGallery({ cards }: { cards: LiveOutfitCard[] }) {
           </div>
         ))}
       </div>
-      <table className={s.table}>
-        <thead>
-          <tr><th style={{ width: '10%' }}>순위</th><th>의상</th><th>코드</th><th>카테고리</th><th>촬영 건수</th></tr>
-        </thead>
-        <tbody>
-          {cards.map((o) => (
-            <tr key={`t-${o.rank}-${o.code}`}>
-              <td className={o.rank <= 3 ? s.tdB : ''}>{o.rank}</td>
-              <td className={`${s.tdL} ${o.rank <= 3 ? s.tdB : ''}`}>{o.name}</td>
-              <td>{o.code}</td>
-              <td>{o.cat ?? '—'}</td>
-              <td className={o.rank <= 3 ? s.tdB : ''}>{o.cnt.toLocaleString()}건</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
     </>
   );
 }
@@ -250,6 +267,8 @@ export function ShootingWeeklyLiveView({ anchor }: { anchor?: string }) {
   const hourly = useShotsHourly(r.start, r.end, true);
   const catTop = useOutfitCategoryTop(r.start, r.end, true);
   const outfitMatrix = useOutfitByKiosk(r.start, r.end, true);
+  const gender = useShotsGender(r.start, r.end, true);
+  const genderPrev = useShotsGender(r.prevStart, r.prevEnd, true);
 
   if (cur.isPending) return <LoadingCard text='실데이터를 불러오는 중…' />;
   if (cur.isError) return <LoadingCard text='촬영 통계를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.' />;
@@ -339,10 +358,10 @@ export function ShootingWeeklyLiveView({ anchor }: { anchor?: string }) {
       <div data-report-page>
       <NewOutfitsSection periodLabel='이번 주' start={r.start} end={r.end} mode='live' />
       <div data-report-keep>
-      <Section title='지점별 상세' sub='전체 · 전주 대비'>
+      <Section title='지점별 상세' sub={`전체 · 전주 대비 · ${GENDER_NOTE}`}>
         <table className={s.table}>
           <thead>
-            <tr><th>지점</th><th>촬영</th><th>전주</th><th>증감</th></tr>
+            <tr><th>지점</th><th>촬영</th><th>전주</th><th>증감</th><th>남:여 비율</th></tr>
           </thead>
           <tbody>
             {kioskNames.map((k, i) => {
@@ -350,17 +369,19 @@ export function ShootingWeeklyLiveView({ anchor }: { anchor?: string }) {
               return (
                 <tr key={k}>
                   <td className={`${s.tdL} ${s.tdB}`}>{k}</td>
-                  <td className={s.tdB}>{siteTotals[i].toLocaleString()}건</td>
-                  <td>{sitePrev[i].toLocaleString()}건</td>
+                  <td className={s.tdB}><CountWithGender count={siteTotals[i]} g={genderOf(gender.data, k)} /></td>
+                  <td><CountWithGender count={sitePrev[i]} g={genderOf(genderPrev.data, k)} /></td>
                   <td>{b ? <Diff text={b.text.replace(/^ /, '').split(' (')[0].trim()} /> : '—'}</td>
+                  <td>{genderRatio(genderOf(gender.data, k))}</td>
                 </tr>
               );
             })}
             <tr className={s.sumRow}>
               <td className={s.tdL}>합계</td>
-              <td>{total.toLocaleString()}건</td>
-              <td>{prevTotal.toLocaleString()}건</td>
+              <td><CountWithGender count={total} g={genderOf(gender.data)} /></td>
+              <td><CountWithGender count={prevTotal} g={genderOf(genderPrev.data)} /></td>
               <td>{badge ? <Diff text={badge.text.split(' (')[0].replace('전주 대비 ', '')} /> : '—'}</td>
+              <td>{genderRatio(genderOf(gender.data))}</td>
             </tr>
           </tbody>
         </table>
@@ -407,6 +428,7 @@ export function ShootingWeeklyLiveView({ anchor }: { anchor?: string }) {
       </Section>
       </div>
 
+      {/* 카테고리별 1위는 독립 페이지 — 지점이 늘면 표가 둘로 나뉘어 TOP 10 과 한 장에 들어가지 않는다(2026-10-28 사용자 결정) */}
       <div data-report-page>
       <Section title='카테고리별 1위 의상' sub='전체 · 키오스크별 · 실데이터'>
         {catTop.isPending ? <LoadingCard text='불러오는 중…' /> : <LiveCatWinners rows={catTop.data ?? []} />}
@@ -425,39 +447,72 @@ export function ShootingWeeklyLiveView({ anchor }: { anchor?: string }) {
 }
 
 /* ── 촬영 리포트 (월간) ── */
-export function ShootingMonthlyLiveView({ ym }: { ym?: string }) {
+/**
+ * 월간 촬영 리포트. 지점을 고르면(kioskSel) 그 지점만의 리포트가 되고, PDF 도 화면 그대로 그 지점으로 나간다(2026-10-28 사용자 요청 —
+ * 키오스크별 분리 추출). 지점 목록은 그 달 촬영이 있는 지점(성별 집계 응답)에서 올려 준다.
+ */
+export function ShootingMonthlyLiveView({
+  ym,
+  kioskSel = 'ALL',
+  onKiosks,
+}: {
+  ym?: string;
+  kioskSel?: 'ALL' | number;
+  onKiosks?: (list: ReportKioskOption[]) => void;
+}) {
   const r = monthRangesOf(ym);
+  const kioskId = kioskSel === 'ALL' ? undefined : kioskSel;
   const cur = useShootingDailyLive(r.start, r.end, true);
   const monthly = useShootingMonthlyLive(true);
-  const outfits = useOutfitTopLive(r.start, r.end, true);
-  const hourly = useShotsHourly(r.start, r.end, true);
-  const weekday = useShotsWeekday(r.start, r.end, true);
+  const outfits = useOutfitTopLive(r.start, r.end, true, kioskId);
+  const hourly = useShotsHourly(r.start, r.end, true, kioskId);
+  const weekday = useShotsWeekday(r.start, r.end, true, kioskId);
   const catTop = useOutfitCategoryTop(r.start, r.end, true);
   const year = Number(r.start.slice(0, 4));
-  const outfitMonthlyMatrix = useOutfitMonthly(year, true);
+  const outfitMonthlyMatrix = useOutfitMonthly(year, true, kioskId);
+  const genderAll = useShotsGender(r.start, r.end, true);
+  const gender = useShotsGender(r.start, r.end, true, kioskId);
+  const genderPrev = useShotsGender(r.prevStart, r.prevEnd, true, kioskId);
+
+  const kioskOptions = genderAll.data?.kiosks;
+  useEffect(() => {
+    if (onKiosks && kioskOptions) onKiosks(kioskOptions.map((k) => ({ id: k.kioskId, name: k.kioskName })));
+  }, [onKiosks, kioskOptions]);
 
   if (cur.isPending || monthly.isPending) return <LoadingCard text='실데이터를 불러오는 중…' />;
   if (cur.isError) return <LoadingCard text='촬영 통계를 불러오지 못했습니다.' />;
 
-  const kioskNames = cur.data?.kioskNames ?? [];
+  // 지점 리포트면 일별·월별 표의 그 지점 열만 본다(열 이름 = 표시명).
+  const selName = kioskId ? kioskOptions?.find((k) => k.kioskId === kioskId)?.kioskName : undefined;
+  const rowTotal = (row: Record<string, string | number>) => Number((selName ? row[selName] : row.total) ?? 0);
+  const allNames = cur.data?.kioskNames ?? [];
+  const kioskNames = selName ? allNames.filter((n) => n === selName) : allNames;
   const rows = cur.data?.rows ?? [];
-  const total = rows.reduce((a, row) => a + Number(row.total ?? 0), 0);
+  const total = rows.reduce((a, row) => a + rowTotal(row), 0);
   const days = rows.length || 1;
-  const cumTotal = (monthly.data?.rows ?? []).reduce((a, row) => a + Number(row.total ?? 0), 0);
+  const cumTotal = (monthly.data?.rows ?? []).reduce((a, row) => a + rowTotal(row), 0);
+  // 카테고리별 1위 — 지점 리포트는 그 지점의 1위만(표의 '전체' 열 = 이 지점)
+  const catRows = kioskId
+    ? (catTop.data ?? []).flatMap((c) => {
+        const k = c.byKiosk.find((x) => x.kioskId === kioskId);
+        return k ? [{ ...c, overall: { name: k.name, code: k.code, count: k.count }, byKiosk: [] }] : [];
+      })
+    : (catTop.data ?? []);
+  const scope = selName ? ` · ${selName}` : '';
 
   // 전월 합계: 월별 집계에서 직전 2개월 행 비교
   const monthRows = monthly.data?.rows ?? [];
   const curMonthKey = r.start.slice(0, 7);
   const curIdx = monthRows.findIndex((row) => String(row.month) === curMonthKey);
   const prevRow = curIdx >= 0 ? monthRows[curIdx + 1] : undefined;
-  const prevTotal = Number(prevRow?.total ?? 0);
+  const prevTotal = prevRow ? rowTotal(prevRow) : 0;
   const badge = diffBadge(total, prevTotal, '건', '전월 대비');
 
   // 주차별 집계(7일 단위)
   const weeks: { label: string; cur: number }[] = [];
   for (let i = 0; i < rows.length; i += 7) {
     const chunk = rows.slice(i, i + 7);
-    weeks.push({ label: `${Math.floor(i / 7) + 1}주`, cur: chunk.reduce((a, row) => a + Number(row.total ?? 0), 0) });
+    weeks.push({ label: `${Math.floor(i / 7) + 1}주`, cur: chunk.reduce((a, row) => a + rowTotal(row), 0) });
   }
 
   const siteTotals = kioskNames.map((k) => rows.reduce((a, row) => a + Number(row[k] ?? 0), 0));
@@ -484,13 +539,15 @@ export function ShootingMonthlyLiveView({ ym }: { ym?: string }) {
   });
 
   return (
-    <div className={s.report} data-report-root data-report-title='월간 촬영 통계 리포트'>
+    <div className={s.report} data-report-root data-report-title={`월간 촬영 통계 리포트${selName ? `_${selName}` : ''}`}>
       <div data-report-page>
       <div className={s.head}>
         <div className={s.headRow}>
           <div>
-            <h2 className={s.headTitle}>월간 촬영 통계 리포트</h2>
-            <p className={s.headSub}>대상: {r.label} ({r.start} ~ {r.end}) · {kioskNames.length}개 지점 · 실데이터</p>
+            <h2 className={s.headTitle}>월간 촬영 통계 리포트{selName ? ` — ${selName}` : ''}</h2>
+            <p className={s.headSub}>
+              대상: {r.label} ({r.start} ~ {r.end}) · {selName ? '지점 리포트' : `${kioskNames.length}개 지점`} · 실데이터
+            </p>
           </div>
           <div className={s.headMeta}><b>월간 촬영 통계 리포트</b></div>
         </div>
@@ -534,10 +591,10 @@ export function ShootingMonthlyLiveView({ ym }: { ym?: string }) {
       <div data-report-page>
       <NewOutfitsSection periodLabel='이번 달' start={r.start} end={r.end} mode='live' />
       <div data-report-keep>
-      <Section title='지점별 상세' sub='전체 · 전월 대비'>
+      <Section title={selName ? '지점 상세' : '지점별 상세'} sub={`전체 · 전월 대비 · ${GENDER_NOTE}`}>
         <table className={s.table}>
           <thead>
-            <tr><th>지점</th><th>당월</th><th>전월</th><th>증감</th></tr>
+            <tr><th>지점</th><th>당월</th><th>전월</th><th>증감</th><th>남:여 비율</th></tr>
           </thead>
           <tbody>
             {kioskNames.map((k, i) => {
@@ -545,17 +602,19 @@ export function ShootingMonthlyLiveView({ ym }: { ym?: string }) {
               return (
                 <tr key={k}>
                   <td className={`${s.tdL} ${s.tdB}`}>{k}</td>
-                  <td className={s.tdB}>{siteTotals[i].toLocaleString()}건</td>
-                  <td>{sitePrev[i].toLocaleString()}건</td>
+                  <td className={s.tdB}><CountWithGender count={siteTotals[i]} g={genderOf(gender.data, k)} /></td>
+                  <td><CountWithGender count={sitePrev[i]} g={genderOf(genderPrev.data, k)} /></td>
                   <td>{b ? <Diff text={b.text.split(' (')[0].trim()} /> : '—'}</td>
+                  <td>{genderRatio(genderOf(gender.data, k))}</td>
                 </tr>
               );
             })}
             <tr className={s.sumRow}>
               <td className={s.tdL}>합계</td>
-              <td>{total.toLocaleString()}건</td>
-              <td>{prevTotal.toLocaleString()}건</td>
+              <td><CountWithGender count={total} g={genderOf(gender.data)} /></td>
+              <td><CountWithGender count={prevTotal} g={genderOf(genderPrev.data)} /></td>
               <td>{badge ? <Diff text={badge.text.split(' (')[0].replace('전월 대비 ', '')} /> : '—'}</td>
+              <td>{genderRatio(genderOf(gender.data))}</td>
             </tr>
           </tbody>
         </table>
@@ -565,14 +624,14 @@ export function ShootingMonthlyLiveView({ ym }: { ym?: string }) {
 </div>
 
       <div data-report-page>
-      <Section title='이번 달 인기 의상 TOP 10' sub='실물 등록 사진 · 실데이터'>
+      <Section title='이번 달 인기 의상 TOP 10' sub={`실물 등록 사진 · 실데이터${scope}`}>
         {outfits.isPending ? <LoadingCard text='의상 랭킹을 불러오는 중…' /> : <LiveOutfitGallery cards={outfits.data ?? []} />}
       </Section>
       </div>
 
       <div data-report-page>
-      <Section title='카테고리별 1위 의상' sub={`전체 · 키오스크별 (${r.label} 기준) · 실데이터`}>
-        {catTop.isPending ? <LoadingCard text='불러오는 중…' /> : <LiveCatWinners rows={catTop.data ?? []} />}
+      <Section title='카테고리별 1위 의상' sub={`${selName ? selName : '전체 · 키오스크별'} (${r.label} 기준) · 실데이터`}>
+        {catTop.isPending ? <LoadingCard text='불러오는 중…' /> : <LiveCatWinners rows={catRows} overallLabel={selName} />}
       </Section>
       </div>
 

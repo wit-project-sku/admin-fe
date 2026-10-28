@@ -22,8 +22,9 @@ function afterRender(): Promise<void> {
 
 export default function StatReportsPage() {
   const [isExporting, setIsExporting] = useState(false);
-  // 화면에서 지점·계열을 걸러 보고 있어도 문서는 항상 전체 리포트여야 한다(클라이언트 확정).
+  // 버튼 리포트는 화면에서 지점·계열을 걸러 보고 있어도 문서는 항상 전체 리포트여야 한다(클라이언트 확정).
   // 내보내기 동안만 전체로 렌더하고 끝나면 원래 보던 상태로 돌아간다.
+  // 월간 촬영 리포트는 예외 — 고른 지점이 그대로 문서가 된다(2026-10-28, 키오스크별 분리 추출).
   const [exportMode, setExportMode] = useState(false);
 
   const handleDoc = async () => {

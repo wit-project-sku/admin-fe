@@ -255,6 +255,28 @@
   color: var(--text-primary);
 }
 
+/* 칸 너비를 고르게 나눠 A4 폭을 넘지 않게 한다 — 지점이 늘면(제주 포함 6곳) 카테고리별 1위 표가 오른쪽에서 잘렸다(2026-10-28).
+   긴 의상 이름·지점 이름은 칸 안에서 줄바꿈한다. */
+.tableFixed {
+  table-layout: fixed;
+}
+
+.tableFixed th,
+.tableFixed td {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  padding-left: 6px;
+  padding-right: 6px;
+}
+
+/* 지점별 상세 — 건수 옆 성별 내역 "(남 191 / 여 410)" */
+.genderSplit {
+  font-weight: 500;
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
 .tdL {
   text-align: left;
   padding-left: 14px !important;
@@ -889,6 +911,31 @@
    인기 의상 TOP 10 은 기존 3/4 를 유지. */
 .gcard[data-no-rank] .gcardImg {
   aspect-ratio: 1 / 1;
+}
+
+/* 인기 의상 TOP 10 — 카드를 낮춘다(2026-10-28 사용자 요청).
+   사진은 3:4 비율 그대로 폭만 90% 로 줄여 가운데에 두고, 사진 아래 이름·건수 영역의 여백을 줄인다. */
+.galTop {
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.galTop .gcardImg {
+  width: 90%;
+  margin: 4px auto 0;
+}
+
+.galTop .gcardMeta {
+  padding: 3px 8px 0;
+}
+
+.galTop .gcardCat {
+  margin-top: 0;
+}
+
+.galTop .gcardFooter {
+  margin-top: 3px;
+  padding: 4px 8px;
 }
 
 

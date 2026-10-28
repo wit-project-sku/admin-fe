@@ -1,6 +1,6 @@
 // 촬영 통계 리포트 뷰(주간/월간) — 클라이언트 확정 구성:
 // 헤더 → KPI(첫 지표 강조) → 그래프 → AI 분석 → 지점별·일별(주차별) 상세
-// → 인기 의상 TOP10(사진+카테고리+표, 연속 배치) → 카테고리별 1위
+// → 인기 의상 TOP10(사진+카테고리, 순위표는 2026-10-28 제거) → 카테고리별 1위(독립 페이지)
 // → (주간) 키오스크별 전체 의상 통계 / (월간) 인기 의상 월별 통계
 import s from './StatReports.module.css';
 import { AiPanel, CompareBarChart, Diff, KpiRow, Section } from './StatReportParts';
@@ -40,16 +40,16 @@ function useRealisticCards(sample: OutfitCard[]): OutfitCard[] {
   });
 }
 
-/** 인기 의상 TOP 10 — 사진 갤러리(카테고리 텍스트 포함) + 수치 표 연속 배치 */
-function OutfitTop10({ cards, note }: { cards: OutfitCard[]; note: string }) {
+/** 인기 의상 TOP 10 — 사진 갤러리(카테고리 텍스트 포함). 순위표는 2026-10-28 뺐다(카테고리별 1위는 다음 페이지). */
+function OutfitTop10({ cards }: { cards: OutfitCard[] }) {
   return (
     <>
-      <div className={s.gal}>
+      <div className={`${s.gal} ${s.galTop}`}>
         {cards.map((o) => (
           <div key={`${o.rank}-${o.code}`} className={s.gcard}>
             <span className={s.gcardRank}>{o.rank}</span>
             {o.imageUrl ? (
-              <img src={o.imageUrl} alt={o.name} className={s.gcardImg} style={{ objectFit: 'contain', width: '100%' }} />
+              <img src={o.imageUrl} alt={o.name} className={s.gcardImg} style={{ objectFit: 'contain' }} />
             ) : (
               <div className={s.gcardImg} style={{ background: `linear-gradient(135deg, ${o.grad[0]}, ${o.grad[1]})` }}>👘</div>
             )}
@@ -64,28 +64,6 @@ function OutfitTop10({ cards, note }: { cards: OutfitCard[]; note: string }) {
           </div>
         ))}
       </div>
-      <table className={s.table}>
-        <thead>
-          <tr>
-            <th style={{ width: '8%' }}>순위</th><th>의상</th><th>코드</th><th>카테고리</th><th>촬영 건수</th><th>비중</th>
-          </tr>
-        </thead>
-        <tbody>
-          {cards.map((o) => (
-            <tr key={o.code}>
-              <td className={o.rank <= 3 ? s.tdB : ''}>{o.rank}</td>
-              <td className={`${s.tdL} ${o.rank <= 3 ? s.tdB : ''}`}>{o.name}</td>
-              <td>{o.code}</td>
-              <td>{o.cat}</td>
-              <td className={o.rank <= 3 ? s.tdB : ''}>{o.cnt.toLocaleString()}건</td>
-              <td>{o.share}</td>
-            </tr>
-          ))}
-          <tr className={s.sumRow}>
-            <td colSpan={6} className={s.tdL}>{note}</td>
-          </tr>
-        </tbody>
-      </table>
     </>
   );
 }
@@ -222,11 +200,10 @@ export function ShootingWeeklyView() {
 </div>
 
       <div data-report-page>
-      <Section title='이번 주 인기 의상 TOP 10' sub='사진(카테고리 표기) + 수치 표 — 자동 생성 시 실물 사진으로 삽입'>
-        <OutfitTop10 cards={cards} note={d.outfitTop10Note} />
+      <Section title='이번 주 인기 의상 TOP 10' sub='사진(카테고리 표기) — 자동 생성 시 실물 사진으로 삽입'>
+        <OutfitTop10 cards={cards} />
       </Section>
-
-</div>
+      </div>
 
       <div data-report-page>
       <Section title='카테고리별 1위 의상' sub='전체 · 키오스크별'>
@@ -355,11 +332,10 @@ export function ShootingMonthlyView() {
 </div>
 
       <div data-report-page>
-      <Section title='이번 달 인기 의상 TOP 10' sub='사진(카테고리 표기) + 수치 표 — 자동 생성 시 실물 사진으로 삽입'>
-        <OutfitTop10 cards={cards} note={d.outfitTop10Note} />
+      <Section title='이번 달 인기 의상 TOP 10' sub='사진(카테고리 표기) — 자동 생성 시 실물 사진으로 삽입'>
+        <OutfitTop10 cards={cards} />
       </Section>
-
-</div>
+      </div>
 
       <div data-report-page>
       <Section title='카테고리별 1위 의상' sub='전체 · 키오스크별 (6월 기준)'>
