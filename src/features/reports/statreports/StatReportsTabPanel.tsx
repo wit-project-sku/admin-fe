@@ -13,7 +13,7 @@ type ReportKind = 'shoot-weekly' | 'shoot-monthly' | 'button-weekly' | 'button-m
 
 const KINDS: { id: ReportKind; badge: string; green?: boolean; title: string; desc: string }[] = [
   { id: 'shoot-weekly', badge: '주간', title: '주간 촬영 통계 리포트', desc: '전주 대비 · 지점별(전체·오전/오후·요일별) 상세' },
-  { id: 'shoot-monthly', badge: '월간', green: true, title: '월간 촬영 통계 리포트', desc: '전월 대비 · 지점별(전체·오전/오후) 상세' },
+  { id: 'shoot-monthly', badge: '월간', green: true, title: '월간 촬영 통계 리포트', desc: '전월 대비 · 지점별(전체·오전/오후) 상세 · 지점별 추출' },
   { id: 'button-weekly', badge: '주간', title: '주간 버튼 사용 리포트', desc: '클릭·사용 시간 — 전체/키오스크별 아이콘 집계' },
   { id: 'button-monthly', badge: '월간', green: true, title: '월간 버튼 사용 리포트', desc: '전월 대비 · 키오스크별 아이콘별 상세' },
 ];
@@ -41,7 +41,7 @@ export function StatReportsTabPanel({ exportMode = false }: { exportMode?: boole
   const [anchor, setAnchor] = useState<string>(() => DEFAULT_ANCHOR);
   const [ym, setYm] = useState<string>(() => DEFAULT_YM);
 
-  // 지점 선택 — 버튼 리포트 전용. 옵션은 리포트 뷰가 실제로 가진 지점만 올려 준다.
+  // 지점 선택 — 버튼 리포트(화면 조회 전용)와 월간 촬영 리포트(PDF 도 그 지점으로). 옵션은 리포트 뷰가 실제로 가진 지점만 올려 준다.
   const [kioskSel, setKioskSel] = useState<'ALL' | number>('ALL');
   const [kioskOpts, setKioskOpts] = useState<ReportKioskOption[]>([]);
   const handleKiosks = useCallback((list: ReportKioskOption[]) => {
@@ -57,6 +57,7 @@ export function StatReportsTabPanel({ exportMode = false }: { exportMode?: boole
   }, [kioskOpts, kioskSel]);
 
   const isButton = kind === 'button-weekly' || kind === 'button-monthly';
+  const hasKioskPick = isButton || kind === 'shoot-monthly';
   const isWeekly = kind === 'shoot-weekly' || kind === 'button-weekly';
   const wk = weekRangesOf(anchor); // 선택 주 라벨 표시용
 
@@ -123,8 +124,8 @@ export function StatReportsTabPanel({ exportMode = false }: { exportMode?: boole
             지난 {isWeekly ? '주' : '달'}로
           </button>
 
-          {/* 지점 선택 — 화면 조회 전용. PDF 는 어떤 선택 상태에서도 전체 리포트로 나간다. */}
-          {isButton ? (
+          {/* 지점 선택 — 버튼 리포트는 화면 조회 전용(PDF 는 늘 전체), 월간 촬영 리포트는 고른 지점이 그대로 PDF 가 된다. */}
+          {hasKioskPick ? (
             <div className={s.periodKiosk}>
               <span className={s.periodLabel}>지점</span>
               <select
@@ -141,7 +142,9 @@ export function StatReportsTabPanel({ exportMode = false }: { exportMode?: boole
                   </option>
                 ))}
               </select>
-              <span className={s.filterHint}>PDF 다운로드는 항상 전체 리포트</span>
+              <span className={s.filterHint}>
+                {isButton ? 'PDF 다운로드는 항상 전체 리포트' : 'PDF 도 선택한 지점 리포트로 내려받습니다'}
+              </span>
             </div>
           ) : null}
         </div>
@@ -150,7 +153,7 @@ export function StatReportsTabPanel({ exportMode = false }: { exportMode?: boole
       <div className={`${s.a4wrap} ${s.printRoot}`}>
         {mode === 'live' ? (
           kind === 'shoot-weekly' ? <ShootingWeeklyLiveView anchor={anchor || undefined} />
-          : kind === 'shoot-monthly' ? <ShootingMonthlyLiveView ym={ym || undefined} />
+          : kind === 'shoot-monthly' ? <ShootingMonthlyLiveView ym={ym || undefined} kioskSel={kioskSel} onKiosks={handleKiosks} />
           : kind === 'button-weekly'
             ? <ButtonLiveView variant='weekly' anchor={anchor || undefined} exportMode={exportMode} kioskSel={kioskSel} onKiosks={handleKiosks} />
             : <ButtonLiveView variant='monthly' ym={ym || undefined} exportMode={exportMode} kioskSel={kioskSel} onKiosks={handleKiosks} />

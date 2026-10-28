@@ -181,12 +181,12 @@ function readRankingRows(raw: unknown): LiveOutfitCard[] {
   }));
 }
 
-export function useOutfitTopLive(start: string, end: string, enabled: boolean) {
+export function useOutfitTopLive(start: string, end: string, enabled: boolean, kioskId?: number) {
   return useQuery({
-    queryKey: ['stat-report-outfit-top', start, end],
+    queryKey: ['stat-report-outfit-top', start, end, kioskId ?? ''],
     queryFn: async () => {
       const res = await APIService.private.get('/admin/stats/outfit-ranking', {
-        params: { sort: 'POPULAR', pageNum: 1, pageSize: 10, start, end },
+        params: { sort: 'POPULAR', pageNum: 1, pageSize: 10, start, end, ...(kioskId ? { kioskId } : {}) },
       });
       return readRankingRows(res);
     },
@@ -294,12 +294,35 @@ export function useShotsHourly(start: string, end: string, enabled: boolean, kio
 export type WeekdayRow = { weekday: string; total: number; avg: number };
 
 /** 요일별 일평균 촬영 */
-export function useShotsWeekday(start: string, end: string, enabled: boolean) {
+export function useShotsWeekday(start: string, end: string, enabled: boolean, kioskId?: number) {
   return useQuery({
-    queryKey: ['stat-report-weekday', start, end],
+    queryKey: ['stat-report-weekday', start, end, kioskId ?? ''],
     queryFn: async () => {
-      const res = await APIService.private.get('/admin/stats/shots/weekday', { params: { start, end } });
+      const res = await APIService.private.get('/admin/stats/shots/weekday', {
+        params: { start, end, ...(kioskId ? { kioskId } : {}) },
+      });
       return unwrap<WeekdayRow[]>(res) ?? [];
+    },
+    enabled,
+    staleTime: 60_000,
+  });
+}
+
+export type GenderCounts = { male: number; female: number; unspecified: number };
+export type ShotGenderData = GenderCounts & {
+  kiosks: (GenderCounts & { kioskId: number; kioskName: string })[];
+};
+
+/** 성별(고른 의상 기준 — 남자 의상=남, 여자 의상=여) 촬영 집계 · 전체와 키오스크별 */
+export function useShotsGender(start: string, end: string, enabled: boolean, kioskId?: number) {
+  return useQuery({
+    queryKey: ['stat-report-gender', start, end, kioskId ?? ''],
+    queryFn: async () => {
+      const res = await APIService.private.get('/admin/stats/shots/gender', {
+        params: { start, end, ...(kioskId ? { kioskId } : {}) },
+      });
+      const data = unwrap<ShotGenderData>(res);
+      return { ...data, kiosks: (data?.kiosks ?? []).map((k) => ({ ...k, kioskName: kioskLabel(k.kioskName) })) };
     },
     enabled,
     staleTime: 60_000,
@@ -352,11 +375,13 @@ export type OutfitMonthlyData = {
 };
 
 /** 의상 × 월(1~12) 매트릭스 */
-export function useOutfitMonthly(year: number, enabled: boolean) {
+export function useOutfitMonthly(year: number, enabled: boolean, kioskId?: number) {
   return useQuery({
-    queryKey: ['stat-report-outfit-monthly', year],
+    queryKey: ['stat-report-outfit-monthly', year, kioskId ?? ''],
     queryFn: async () => {
-      const res = await APIService.private.get('/admin/stats/outfit-monthly', { params: { year } });
+      const res = await APIService.private.get('/admin/stats/outfit-monthly', {
+        params: { year, ...(kioskId ? { kioskId } : {}) },
+      });
       return unwrap<OutfitMonthlyData>(res);
     },
     enabled,
