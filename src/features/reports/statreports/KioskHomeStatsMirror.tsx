@@ -2,6 +2,7 @@
 // 레이아웃은 아이콘 등록 관리의 실사 미러를 그대로 재사용한다(레이아웃 진실의 원천을 하나로 유지).
 // 단, 인사동 1·2·3 과 오색시장·화성휴게소(2026-10 새 홈)·제주국제공항은 앱이 서버 좌표 없이 고정 화면을 그리므로 리포트 전용 미러를 쓴다.
 // 표를 대체하는 화면이므로 선택(onSelect)을 넘기지 않아 읽기 전용으로만 쓴다.
+// 홈 버튼은 집계에서 빠져(reportButtonRules) stats 에 없다 — 새 미러를 만들 때도 홈 칸에는 배지를 달지 않는다.
 import { KioskMirrorGridApp, INSADONG_SKIN, OSAN_SKIN } from '@/features/kiosk/manage/KioskMirrorGridApp';
 import { KioskMirrorHwaseong } from '@/features/kiosk/manage/KioskMirrorHwaseong';
 import { InsadongRenewalStatsMirror, INSADONG_RENEWAL_KIOSK_IDS } from './InsadongRenewalStatsMirror';
