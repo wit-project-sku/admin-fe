@@ -254,21 +254,22 @@
   color: var(--text-muted);
 }
 
-/* ───────────── 상세 패널 ───────────── */
+/* ───────────── 상세 모달 ───────────── */
+
+.detailModal {
+  max-width: 760px;
+}
 
 .detailCard {
   display: flex;
   gap: 20px;
   padding: 20px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
 }
 
 .photoBox {
   flex-shrink: 0;
-  width: 150px;
-  height: 200px;
+  width: 180px;
+  height: 240px;
   padding: 0;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -311,13 +312,6 @@ button.photoBox {
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
-}
-
-.detailTitle {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--text-primary);
-  letter-spacing: -0.01em;
 }
 
 .eventChip {
