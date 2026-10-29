@@ -1013,3 +1013,38 @@
   color: #1d4ed8;
   font-weight: 700;
 }
+
+/* ── 언어권 비율(촬영 리포트) — 전체 비율 막대 + 범례 ── */
+.langHead {
+  display: flex;
+  justify-content: space-between;
+  margin: 2px 0 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.langBar {
+  display: flex;
+  height: 22px;
+  border-radius: 5px;
+  overflow: hidden;
+  background: #eceae4;
+}
+.langBar > span {
+  height: 100%;
+}
+.langLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 8px 0 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.langLegend i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 5px;
+  border-radius: 2px;
+  vertical-align: -1px;
+}

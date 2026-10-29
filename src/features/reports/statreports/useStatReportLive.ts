@@ -329,6 +329,33 @@ export function useShotsGender(start: string, end: string, enabled: boolean, kio
   });
 }
 
+export type LanguageCount = { code: string; label: string; count: number };
+export type ShotLanguageData = {
+  languages: LanguageCount[];
+  unknown: number;
+  kiosks: { kioskId: number; kioskName: string; languages: LanguageCount[]; unknown: number }[];
+};
+
+/** 언어권(촬영 때 키오스크 화면 언어 기준) 촬영 집계 · 전체와 키오스크별 */
+export function useShotsLanguage(start: string, end: string, enabled: boolean, kioskId?: number) {
+  return useQuery({
+    queryKey: ['stat-report-language', start, end, kioskId ?? ''],
+    queryFn: async () => {
+      const res = await APIService.private.get('/admin/stats/shots/language', {
+        params: { start, end, ...(kioskId ? { kioskId } : {}) },
+      });
+      const data = unwrap<ShotLanguageData>(res);
+      return {
+        languages: data?.languages ?? [],
+        unknown: data?.unknown ?? 0,
+        kiosks: (data?.kiosks ?? []).map((k) => ({ ...k, kioskName: kioskLabel(k.kioskName) })),
+      };
+    },
+    enabled,
+    staleTime: 60_000,
+  });
+}
+
 export type CategoryTop = {
   category: string;
   overall: { name: string; code: string; count: number } | null;

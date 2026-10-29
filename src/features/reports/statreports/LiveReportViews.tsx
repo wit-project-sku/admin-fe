@@ -29,11 +29,13 @@ import {
   useShootingDailyLive,
   useShootingMonthlyLive,
   useShotsGender,
+  useShotsLanguage,
   useShotsHourly,
   useShotsWeekday,
   type CategoryTop,
   type GenderCounts,
   type ShotGenderData,
+  type ShotLanguageData,
   type LiveOutfitCard,
   type OutfitByKioskData,
   type OutfitMonthlyData,
@@ -218,6 +220,86 @@ function genderRatio(g?: GenderCounts): string {
   return `${m}% : ${Math.round((100 - m) * 10) / 10}%`;
 }
 
+const LANGUAGE_NOTE = '촬영할 때 키오스크에 선택된 화면 언어로 판별(국적이 아니라 언어권). 비율은 언어가 확인된 촬영 기준이고, 미확인은 언어를 보내기 전 키오스크 앱의 촬영.';
+
+/** 언어권 막대·범례 색 — 언어 코드별 고정(리포트마다 같은 색). */
+const LANGUAGE_COLORS: Record<string, string> = {
+  ko: '#378add',
+  en: '#1d9e75',
+  ja: '#d4537e',
+  zh: '#d85a30',
+  vi: '#7f77dd',
+  th: '#ba7517',
+  ru: '#888780',
+  id: '#97c459',
+};
+
+/** 언어권 비율 표 — 언어권 행 × 지점 열. 칸 = 비율과 건수, 집계가 없는 지점은 0. 지점이 많으면 다른 표처럼 여러 표로 나눈다. */
+function LanguageTable({ data, kioskNames }: { data?: ShotLanguageData; kioskNames: string[] }) {
+  if (!data || data.languages.length === 0) return <EmptyNote />;
+  const empty = { languages: data.languages.map((l) => ({ ...l, count: 0 })), unknown: 0 };
+  const cols = [
+    ...kioskNames.map((name) => ({ name, sum: false, ...(data.kiosks.find((k) => k.kioskName === name) ?? empty) })),
+    { name: '합계', sum: true, languages: data.languages, unknown: data.unknown },
+  ].map((c) => ({ ...c, known: c.languages.reduce((a, l) => a + l.count, 0) }));
+  const total = cols[cols.length - 1];
+  const pct = (n: number) => (total.known > 0 ? Math.round((n / total.known) * 1000) / 10 : 0);
+  return (
+    <>
+      {/* 전체 비율 막대 — 언어가 확인된 촬영 기준 */}
+      <div className={s.langHead}>
+        <span>전체 · 언어 확인 {total.known.toLocaleString()}건</span>
+        <span>미확인 {total.unknown.toLocaleString()}건</span>
+      </div>
+      <div className={s.langBar}>
+        {total.known > 0
+          ? data.languages.map((l) => (
+              <span key={l.code} style={{ width: `${pct(l.count)}%`, background: LANGUAGE_COLORS[l.code] ?? '#b4b2a9' }} />
+            ))
+          : null}
+      </div>
+      <div className={s.langLegend}>
+        {data.languages.map((l) => (
+          <span key={l.code}>
+            <i style={{ background: LANGUAGE_COLORS[l.code] ?? '#b4b2a9' }} />
+            {l.label} {total.known > 0 ? `${pct(l.count)}%` : '—'}
+          </span>
+        ))}
+      </div>
+      {chunkKioskCols(cols, 4, 4).map((chunk, idx) => (
+        <table key={chunk[0].name} className={s.table} style={idx > 0 ? { marginTop: 12 } : undefined}>
+          <thead>
+            <tr>
+              <th>언어권</th>
+              {chunk.map((c) => <th key={c.name}>{c.name}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {data.languages.map((l, i) => (
+              <tr key={l.code}>
+                <td className={`${s.tdL} ${s.tdB}`}>{l.label}</td>
+                {chunk.map((c) => {
+                  const n = c.languages[i]?.count ?? 0;
+                  return (
+                    <td key={c.name} className={c.sum ? s.tdB : undefined}>
+                      {c.known > 0 ? `${Math.round((n / c.known) * 1000) / 10}%` : '—'}
+                      {c.known > 0 ? <span className={s.genderSplit}> ({n.toLocaleString()})</span> : null}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+            <tr className={s.sumRow}>
+              <td className={s.tdL}>미확인</td>
+              {chunk.map((c) => <td key={c.name}>{c.unknown.toLocaleString()}건</td>)}
+            </tr>
+          </tbody>
+        </table>
+      ))}
+    </>
+  );
+}
+
 export function EmptyNote({ title, hint }: { title?: string; hint?: string | null }) {
   // hint === null 이면 서브텍스트를 아예 표시하지 않음. undefined면 기본 문구.
   const sub = hint === undefined ? '해당 기간에 수집된 데이터가 없어 표시할 내용이 없습니다.' : hint;
@@ -271,6 +353,7 @@ export function ShootingWeeklyLiveView({ anchor }: { anchor?: string }) {
   const outfitMatrix = useOutfitByKiosk(r.start, r.end, true);
   const gender = useShotsGender(r.start, r.end, true);
   const genderPrev = useShotsGender(r.prevStart, r.prevEnd, true);
+  const language = useShotsLanguage(r.start, r.end, true);
 
   if (cur.isPending) return <LoadingCard text='실데이터를 불러오는 중…' />;
   if (cur.isError) return <LoadingCard text='촬영 통계를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.' />;
@@ -391,6 +474,12 @@ export function ShootingWeeklyLiveView({ anchor }: { anchor?: string }) {
       </div>
 
       <div data-report-keep>
+      <Section title='언어권 비율' sub={LANGUAGE_NOTE}>
+        <LanguageTable data={language.data} kioskNames={kioskNames} />
+      </Section>
+      </div>
+
+      <div data-report-keep>
       <Section title='일별 상세' sub='키오스크 세로 × 일자 가로'>
         {rows.length === 0 ? (
           <EmptyNote />
@@ -475,6 +564,7 @@ export function ShootingMonthlyLiveView({
   const genderAll = useShotsGender(r.start, r.end, true);
   const gender = useShotsGender(r.start, r.end, true, kioskId);
   const genderPrev = useShotsGender(r.prevStart, r.prevEnd, true, kioskId);
+  const language = useShotsLanguage(r.start, r.end, true, kioskId);
 
   const kioskOptions = genderAll.data?.kiosks;
   useEffect(() => {
@@ -620,6 +710,12 @@ export function ShootingMonthlyLiveView({
             </tr>
           </tbody>
         </table>
+      </Section>
+      </div>
+
+      <div data-report-keep>
+      <Section title='언어권 비율' sub={LANGUAGE_NOTE}>
+        <LanguageTable data={language.data} kioskNames={kioskNames} />
       </Section>
       </div>
 
