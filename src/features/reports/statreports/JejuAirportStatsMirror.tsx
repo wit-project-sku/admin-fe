@@ -1,14 +1,17 @@
-// 통계 리포트 전용 — 제주국제공항(W008) 홈 화면 미러, 2026-10-28 홈 격자 개편판.
+// 통계 리포트 전용 — 제주국제공항(W008) 홈 화면 미러, 2026-10-29 홈 격자 4·3·4 개편판.
 //
 // 키오스크 앱(kiosk-electron JejuHome, Figma 6439:71456)이 고정 배치로 그리는 화면을 같은 좌표로 옮겼다 —
-// 위치·날짜 · 공지/날씨 · 운항 정보 보드 · 검색줄 · 카드 3 · 격자 4×3 · 필미/사진촬영/화장실.
-// 10-28 개편: 탐나오·제주큐랑이 위드마켓 카드 자리로, 지역화폐↔TAX-FREE 자리 바꿈, 위드마켓·TAX-FREE·기부는 회색 '준비중',
-// 도와줘 칸 제목은 '제주공항 안내'. 이 배치는 DB line/position 과 맞지 않아(앱도 CMS 순서를 쓰지 않는다) 좌표를 여기 적는다.
+// 위치·날짜 · 공지/날씨 · 운항 정보 보드 · 검색줄 · 카드 3 · 격자 4·3·4 · 스마트 헬스케어/사진촬영/화장실.
+// 10-29 개편: 카드 가운데는 탐나오만, 격자 1줄 끝에 제주큐랑(새 버튼), 2줄은 위 카드 3장과 같은 카드 3장(여기는 제주도·안녕·
+// 제주공항 안내), 3줄은 환율·지역화폐·렌트카·오늘의 날씨(새 버튼). 기부·위드마켓·TAX-FREE 칸은 화면에서 빠졌다.
+// 제주큐랑·제주공항 안내 그림은 따로 받기로 해 아직 없다(빈 판 / 그림 없음).
+// 이 배치는 DB line/position 과 맞지 않아(앱도 CMS 순서를 쓰지 않는다) 좌표를 여기 적는다.
 //
 // - 칸은 DB `button_name`(#W008_아이콘NN)으로 찾는다 — 앱은 표시 문구가 아니라 CMS button_type 으로 터치를 기록하고,
 //   button_name 은 그 행의 고정 슬롯이다(오색·화성 미러와 같은 방식).
-// - 필미(FillMe)는 DB 버튼 행이 없어 앱이 이름('필미')만으로 기록한다 → 집계도 그 이름으로 찾는다.
-// - '준비중' 칸 3개(예전 기부·위드마켓·TAX-FREE 자리)는 버튼이 없는 빈 자리다 — '준비중' 글자만, 배지·호버 없음(집계에서도 뺀다, jejuAirportHome).
+// - 스마트 헬스케어(FillMe)는 아이콘19(옛 '프로모션' 행, 2026-10-29 V205 에서 이름 변경). 그 전에는 앱이 이 행과 잇지 않아
+//   기록이 없다.
+// - 예전 '준비중' 버튼 3개(기부·위드마켓·TAX-FREE)는 집계에서 계속 뺀다(jejuAirportHome).
 import type { CSSProperties, ReactNode } from 'react';
 import {
   ButtonStatBadge,
@@ -23,33 +26,46 @@ import styles from './JejuAirportStatsMirror.module.css';
 type Slot = { name: string; label: string; sub: string; art: string };
 
 const PREFIX = '#W008_';
-/** DB 행이 없는 버튼 — 앱이 기록하는 이름(button_type) 그대로. */
-const FILLME_TYPE = '필미';
-
-const FIXED = { home: '아이콘01', search: '아이콘02', language: '아이콘03', camera: '아이콘20', restroom: '아이콘21' } as const;
+const FIXED = {
+  home: '아이콘01',
+  search: '아이콘02',
+  language: '아이콘03',
+  fillme: '아이콘19',
+  camera: '아이콘20',
+  restroom: '아이콘21',
+} as const;
 
 /** 카드 3장 — 앱 AIRPORT_CARDS. 그림 자리는 카드 기준 px(JejuHome.module.css). */
 const CARDS: readonly (Slot & { variant: 'cardAi' | 'cardTamnao' | 'cardEvents' })[] = [
   { name: '아이콘04', label: "'제주' 뭐하지", sub: 'AI 검색하기', art: 'card-ai', variant: 'cardAi' },
-  { name: '아이콘17', label: '탐나오·제주큐랑', sub: '제주공공플랫폼', art: 'tile-tamnao', variant: 'cardTamnao' },
+  { name: '아이콘17', label: '탐나오', sub: '제주공공플랫폼', art: 'tile-tamnao', variant: 'cardTamnao' },
   { name: '아이콘06', label: '제주도 이벤트', sub: '제주행사', art: 'card-events', variant: 'cardEvents' },
 ];
 
-/** 격자 4×3 — 앱 TILES_AIRPORT 의 읽기 순서. null = 버튼 없는 '준비중' 빈 자리. */
-const GRID: readonly (Slot | null)[] = [
-  { name: '아이콘07', label: "'제주'뭐먹지", sub: '맛집 추천', art: 'tile-eat' },
-  { name: '아이콘08', label: "'제주'뭐사지", sub: '쇼핑 추천', art: 'tile-shop' },
-  { name: '아이콘09', label: '숙박안내', sub: '제주 숙소 모음', art: 'tile-lodging' },
-  { name: '아이콘18', label: '지역화폐', sub: '탐나는전', art: 'tile-localpay' },
-  { name: '아이콘11', label: '여기는 제주도', sub: '관광지 추천', art: 'tile-about' },
-  { name: '아이콘12', label: "안녕 '귤이'", sub: '귤이 소개', art: 'tile-hello' },
-  { name: '아이콘13', label: '제주공항 안내', sub: '편의시설 안내', art: 'tile-help' },
-  { name: '아이콘14', label: '렌트카', sub: '간편 예약', art: 'tile-rentcar' },
-  { name: '아이콘15', label: '환율', sub: '환율 계산기', art: 'tile-exchange' },
-  null,
-  null,
-  null,
+/** 격자 4·3·4 — 앱 TILES_AIRPORT 의 읽기 순서. 가운데 줄은 위 카드와 같은 카드 3장(MID_VARIANTS). */
+const GRID: readonly (readonly Slot[])[] = [
+  [
+    { name: '아이콘07', label: "'제주'뭐먹지", sub: '맛집 추천', art: 'tile-eat' },
+    { name: '아이콘08', label: "'제주'뭐사지", sub: '쇼핑 추천', art: 'tile-shop' },
+    { name: '아이콘09', label: '숙박안내', sub: '제주 숙소 모음', art: 'tile-lodging' },
+    { name: '아이콘22', label: '제주큐랑', sub: 'QR 여행정보', art: '' },
+  ],
+  [
+    { name: '아이콘11', label: '여기는 제주도', sub: '관광지 추천', art: 'tile-about' },
+    { name: '아이콘12', label: "안녕 '귤이'", sub: '귤이 소개', art: 'tile-hello' },
+    { name: '아이콘13', label: '제주공항 안내', sub: '편의시설 안내', art: '' },
+  ],
+  [
+    { name: '아이콘15', label: '환율', sub: '환율 계산기', art: 'tile-exchange' },
+    { name: '아이콘18', label: '지역화폐', sub: '탐나는전', art: 'tile-localpay' },
+    { name: '아이콘14', label: '렌트카', sub: '간편 예약', art: 'tile-rentcar' },
+    { name: '아이콘23', label: '오늘의 날씨', sub: '제주 날씨 예보', art: 'weather-sun' },
+  ],
 ];
+/** 가운데 줄 카드 — 위 카드 3장의 자리(앱 MID_CARD_VARIANTS). */
+const MID_VARIANTS = ['cardAi', 'cardTamnao', 'cardEvents'] as const;
+/** 날씨 칸 — 그림 대신 하늘색 판에 날씨 아이콘·기온(앱은 실시간 날씨를 그린다). */
+const WEATHER_SLOT = '아이콘23';
 
 /** 운항 정보 보드 머리 — 열 가운데 x(보드 기준, 앱 JejuFlightBoard COLUMNS). */
 const FLIGHT_COLUMNS: readonly [string, number][] = [
@@ -67,6 +83,7 @@ const ZERO: ButtonStat = { clicks: 0, durationSec: 0, avgSec: 0 };
 /** 격자 한 칸 간격 — 300 폭 + 180 틈, 412 높이 + 80 틈(앱 COL_STEP/ROW_STEP). */
 const COL_STEP = 480;
 const ROW_STEP = 492;
+
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 /** `2025-09-13(Mon)  ㅣ  06:00` — 앱 상단과 같은 형식. */
@@ -100,7 +117,7 @@ export function JejuAirportStatsMirror({ buttons, stats }: Props) {
   const lang = find(FIXED.language);
   const camera = find(FIXED.camera);
   const restroom = find(FIXED.restroom);
-  const fillmeStat = stats.get(FILLME_TYPE) ?? ZERO;
+  const fillme = find(FIXED.fillme);
   const bg = reportHomeArt('jeju', 'bg');
 
   return (
@@ -181,32 +198,54 @@ export function JejuAirportStatsMirror({ buttons, stats }: Props) {
           })}
         </div>
 
-        {/* ── 격자 4×3 — 판 x135 y1772, 칸 x203 y1821 ── */}
-        <div className={styles.panel} />
-        {GRID.map((g, i) => {
-          const pos = { left: 203 + (i % 4) * COL_STEP, top: 1821 + Math.floor(i / 4) * ROW_STEP } as CSSProperties;
-          if (!g) {
-            return (
-              <div key={`empty-${i}`} className={`${styles.tile} ${styles.tileComingSoon}`} style={pos}>
-                <span className={`${styles.tileArt} ${styles.tilePlateBlank}`} />
-                <span className={styles.tileText}>
-                  <span className={styles.tileTitle}>준비중</span>
-                </span>
-              </div>
-            );
-          }
-          const b = find(g.name);
-          return (
-            <div key={g.name} className={`${styles.tile} ${missingCls(b)}`} style={pos} title={tip(b, g.label)}>
-              <span className={styles.tileArt}>{img(g.art)}</span>
-              <span className={styles.tileText}>
-                <span className={styles.tileTitle}>{g.label}</span>
-                <span className={styles.tileSub}>{g.sub}</span>
-              </span>
-              {badge(b)}
+        {/* ── 격자 4·3·4 — 판 x135 y1772, 칸 x203 y1821 ── */}
+        <div className={`${styles.panel} ${styles.panelCards}`} />
+        {GRID.map((row, r) =>
+          row.length === 3 ? (
+            // 가운데 줄 — 위 카드와 같은 카드 3장, 판 위에(앱 .cardsMid: y2364).
+            <div key={`mid-${r}`} className={`${styles.cards} ${styles.cardsMid}`}>
+              {row.map((g, c) => {
+                const b = find(g.name);
+                return (
+                  <div
+                    key={g.name}
+                    className={`${styles.card} ${styles[MID_VARIANTS[c]]} ${missingCls(b)}`}
+                    title={tip(b, g.label)}
+                  >
+                    <span className={styles.cardTitle}>{g.label}</span>
+                    <span className={styles.cardSub}>{g.sub}</span>
+                    {g.art ? <span className={styles.cardArt}>{img(g.art)}</span> : null}
+                    <span className={styles.cardBadgeAnchor}>{badge(b)}</span>
+                  </div>
+                );
+              })}
             </div>
-          );
-        })}
+          ) : (
+            row.map((g, c) => {
+              const pos = { left: 203 + c * COL_STEP, top: 1821 + r * ROW_STEP } as CSSProperties;
+              const b = find(g.name);
+              return (
+                <div key={g.name} className={`${styles.tile} ${missingCls(b)}`} style={pos} title={tip(b, g.label)}>
+                  {g.name === WEATHER_SLOT ? (
+                    <span className={`${styles.tileArt} ${styles.weatherPlate}`}>
+                      {img(g.art, styles.weatherPlateIcon)}
+                      <span className={styles.weatherPlateTemp}>18˚</span>
+                    </span>
+                  ) : g.art ? (
+                    <span className={styles.tileArt}>{img(g.art)}</span>
+                  ) : (
+                    <span className={`${styles.tileArt} ${styles.tilePlateEmpty}`} />
+                  )}
+                  <span className={styles.tileText}>
+                    <span className={styles.tileTitle}>{g.label}</span>
+                    <span className={styles.tileSub}>{g.sub}</span>
+                  </span>
+                  {badge(b)}
+                </div>
+              );
+            })
+          ),
+        )}
 
         {/* ── 왼쪽 떠 있는 내비(홈·뒤로) + 교통약자 — 표시 전용 ── */}
         <span className={styles.leftNav} aria-hidden>
@@ -216,10 +255,10 @@ export function JejuAirportStatsMirror({ buttons, stats }: Props) {
           {img('ico-accessibility')}
         </span>
 
-        {/* ── 하단 3: 필미(스마트 헬스케어) · 사진촬영 · 화장실 ── */}
-        <div className={styles.fillme} title={FILLME_TYPE}>
+        {/* ── 하단 3: 스마트 헬스케어(FillMe) · 사진촬영 · 화장실 ── */}
+        <div className={`${styles.fillme} ${missingCls(fillme)}`} title={tip(fillme, '스마트 헬스케어')}>
           {img('btn-fillme')}
-          <span className={styles.liftBadge}>{badgeOf(fillmeStat)}</span>
+          <span className={styles.liftBadge}>{badge(fillme)}</span>
         </div>
         <span className={`${styles.actionLabel} ${styles.labelFillme}`}>스마트 헬스케어</span>
         <div className={`${styles.camera} ${missingCls(camera)}`} title={tip(camera, '사진촬영')}>

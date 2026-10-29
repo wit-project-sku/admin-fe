@@ -413,13 +413,56 @@
   overflow: hidden;
 }
 
-/* '준비중' 칸 — 앱처럼 그림 대신 회색 판, 제목도 회색. */
-.tilePlateBlank {
-  background: #e3e3e3;
+/* 가운데 줄(2026-10-29) — 위 카드 3장과 같은 카드, 격자 2줄 띠 가운데(앱 .cardsMid). 판보다 위에 그린다. */
+.cardsMid {
+  top: 2364px;
+  z-index: 1;
 }
 
-.tileComingSoon .tileTitle {
-  color: #9a9a9a;
+/* 카드 자리에 들어가는 타일 그림(정사각형 판) — 둥근 모서리로 자른다. */
+.cardsMid .cardAi .cardArt {
+  left: 70px;
+  width: 214px;
+  height: 214px;
+  border-radius: 60px;
+  overflow: hidden;
+}
+
+/* 판은 카드 폭(120…2046)을 감싸도록 넓힌다(앱 .panelCards). */
+.panelCards {
+  left: 100px;
+  width: 1966px;
+}
+
+/* 그림이 아직 없는 칸 — 빈 판. */
+.tilePlateEmpty {
+  background: #f1ebe4;
+}
+
+/* 오늘의 날씨 칸 — 하늘색 판에 날씨 아이콘과 기온. */
+.weatherPlate {
+  background: #e2f0fb;
+}
+
+.board .weatherPlateIcon {
+  position: absolute;
+  left: 22%;
+  top: 12%;
+  width: 56%;
+  height: 50%;
+  object-fit: contain;
+}
+
+.weatherPlateTemp {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 9%;
+  font-size: 64px;
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  color: #3d6488;
 }
 
 .tileText {

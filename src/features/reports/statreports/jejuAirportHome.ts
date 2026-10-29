@@ -7,7 +7,7 @@ export function isJejuAirportKiosk(kioskId?: number, kioskName = ''): boolean {
 }
 
 /**
- * 2026-10-28 홈 개편으로 '준비중'(회색·터치 불가)이 된 버튼 — 기부·위드마켓·TAX-FREE.
+ * 2026-10-28 홈 개편으로 '준비중'(회색·터치 불가)이 됐다가 10-29 개편에서 화면에서 빠진 버튼 — 기부·위드마켓·TAX-FREE.
  * 리포트 집계 대상이 아니다(2026-10-28 사용자 결정) — 개편 전 기간의 클릭도 세지 않는다.
  */
 export const JEJU_AIRPORT_COMING_SOON = new Set(['#W008_아이콘16', '#W008_아이콘05', '#W008_아이콘10']);
