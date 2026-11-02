@@ -88,6 +88,18 @@ function LiveCatWinners({ rows, overallLabel = '전체' }: { rows: CategoryTop[]
 }
 
 /** 키오스크별 전체 의상 매트릭스 표 — 실데이터 */
+/** 의상 × 키오스크 표를 한 지점 열로 줄인다 — 그 지점에서 촬영된 의상만, 많은 순. 지점이 표에 없으면 빈 표. */
+function onlyKiosk(data: OutfitByKioskData | undefined, kioskId: number): OutfitByKioskData | undefined {
+  if (!data) return data;
+  const i = data.kiosks.findIndex((k) => k.id === kioskId);
+  if (i < 0) return { kiosks: [], outfits: [], colTotals: [] };
+  const outfits = data.outfits
+    .map((o) => ({ ...o, perKiosk: [o.perKiosk[i] ?? 0], total: o.perKiosk[i] ?? 0 }))
+    .filter((o) => o.total > 0)
+    .sort((a, b) => b.total - a.total);
+  return { kiosks: [data.kiosks[i]], outfits, colTotals: [data.colTotals[i] ?? 0] };
+}
+
 function LiveOutfitByKiosk({ data }: { data?: OutfitByKioskData }) {
   if (!data || data.outfits.length === 0) return <EmptyNote title='기간 내 의상 촬영 데이터가 없습니다' />;
   const idxChunks = chunkKioskCols(data.kiosks.map((_, i) => i));
@@ -357,30 +369,63 @@ function LiveOutfitGallery({ cards }: { cards: LiveOutfitCard[] }) {
 }
 
 /* ── 촬영 리포트 (주간) ── */
-export function ShootingWeeklyLiveView({ anchor }: { anchor?: string }) {
+/**
+ * 주간 촬영 리포트. 월간과 같이 지점을 고르면(kioskSel) 그 지점만의 리포트가 되고 PDF 도 그 지점으로 나간다
+ * (2026-11-02 사용자 요청). 지점 목록은 그 주 촬영이 있는 지점(성별 집계 응답)에서 올려 준다.
+ */
+export function ShootingWeeklyLiveView({
+  anchor,
+  kioskSel = 'ALL',
+  onKiosks,
+}: {
+  anchor?: string;
+  kioskSel?: 'ALL' | number;
+  onKiosks?: (list: ReportKioskOption[]) => void;
+}) {
   const r = weekRangesOf(anchor);
+  const kioskId = kioskSel === 'ALL' ? undefined : kioskSel;
   const cur = useShootingDailyLive(r.start, r.end, true);
   const prev = useShootingDailyLive(r.prevStart, r.prevEnd, true);
   const monthly = useShootingMonthlyLive(true);
-  const outfits = useOutfitTopLive(r.start, r.end, true);
-  const hourly = useShotsHourly(r.start, r.end, true);
+  const outfits = useOutfitTopLive(r.start, r.end, true, kioskId);
+  const hourly = useShotsHourly(r.start, r.end, true, kioskId);
   const catTop = useOutfitCategoryTop(r.start, r.end, true);
   const outfitMatrix = useOutfitByKiosk(r.start, r.end, true);
-  const gender = useShotsGender(r.start, r.end, true);
-  const genderPrev = useShotsGender(r.prevStart, r.prevEnd, true);
+  const genderAll = useShotsGender(r.start, r.end, true);
+  const gender = useShotsGender(r.start, r.end, true, kioskId);
+  const genderPrev = useShotsGender(r.prevStart, r.prevEnd, true, kioskId);
   const langRange = languageRange(r.start, r.end);
-  const language = useShotsLanguage(langRange.start, r.end, langRange.on);
+  const language = useShotsLanguage(langRange.start, r.end, langRange.on, kioskId);
+
+  const kioskOptions = genderAll.data?.kiosks;
+  useEffect(() => {
+    if (onKiosks && kioskOptions) onKiosks(kioskOptions.map((k) => ({ id: k.kioskId, name: k.kioskName })));
+  }, [onKiosks, kioskOptions]);
 
   if (cur.isPending) return <LoadingCard text='실데이터를 불러오는 중…' />;
   if (cur.isError) return <LoadingCard text='촬영 통계를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.' />;
 
-  const kioskNames = cur.data?.kioskNames ?? [];
+  // 지점 리포트면 일별·월별 표의 그 지점 열만 본다(열 이름 = 표시명).
+  const selName = kioskId ? kioskOptions?.find((k) => k.kioskId === kioskId)?.kioskName : undefined;
+  const rowTotal = (row?: Record<string, string | number>) => Number((selName ? row?.[selName] : row?.total) ?? 0);
+  const allNames = cur.data?.kioskNames ?? [];
+  const kioskNames = selName ? allNames.filter((n) => n === selName) : allNames;
   const rows = cur.data?.rows ?? [];
-  const total = rows.reduce((a, row) => a + Number(row.total ?? 0), 0);
-  const prevTotal = (prev.data?.rows ?? []).reduce((a, row) => a + Number(row.total ?? 0), 0);
-  const weekend = rows.slice(-2).reduce((a, row) => a + Number(row.total ?? 0), 0);
-  const cumTotal = (monthly.data?.rows ?? []).reduce((a, row) => a + Number(row.total ?? 0), 0);
+  const total = rows.reduce((a, row) => a + rowTotal(row), 0);
+  const prevTotal = (prev.data?.rows ?? []).reduce((a, row) => a + rowTotal(row), 0);
+  const weekend = rows.slice(-2).reduce((a, row) => a + rowTotal(row), 0);
+  const cumTotal = (monthly.data?.rows ?? []).reduce((a, row) => a + rowTotal(row), 0);
   const badge = diffBadge(total, prevTotal, '건', '전주 대비');
+  // 카테고리별 1위 — 지점 리포트는 그 지점의 1위만(표의 '전체' 열 = 이 지점)
+  const catRows = kioskId
+    ? (catTop.data ?? []).flatMap((c) => {
+        const k = c.byKiosk.find((x) => x.kioskId === kioskId);
+        return k ? [{ ...c, overall: { name: k.name, code: k.code, count: k.count }, byKiosk: [] }] : [];
+      })
+    : (catTop.data ?? []);
+  // 의상 × 키오스크 표 — 지점 리포트는 그 지점 열만, 촬영된 의상만 많은 순으로
+  const matrix = kioskId ? onlyKiosk(outfitMatrix.data, kioskId) : outfitMatrix.data;
+  const scope = selName ? ` · ${selName}` : '';
 
   const siteTotals = kioskNames.map((k) => rows.reduce((a, row) => a + Number(row[k] ?? 0), 0));
   const sitePrev = kioskNames.map((k) => (prev.data?.rows ?? []).reduce((a, row) => a + Number(row[k] ?? 0), 0));
@@ -404,8 +449,8 @@ export function ShootingWeeklyLiveView({ anchor }: { anchor?: string }) {
 
   const weekdayTrend = rows.map((row, i) => ({
     label: String(row.date ?? '').slice(5),
-    cur: Number(row.total ?? 0),
-    prev: Number(prev.data?.rows?.[i]?.total ?? 0) || undefined,
+    cur: rowTotal(row),
+    prev: rowTotal(prev.data?.rows?.[i]) || undefined,
   }));
 
   const topOutfitCard = (outfits.data ?? [])[0];
@@ -422,13 +467,15 @@ export function ShootingWeeklyLiveView({ anchor }: { anchor?: string }) {
   });
 
   return (
-    <div className={s.report} data-report-root data-report-title='주간 촬영 통계 리포트'>
+    <div className={s.report} data-report-root data-report-title={`주간 촬영 통계 리포트${selName ? `_${selName}` : ''}`}>
       <div data-report-page>
       <div className={s.head}>
         <div className={s.headRow}>
           <div>
-            <h2 className={s.headTitle}>주간 촬영 통계 리포트</h2>
-            <p className={s.headSub}>대상 기간: {r.start} ~ {r.end} · {kioskNames.length}개 지점 · 실데이터</p>
+            <h2 className={s.headTitle}>주간 촬영 통계 리포트{selName ? ` — ${selName}` : ''}</h2>
+            <p className={s.headSub}>
+              대상 기간: {r.start} ~ {r.end} · {selName ? '지점 리포트' : `${kioskNames.length}개 지점`} · 실데이터
+            </p>
           </div>
           <div className={s.headMeta}><b>주간 촬영 통계 리포트</b></div>
         </div>
@@ -459,7 +506,7 @@ export function ShootingWeeklyLiveView({ anchor }: { anchor?: string }) {
       <div data-report-page>
       <NewOutfitsSection periodLabel='이번 주' start={r.start} end={r.end} mode='live' />
       <div data-report-keep>
-      <Section title='지점별 상세' sub={`전체 · 전주 대비 · ${GENDER_NOTE}`}>
+      <Section title={selName ? '지점 상세' : '지점별 상세'} sub={`전체 · 전주 대비 · ${GENDER_NOTE}`}>
         <table className={s.table}>
           <thead>
             <tr><th>지점</th><th>촬영</th><th>전주</th><th>증감</th><th>남:여 비율</th></tr>
@@ -520,7 +567,7 @@ export function ShootingWeeklyLiveView({ anchor }: { anchor?: string }) {
               ))}
               <tr className={s.sumRow}>
                 <td className={s.tdL}>합계</td>
-                {rows.map((row) => <td key={String(row.date)}>{Number(row.total ?? 0).toLocaleString()}</td>)}
+                {rows.map((row) => <td key={String(row.date)}>{rowTotal(row).toLocaleString()}</td>)}
                 <td>{total.toLocaleString()}</td>
               </tr>
             </tbody>
@@ -532,21 +579,24 @@ export function ShootingWeeklyLiveView({ anchor }: { anchor?: string }) {
 </div>
 
       <div data-report-page>
-      <Section title='이번 주 인기 의상 TOP 10' sub='실물 등록 사진 · 실데이터'>
+      <Section title='이번 주 인기 의상 TOP 10' sub={`실물 등록 사진 · 실데이터${scope}`}>
         {outfits.isPending ? <LoadingCard text='의상 랭킹을 불러오는 중…' /> : <LiveOutfitGallery cards={outfits.data ?? []} />}
       </Section>
       </div>
 
       {/* 카테고리별 1위는 독립 페이지 — 지점이 늘면 표가 둘로 나뉘어 TOP 10 과 한 장에 들어가지 않는다(2026-10-28 사용자 결정) */}
       <div data-report-page>
-      <Section title='카테고리별 1위 의상' sub='전체 · 키오스크별 · 실데이터'>
-        {catTop.isPending ? <LoadingCard text='불러오는 중…' /> : <LiveCatWinners rows={catTop.data ?? []} />}
+      <Section title='카테고리별 1위 의상' sub={`${selName ?? '전체 · 키오스크별'} · 실데이터`}>
+        {catTop.isPending ? <LoadingCard text='불러오는 중…' /> : <LiveCatWinners rows={catRows} overallLabel={selName} />}
       </Section>
       </div>
 
       <div data-report-page>
-      <Section title='키오스크별 전체 의상 통계' sub='전체 의상 × 키오스크 촬영 건수 · 굵게 = 각 키오스크 1위'>
-        {outfitMatrix.isPending ? <LoadingCard text='불러오는 중…' /> : <LiveOutfitByKiosk data={outfitMatrix.data} />}
+      <Section
+        title={selName ? '전체 의상 통계' : '키오스크별 전체 의상 통계'}
+        sub={selName ? `${selName} 촬영 건수 · 촬영된 의상만 · 많은 순` : '전체 의상 × 키오스크 촬영 건수 · 굵게 = 각 키오스크 1위'}
+      >
+        {outfitMatrix.isPending ? <LoadingCard text='불러오는 중…' /> : <LiveOutfitByKiosk data={matrix} />}
       </Section>
 
       <p className={s.footer}>집계 기준: AR 촬영 완료 건 · 실데이터(서버 집계)</p>
