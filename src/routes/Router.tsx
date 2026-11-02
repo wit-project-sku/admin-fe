@@ -30,6 +30,7 @@ const KioskHealthPage = lazy(() => import('@pages/KioskHealthPage'));
 const UserManagePage = lazy(() => import('@pages/UserManagePage'));
 const OnsiteEventsPage = lazy(() => import('@pages/OnsiteEventsPage'));
 const OnsiteEventStatsPage = lazy(() => import('@pages/OnsiteEventStatsPage'));
+const InstallationsPage = lazy(() => import('@pages/InstallationsPage'));
 const NotFoundPage = lazy(() => import('@pages/notfound/NotFound'));
 
 const Loader = () => (
@@ -150,6 +151,8 @@ export default function AppRouter() {
             {/* 행사 오버뷰 — ROLE_ADMIN 전용(USER_ALLOWED_PATHS 에 없어 RoleGuard 가 막는다) */}
             <Route path="onsite-events" element={<OnsiteEventsPage />} />
             <Route path="onsite-events/stats" element={<OnsiteEventStatsPage />} />
+            {/* 설치 등록 관리 — ROLE_ADMIN 전용(USER_ALLOWED_PATHS 에 없어 RoleGuard 가 막는다) */}
+            <Route path="installations" element={<InstallationsPage />} />
             <Route path="users" element={<UserManagePage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>
