@@ -428,6 +428,12 @@
   overflow: hidden;
 }
 
+/* 셋째 카드(제주공항 안내) 그림 — 앱 .cardsMid .cardEvents .cardArt 와 같은 둥근 자르기. */
+.cardsMid .cardEvents .cardArt {
+  border-radius: 45px;
+  overflow: hidden;
+}
+
 /* 판은 카드 폭(120…2046)을 감싸도록 넓힌다(앱 .panelCards). */
 .panelCards {
   left: 100px;
