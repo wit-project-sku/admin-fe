@@ -220,7 +220,16 @@ function genderRatio(g?: GenderCounts): string {
   return `${m}% : ${Math.round((100 - m) * 10) / 10}%`;
 }
 
-const LANGUAGE_NOTE = '촬영할 때 키오스크에 선택된 화면 언어로 판별(국적이 아니라 언어권). 비율은 언어가 확인된 촬영 기준이고, 미확인은 언어를 보내기 전 키오스크 앱의 촬영.';
+/** 언어권 집계 시작일 — 현장 키오스크가 언어를 보내기 시작한 뒤 첫 달부터 센다(사용자 결정 2026-11-02). 이보다 앞 촬영은 세지 않고,
+ *  기간이 통째로 이보다 앞이면 섹션을 그리지 않는다. */
+const LANGUAGE_SINCE = '2026-11-01';
+const LANGUAGE_NOTE =
+  '2026년 11월 1일 촬영부터 집계 · 촬영할 때 선택된 키오스크 화면 언어 기준(국적 아님) · 비율은 언어가 확인된 촬영 기준, 미확인은 언어를 보내지 않는 키오스크 앱의 촬영';
+
+/** 리포트 기간(yyyy-MM-dd, 끝 포함)을 언어권 집계 기간으로 자른다. */
+function languageRange(start: string, end: string): { start: string; on: boolean } {
+  return { start: start < LANGUAGE_SINCE ? LANGUAGE_SINCE : start, on: end >= LANGUAGE_SINCE };
+}
 
 /** 언어권 막대·범례 색 — 언어 코드별 고정(리포트마다 같은 색). */
 const LANGUAGE_COLORS: Record<string, string> = {
@@ -244,6 +253,9 @@ function LanguageTable({ data, kioskNames }: { data?: ShotLanguageData; kioskNam
   ].map((c) => ({ ...c, known: c.languages.reduce((a, l) => a + l.count, 0) }));
   const total = cols[cols.length - 1];
   const pct = (n: number) => (total.known > 0 ? Math.round((n / total.known) * 1000) / 10 : 0);
+  // 기간 전체에서 0건인 언어권은 막대·범례·표에서 빼고 한 줄로만 적는다(0% 줄이 여럿 늘어서지 않게). 순서는 서버 고정 순서 그대로.
+  const rows = data.languages.map((l, i) => ({ ...l, i })).filter((l) => l.count > 0);
+  const zero = data.languages.filter((l) => l.count === 0);
   return (
     <>
       {/* 전체 비율 막대 — 언어가 확인된 촬영 기준 */}
@@ -253,19 +265,22 @@ function LanguageTable({ data, kioskNames }: { data?: ShotLanguageData; kioskNam
       </div>
       <div className={s.langBar}>
         {total.known > 0
-          ? data.languages.map((l) => (
+          ? rows.map((l) => (
               <span key={l.code} style={{ width: `${pct(l.count)}%`, background: LANGUAGE_COLORS[l.code] ?? '#b4b2a9' }} />
             ))
           : null}
       </div>
       <div className={s.langLegend}>
-        {data.languages.map((l) => (
+        {rows.map((l) => (
           <span key={l.code}>
             <i style={{ background: LANGUAGE_COLORS[l.code] ?? '#b4b2a9' }} />
             {l.label} {total.known > 0 ? `${pct(l.count)}%` : '—'}
           </span>
         ))}
       </div>
+      {zero.length > 0 ? (
+        <p className={s.langZero}>{zero.map((l) => l.label.replace(/권$/, '')).join('·')}권 0건</p>
+      ) : null}
       {chunkKioskCols(cols, 4, 4).map((chunk, idx) => (
         <table key={chunk[0].name} className={s.table} style={idx > 0 ? { marginTop: 12 } : undefined}>
           <thead>
@@ -275,11 +290,11 @@ function LanguageTable({ data, kioskNames }: { data?: ShotLanguageData; kioskNam
             </tr>
           </thead>
           <tbody>
-            {data.languages.map((l, i) => (
+            {rows.map((l) => (
               <tr key={l.code}>
                 <td className={`${s.tdL} ${s.tdB}`}>{l.label}</td>
                 {chunk.map((c) => {
-                  const n = c.languages[i]?.count ?? 0;
+                  const n = c.languages[l.i]?.count ?? 0;
                   return (
                     <td key={c.name} className={c.sum ? s.tdB : undefined}>
                       {c.known > 0 ? `${Math.round((n / c.known) * 1000) / 10}%` : '—'}
@@ -353,7 +368,8 @@ export function ShootingWeeklyLiveView({ anchor }: { anchor?: string }) {
   const outfitMatrix = useOutfitByKiosk(r.start, r.end, true);
   const gender = useShotsGender(r.start, r.end, true);
   const genderPrev = useShotsGender(r.prevStart, r.prevEnd, true);
-  const language = useShotsLanguage(r.start, r.end, true);
+  const langRange = languageRange(r.start, r.end);
+  const language = useShotsLanguage(langRange.start, r.end, langRange.on);
 
   if (cur.isPending) return <LoadingCard text='실데이터를 불러오는 중…' />;
   if (cur.isError) return <LoadingCard text='촬영 통계를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.' />;
@@ -473,11 +489,13 @@ export function ShootingWeeklyLiveView({ anchor }: { anchor?: string }) {
       </Section>
       </div>
 
-      <div data-report-keep>
-      <Section title='언어권 비율' sub={LANGUAGE_NOTE}>
-        <LanguageTable data={language.data} kioskNames={kioskNames} />
-      </Section>
-      </div>
+      {langRange.on ? (
+        <div data-report-keep>
+        <Section title='언어권 비율' sub={LANGUAGE_NOTE}>
+          <LanguageTable data={language.data} kioskNames={kioskNames} />
+        </Section>
+        </div>
+      ) : null}
 
       <div data-report-keep>
       <Section title='일별 상세' sub='키오스크 세로 × 일자 가로'>
@@ -564,7 +582,8 @@ export function ShootingMonthlyLiveView({
   const genderAll = useShotsGender(r.start, r.end, true);
   const gender = useShotsGender(r.start, r.end, true, kioskId);
   const genderPrev = useShotsGender(r.prevStart, r.prevEnd, true, kioskId);
-  const language = useShotsLanguage(r.start, r.end, true, kioskId);
+  const langRange = languageRange(r.start, r.end);
+  const language = useShotsLanguage(langRange.start, r.end, langRange.on, kioskId);
 
   const kioskOptions = genderAll.data?.kiosks;
   useEffect(() => {
@@ -713,11 +732,13 @@ export function ShootingMonthlyLiveView({
       </Section>
       </div>
 
-      <div data-report-keep>
-      <Section title='언어권 비율' sub={LANGUAGE_NOTE}>
-        <LanguageTable data={language.data} kioskNames={kioskNames} />
-      </Section>
-      </div>
+      {langRange.on ? (
+        <div data-report-keep>
+        <Section title='언어권 비율' sub={LANGUAGE_NOTE}>
+          <LanguageTable data={language.data} kioskNames={kioskNames} />
+        </Section>
+        </div>
+      ) : null}
 
 </div>
 
