@@ -33,6 +33,7 @@ const OnsiteEventStatsPage = lazy(() => import('@pages/OnsiteEventStatsPage'));
 const WitsEventManagePage = lazy(() => import('@pages/WitsEventManagePage'));
 const WitsNotificationManagePage = lazy(() => import('@pages/WitsNotificationManagePage'));
 const AdManagePage = lazy(() => import('@pages/AdManagePage'));
+const InstallationsPage = lazy(() => import('@pages/InstallationsPage'));
 const NotFoundPage = lazy(() => import('@pages/notfound/NotFound'));
 
 const Loader = () => (
@@ -157,6 +158,8 @@ export default function AppRouter() {
             <Route path="wits-events" element={<WitsEventManagePage />} />
             <Route path="wits-notifications" element={<WitsNotificationManagePage />} />
             <Route path="ads" element={<AdManagePage />} />
+            {/* 설치 등록 관리 — ROLE_ADMIN 전용(USER_ALLOWED_PATHS 에 없어 RoleGuard 가 막는다) */}
+            <Route path="installations" element={<InstallationsPage />} />
             <Route path="users" element={<UserManagePage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>

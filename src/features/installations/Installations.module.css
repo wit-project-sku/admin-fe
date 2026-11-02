@@ -1,0 +1,111 @@
+/* 설치 등록 관리 — 목록 */
+.listTable {
+  min-width: 960px;
+}
+
+.clickableRow {
+  cursor: pointer;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.addressCell {
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-secondary);
+}
+
+.dash {
+  color: var(--text-muted);
+}
+
+.thumb {
+  display: block;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+}
+
+.thumbEmpty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  background: #f1f5f9;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+/* 등록·수정 창 */
+.form {
+  display: flex;
+  flex-direction: column;
+}
+
+.body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.loading {
+  padding: 48px 20px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.apiError {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(185, 28, 28, 0.25);
+  background: var(--red-bg);
+  color: var(--red-text);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+/* 상세 보기 창 */
+.detailImages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.detailImage {
+  display: block;
+  max-width: 100%;
+  max-height: 220px;
+  border-radius: var(--radius-md);
+  object-fit: contain;
+}
+
+.detailText {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.detailActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 0 20px 20px;
+}
