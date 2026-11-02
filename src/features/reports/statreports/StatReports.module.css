@@ -1040,6 +1040,11 @@
   font-size: 12px;
   font-weight: 500;
 }
+.langZero {
+  margin: -6px 0 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
 .langLegend i {
   display: inline-block;
   width: 10px;
