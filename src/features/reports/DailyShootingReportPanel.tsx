@@ -1,6 +1,7 @@
 import shared from '@commons/shared.module.css';
 import Pagination from '@components/common/Pagination';
 import s from '@pages/ReportsPage.module.css';
+import { KioskColumnHeader } from './KioskColumnHeader';
 import { REPORT_MESSAGES } from './reportMessages';
 import { ReportDateRangeFilterCard } from './ReportDateRangeFilterCard';
 
@@ -89,9 +90,7 @@ export function DailyShootingReportPanel({
                 <tr className={s.darkHead}>
                   <th className={`${s.darkTh} ${s.shootingTimeCol}`}>Date</th>
                   {kioskNames.map((name) => (
-                    <th key={name} className={s.darkTh} style={{ textAlign: 'center' }}>
-                      {name}
-                    </th>
+                    <KioskColumnHeader key={name} name={name} />
                   ))}
                   <th className={s.darkThAccent}>Total</th>
                 </tr>
@@ -105,7 +104,7 @@ export function DailyShootingReportPanel({
                   >
                     <td className={`${shared.td} ${shared.tdBold} ${s.shootingTimeCol}`}>{row.date}</td>
                     {kioskNames.map((name) => (
-                      <td key={name} className={`${shared.td} ${shared.tdMuted}`} style={{ textAlign: 'center' }}>
+                      <td key={name} className={`${shared.td} ${shared.tdMuted} ${s.kioskTd}`}>
                         {row[name] ?? 0}
                       </td>
                     ))}

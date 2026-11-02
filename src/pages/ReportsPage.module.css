@@ -34,9 +34,8 @@
 
 .darkHead {}
 
-/* 지점별 월별/일별 상세 — Month · Date column (avoid wrapping) */
+/* 지점별 월별/일별 상세 — Month · Date column: 줄바꿈 없이 내용만큼(고정 최소 폭은 가로 스크롤을 만든다) */
 .shootingTimeCol {
-  min-width: 11rem;
   width: 1%;
   white-space: nowrap;
   box-sizing: border-box;
@@ -53,6 +52,33 @@
   text-align: left;
   white-space: nowrap;
   border-bottom: 1px solid #1e293b;
+}
+
+/* 지점별 월별/일별 상세 — 지점 열: 지점명 위, 기기 코드 아래(가로 스크롤 줄이기) */
+.kioskTh {
+  padding: 10px 12px;
+  text-align: center;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.kioskThLabel {
+  display: block;
+  color: #e2e8f0;
+}
+
+.kioskThCode {
+  display: block;
+  margin-top: 2px;
+  font-size: 10px;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.kioskTd {
+  padding-left: 12px;
+  padding-right: 12px;
+  text-align: center;
 }
 
 .darkThAccent {
