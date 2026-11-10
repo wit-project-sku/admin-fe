@@ -1,4 +1,8 @@
-// 통계 리포트 전용 — 제주국제공항(W008) 홈 화면 미러, 2026-10-29 홈 격자 4·3·4 개편판.
+// 통계 리포트 전용 — 제주국제공항(W008)·제주국제여객터미널(W009) 홈 화면 미러, 2026-10-29 홈 격자 4·3·4 개편판.
+//
+// 여객터미널(2026-11-10 운영 시작)은 앱에서 같은 홈(TILES_TERMINAL)을 쓰고 세 곳만 다르다 — 운항 정보 보드가 항공편 대신
+// 여객선(JejuSailingBoard), 격자 2줄 셋째 카드가 '여객터미널 안내'(터미널 그림), 3줄 셋째 칸이 렌트카 대신 '크루즈 운항'.
+// 그래서 같은 미러에 venue 를 넘겨 그 세 곳만 바꾼다(VENUES).
 //
 // 키오스크 앱(kiosk-electron JejuHome, Figma 6439:71456)이 고정 배치로 그리는 화면을 같은 좌표로 옮겼다 —
 // 위치·날짜 · 공지/날씨 · 운항 정보 보드 · 검색줄 · 카드 3 · 격자 4·3·4 · 스마트 헬스케어/사진촬영/화장실.
@@ -20,13 +24,13 @@ import {
   type ButtonStatMap,
 } from '@/features/kiosk/manage/kioskButtonStatOverlay';
 import type { KioskButtonDto } from '@/hooks/kiosk-api/kioskButtonsTypes';
+import type { JejuCardsVenue } from './jejuAirportHome';
 import { reportHomeArt } from './reportHomeArt';
 import styles from './JejuAirportStatsMirror.module.css';
 
 /** 칸 하나 = DB button_name 꼬리(조인 키) + 앱이 그리는 한국어 문구(Localization_Jeju ko). */
 type Slot = { name: string; label: string; sub: string; art: string };
 
-const PREFIX = '#W008_';
 const FIXED = {
   home: '아이콘01',
   search: '아이콘02',
@@ -35,6 +39,49 @@ const FIXED = {
   camera: '아이콘20',
   restroom: '아이콘21',
 } as const;
+
+/** 지점마다 다른 두 칸의 자리표시 — VENUES 의 값으로 바꿔 그린다. 조인 키(button_name 꼬리)는 두 지점이 같다. */
+const HELP_SLOT: Slot = { name: '아이콘13', label: '', sub: '', art: '' };
+const VENUE_SLOT: Slot = { name: '아이콘14', label: '', sub: '', art: '' };
+
+/** 운항 정보 보드 열 — [머리, 열 가운데 x(보드 기준)]. */
+type BoardColumns = readonly (readonly [string, number])[];
+
+/** 지점별 차이 — 앱 TILES_AIRPORT / TILES_TERMINAL · JejuFlightBoard / JejuSailingBoard(한국어 COLUMNS_KO). */
+const VENUES: Record<
+  JejuCardsVenue,
+  { prefix: string; help: Slot; venue: Slot; board: BoardColumns; boardMore: string }
+> = {
+  airport: {
+    prefix: '#W008_',
+    help: { name: '아이콘13', label: '제주공항 안내', sub: '편의시설 안내', art: 'card-airport-guide' },
+    venue: { name: '아이콘14', label: '렌트카', sub: '간편 예약', art: 'tile-rentcar' },
+    board: [
+      ['출발시각', 410],
+      ['항공사/편명', 750],
+      ['목적지', 1150],
+      ['구분', 1410],
+      ['게이트', 1570],
+      ['현황', 1730],
+    ],
+    boardMore: '항공편 정보 더보기',
+  },
+  terminal: {
+    prefix: '#W009_',
+    // DB 이름은 도와줘 '귤이' 그대로다(앱이 "도와줘 '" 로 찾는다 — V212). 화면 문구만 여객터미널 안내.
+    help: { name: '아이콘13', label: '여객터미널 안내', sub: '편의시설 안내', art: 'card-terminal-guide' },
+    venue: { name: '아이콘14', label: '크루즈 운항', sub: '입·출항 정보', art: 'tile-cruise' },
+    board: [
+      ['출발시각', 412],
+      ['소요시간', 590],
+      ['선박명', 840],
+      ['항로', 1190],
+      ['출발장소', 1500],
+      ['현황', 1718],
+    ],
+    boardMore: '운항 정보 더보기',
+  },
+};
 
 /** 카드 3장 — 앱 AIRPORT_CARDS. 그림 자리는 카드 기준 px(JejuHome.module.css). */
 const CARDS: readonly (Slot & { variant: 'cardAi' | 'cardTamnao' | 'cardEvents' })[] = [
@@ -54,12 +101,12 @@ const GRID: readonly (readonly Slot[])[] = [
   [
     { name: '아이콘11', label: '여기는 제주도', sub: '관광지 추천', art: 'tile-about' },
     { name: '아이콘12', label: "안녕 '귤이'", sub: '귤이 소개', art: 'tile-hello' },
-    { name: '아이콘13', label: '제주공항 안내', sub: '편의시설 안내', art: 'card-airport-guide' },
+    HELP_SLOT,
   ],
   [
     { name: '아이콘15', label: '환율', sub: '환율 계산기', art: 'tile-exchange' },
     { name: '아이콘18', label: '지역화폐', sub: '탐나는전', art: 'tile-localpay' },
-    { name: '아이콘14', label: '렌트카', sub: '간편 예약', art: 'tile-rentcar' },
+    VENUE_SLOT,
     { name: '아이콘23', label: '오늘의 날씨', sub: '제주 날씨 예보', art: 'weather-sun' },
   ],
 ];
@@ -67,16 +114,6 @@ const GRID: readonly (readonly Slot[])[] = [
 const MID_VARIANTS = ['cardAi', 'cardTamnao', 'cardEvents'] as const;
 /** 날씨 칸 — 그림 대신 하늘색 판에 날씨 아이콘·기온(앱은 실시간 날씨를 그린다). */
 const WEATHER_SLOT = '아이콘23';
-
-/** 운항 정보 보드 머리 — 열 가운데 x(보드 기준, 앱 JejuFlightBoard COLUMNS). */
-const FLIGHT_COLUMNS: readonly [string, number][] = [
-  ['출발시각', 410],
-  ['항공사/편명', 750],
-  ['목적지', 1150],
-  ['구분', 1410],
-  ['게이트', 1570],
-  ['현황', 1730],
-];
 
 const TARGET_WIDTH = 560;
 const SCALE = TARGET_WIDTH / 2160;
@@ -94,14 +131,18 @@ function formatDateTime(d: Date): string {
 }
 
 type Props = {
+  /** 어느 제주 지점의 홈인가(jejuCardsVenueOf). */
+  venue: JejuCardsVenue;
   /** 해당 키오스크의 전체 버튼(이름에만 쓴다 — 좌표는 쓰지 않는다). */
   buttons: KioskButtonDto[];
   /** buttonType → 기간 집계 */
   stats: ButtonStatMap;
 };
 
-export function JejuAirportStatsMirror({ buttons, stats }: Props) {
-  const find = (slot: string): KioskButtonDto | null => buttons.find((b) => b.buttonName === PREFIX + slot) ?? null;
+export function JejuAirportStatsMirror({ venue, buttons, stats }: Props) {
+  const v = VENUES[venue];
+  const find = (slot: string): KioskButtonDto | null => buttons.find((b) => b.buttonName === v.prefix + slot) ?? null;
+  const slotOf = (g: Slot): Slot => (g === HELP_SLOT ? v.help : g === VENUE_SLOT ? v.venue : g);
   const statOf = (b: KioskButtonDto | null): ButtonStat => (b ? stats.get(b.buttonType) : undefined) ?? ZERO;
   const maxClicks = Math.max(0, ...[...stats.values()].map((v) => v.clicks));
   const badgeOf = (stat: ButtonStat) => <ButtonStatBadge stat={stat} max={maxClicks} unit='cq' />;
@@ -149,11 +190,11 @@ export function JejuAirportStatsMirror({ buttons, stats }: Props) {
           </div>
         </div>
 
-        {/* ── 운항 정보 보드 — x155 y732, 표시 전용 ── */}
+        {/* ── 운항 정보 보드 — x155 y732, 표시 전용(공항 = 항공편, 여객터미널 = 여객선) ── */}
         <div className={styles.flightBoard} aria-hidden>
           <span className={styles.flightTitle}>운항 정보</span>
           <span className={styles.flightRule} />
-          {FLIGHT_COLUMNS.map(([label, x]) => (
+          {v.board.map(([label, x]) => (
             <span key={label} className={styles.flightCol} style={{ left: x }}>
               <span className={styles.flightHead}>{label}</span>
               <span className={styles.flightValue}>—</span>
@@ -164,7 +205,7 @@ export function JejuAirportStatsMirror({ buttons, stats }: Props) {
           <svg viewBox='0 0 81 51' className={styles.moreArrow}>
             <path d='M0 0h81L40.5 51Z' fill='currentColor' />
           </svg>
-          항공편 정보 더보기
+          {v.boardMore}
         </span>
 
         {/* ── 검색줄: 홈 · 검색 · 언어선택 — x80 y1136 ── */}
@@ -205,7 +246,8 @@ export function JejuAirportStatsMirror({ buttons, stats }: Props) {
           row.length === 3 ? (
             // 가운데 줄 — 위 카드와 같은 카드 3장, 판 위에(앱 .cardsMid: y2364).
             <div key={`mid-${r}`} className={`${styles.cards} ${styles.cardsMid}`}>
-              {row.map((g, c) => {
+              {row.map((slot, c) => {
+                const g = slotOf(slot);
                 const b = find(g.name);
                 return (
                   <div
@@ -222,7 +264,8 @@ export function JejuAirportStatsMirror({ buttons, stats }: Props) {
               })}
             </div>
           ) : (
-            row.map((g, c) => {
+            row.map((slot, c) => {
+              const g = slotOf(slot);
               const pos = { left: 203 + c * COL_STEP, top: 1821 + r * ROW_STEP } as CSSProperties;
               const b = find(g.name);
               return (

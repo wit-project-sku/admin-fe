@@ -10,7 +10,7 @@ import { chunkKioskCols } from './ShootingReportView';
 import { kioskButtonLabel } from '@/features/kiosk/manage/kioskButtonDisplay';
 import { KioskHomeStatsMirror } from './KioskHomeStatsMirror';
 import { isOnRedesignHome, redesignSiteOf } from './RedesignHomeStatsMirror';
-import { isJejuAirportComingSoon, isJejuAirportKiosk } from './jejuAirportHome';
+import { isJejuAirportComingSoon, jejuCardsVenueOf } from './jejuAirportHome';
 import { isHomeButton } from './reportButtonRules';
 import type { KioskButtonDto } from '@/hooks/kiosk-api/kioskButtonsTypes';
 import { fmtMD, type KpiItem } from './statReportsMockData';
@@ -825,10 +825,10 @@ export type ReportKioskOption = { id: number; name: string };
 type KioskRow = NonNullable<KioskButtonStatsSummaryBlock['kioskButtonDetails']>[number];
 
 /** 집계하지 않는 행(사용자 결정) — 그 행을 빼고 합계도 다시 맞춘다.
- *  모든 지점의 홈 버튼 · 오색시장·화성휴게소의 2026-10 새 홈에 없는 버튼 · 제주국제공항의 '준비중' 버튼 3개. */
+ *  모든 지점의 홈 버튼 · 오색시장·화성휴게소의 2026-10 새 홈에 없는 버튼 · 제주국제공항·여객터미널 홈에서 빠진 버튼 3개. */
 function isCountedRow(row: { kioskId: number; kioskName: string; buttonName?: string | null; buttonType: string }, catalog?: Record<string, KioskButtonDto[]>): boolean {
   if (isHomeButton(row.buttonType)) return false;
-  if (isJejuAirportKiosk(row.kioskId, row.kioskName)) return !isJejuAirportComingSoon(row, catalog?.[row.kioskName] ?? []);
+  if (jejuCardsVenueOf(row.kioskId, row.kioskName)) return !isJejuAirportComingSoon(row, catalog?.[row.kioskName] ?? []);
   const site = redesignSiteOf(row.kioskId, row.kioskName);
   return !site || isOnRedesignHome(site, row, catalog?.[row.kioskName] ?? []);
 }
