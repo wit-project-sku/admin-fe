@@ -7,6 +7,8 @@ import { useAddShop } from '../../hooks/shop-api/useAddShop';
 import { useUpdateShop } from '../../hooks/shop-api/useUpdateShop';
 import { useAddShopImages } from '../../hooks/shop-api/useAddShopImages';
 import { useDeleteShopImage } from '../../hooks/shop-api/useDeleteShopImage';
+import { useGetAllShops } from '../../hooks/shop-api/useGetAllShops';
+import { kioskCodeOf, LOTTE_BRANCHES } from '../../features/lotte/lotteBranches';
 import type { ShopWriteBody } from '../../hooks/shop-api/shopApiTypes';
 import type { ShopRow } from '../../features/shops/shopsListMappers';
 import {
@@ -52,6 +54,25 @@ const ALL_TEXT_KEYS: string[] = [
 ];
 
 const MAX_IMAGE_COUNT = 10;
+
+/**
+ * 롯데 건물 안내 › 핫스팟에 나오는 '주요 시설'(기능 가이드 5절). 따로 화면을 두지 않고 상점으로 올린다:
+ * 1차 카테고리 = 이 값, 권역 = 건물(롯데월드몰·롯데월드타워…), 주소 끝 = 층, 설명 = 한 줄 소개, 영업시간·사진은 그대로.
+ */
+const LOTTE_FACILITY_CATEGORY = '롯데 주요 시설';
+
+/** 1차 카테고리·권역 칸의 추천 목록 — 같은 키오스크에 이미 있는 값(롯데면 주요 시설 포함). */
+const SUGGEST_FIELDS: Record<string, string> = { baseCategoryKr: 'shop-suggest-base', regionKr: 'shop-suggest-region' };
+
+const distinct = (rows: unknown[], key: string): string[] =>
+  [
+    ...new Set(
+      rows
+        .map((r) => (r && typeof r === 'object' ? (r as Record<string, unknown>)[key] : null))
+        .filter((v): v is string => typeof v === 'string' && v.trim() !== '')
+        .map((v) => v.trim()),
+    ),
+  ].sort((a, b) => a.localeCompare(b, 'ko'));
 
 type ServerImage = { id: number; url: string };
 type NewImage = { url: string; file: File };
@@ -145,6 +166,20 @@ export default function ShopsManageModal({ open, mode, shop, defaultKioskId, onC
   const [removedImageIds, setRemovedImageIds] = useState<number[]>([]);
   const [newImages, setNewImages] = useState<NewImage[]>([]);
   const [fieldErrors, setFieldErrors] = useState<ShopFieldErrors>({});
+
+  const isLotte = useMemo(() => {
+    const k = kiosks.find((o) => String(o.value ?? o.id ?? '') === form.kioskId);
+    const code = kioskCodeOf(k?.label ?? k?.name);
+    return LOTTE_BRANCHES.some((b) => b.code === code);
+  }, [kiosks, form.kioskId]);
+  const { data: siblingShops } = useGetAllShops({ kioskId: open ? form.kioskId || null : null, pageNum: 1, pageSize: 1000 });
+  const suggestions = useMemo(() => {
+    const rows = siblingShops?.data?.content ?? [];
+    const base = distinct(rows, 'baseCategoryKr');
+    if (isLotte && !base.includes(LOTTE_FACILITY_CATEGORY)) base.push(LOTTE_FACILITY_CATEGORY);
+    return { baseCategoryKr: base, regionKr: distinct(rows, 'regionKr') };
+  }, [siblingShops, isLotte]);
+  const isLotteFacility = isLotte && form.baseCategoryKr?.trim() === LOTTE_FACILITY_CATEGORY;
 
   useEffect(() => {
     if (!open) return;
@@ -284,15 +319,32 @@ export default function ShopsManageModal({ open, mode, shop, defaultKioskId, onC
                     />
                   );
                 }
+                const listId = SUGGEST_FIELDS[key];
                 return (
-                  <InputField
-                    key={key}
-                    label={`${field.label} (${lang.code})`}
-                    required={required}
-                    error={fieldErrors[key]}
-                    value={form[key]}
-                    onChange={(e) => setField(key, e.target.value)}
-                  />
+                  <div key={key} style={{ display: 'contents' }}>
+                    <InputField
+                      label={`${field.label} (${lang.code})`}
+                      required={required}
+                      error={fieldErrors[key]}
+                      value={form[key]}
+                      list={listId}
+                      autoComplete={listId ? 'off' : undefined}
+                      placeholder={
+                        key === 'baseCategoryKr' && isLotte
+                          ? `예: 롯데 뭐사지 · 롯데 뭐먹지 · ${LOTTE_FACILITY_CATEGORY}`
+                          : key === 'regionKr' && isLotte
+                            ? '건물 — 예: 롯데월드몰 · 롯데월드타워 · 에비뉴엘'
+                            : undefined
+                      }
+                      onChange={(e) => setField(key, e.target.value)}
+                    />
+                    {key === 'baseCategoryKr' && isLotteFacility ? (
+                      <p className={styles.hint}>
+                        주요 시설은 키오스크 건물 안내 › 핫스팟에 나옵니다. 권역 = 건물, 주소 끝 = 층(예: 5F ~ 7F), 설명 = 한 줄
+                        소개, 영업시간·사진은 그대로 씁니다.
+                      </p>
+                    ) : null}
+                  </div>
                 );
               })}
             </div>
@@ -330,6 +382,14 @@ export default function ShopsManageModal({ open, mode, shop, defaultKioskId, onC
             isEdit
           />
         </div>
+
+        {Object.entries(SUGGEST_FIELDS).map(([field, id]) => (
+          <datalist key={id} id={id}>
+            {suggestions[field as keyof typeof suggestions].map((v) => (
+              <option key={v} value={v} />
+            ))}
+          </datalist>
+        ))}
 
         <div>
           <ModalFooter
