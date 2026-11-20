@@ -36,6 +36,7 @@ const AdManagePage = lazy(() => import('@pages/AdManagePage'));
 const InstallationsPage = lazy(() => import('@pages/InstallationsPage'));
 const StoryManagePage = lazy(() => import('@pages/StoryManagePage'));
 const MovieSharePage = lazy(() => import('@pages/MovieSharePage'));
+const LotteEventManagePage = lazy(() => import('@pages/LotteEventManagePage'));
 const NotFoundPage = lazy(() => import('@pages/notfound/NotFound'));
 
 const Loader = () => (
@@ -165,6 +166,7 @@ export default function AppRouter() {
             {/* 롯데 키오스크 — ROLE_ADMIN 전용(USER_ALLOWED_PATHS 에 없어 RoleGuard 가 막는다) */}
             <Route path="lotte/stories" element={<StoryManagePage />} />
             <Route path="lotte/movie-share" element={<MovieSharePage />} />
+            <Route path="lotte/events" element={<LotteEventManagePage />} />
             <Route path="users" element={<UserManagePage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>
