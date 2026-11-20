@@ -253,6 +253,38 @@ const WITS_APP_GROUP: NavGroupDef = {
   ],
 };
 
+const LOTTE_GROUP: NavGroupDef = {
+  label: '롯데 키오스크',
+  items: [
+    {
+      label: '사연 관리',
+      path: '/admin/lotte/stories',
+      icon: (
+        <svg width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
+          <path d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z' />
+          <line x1='8' y1='9' x2='16' y2='9' />
+          <line x1='8' y1='13' x2='13' y2='13' />
+        </svg>
+      ),
+    },
+    {
+      label: '영화 나눔 현황',
+      path: '/admin/lotte/movie-share',
+      icon: (
+        <svg width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
+          <rect x='2' y='4' width='20' height='16' rx='2' />
+          <line x1='7' y1='4' x2='7' y2='20' />
+          <line x1='17' y1='4' x2='17' y2='20' />
+          <line x1='2' y1='9' x2='7' y2='9' />
+          <line x1='2' y1='15' x2='7' y2='15' />
+          <line x1='17' y1='9' x2='22' y2='9' />
+          <line x1='17' y1='15' x2='22' y2='15' />
+        </svg>
+      ),
+    },
+  ],
+};
+
 const KIOSK_CONTENT_GROUP: NavGroupDef = {
   label: '키오스크 컨텐츠 관리',
   items: [
@@ -449,6 +481,8 @@ const NAV_GROUPS: NavGroupDef[] = [
   // WITS 앱 관리 — ROLE_ADMIN 전용(USER_NAV_GROUPS 에 없고 USER_ALLOWED_PATHS 에도 없다)
   WITS_APP_GROUP,
   KIOSK_CONTENT_GROUP,
+  // 롯데 키오스크 — ROLE_ADMIN 전용(USER_NAV_GROUPS 에 없고 USER_ALLOWED_PATHS 에도 없다)
+  LOTTE_GROUP,
   DONATION_GROUP,
   WITH_MARKET_GROUP,
   SYSTEM_GROUP,
