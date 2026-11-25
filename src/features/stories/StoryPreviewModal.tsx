@@ -75,7 +75,7 @@ export function StoryPreviewModal({ story, branchCode, busy, onClose, onChangeSt
         </div>
         <div className={s.row}>
           <InfoField label='마지막 처리' value={formatDateTime(story.reviewedAt)} />
-          <InfoField label='처리한 관리자' value={story.reviewedBy != null ? `관리자 #${story.reviewedBy}` : '—'} />
+          <InfoField label='처리한 관리자' value={story.reviewedByName?.trim() || (story.reviewedBy != null ? `관리자 #${story.reviewedBy}` : '—')} />
         </div>
       </div>
 

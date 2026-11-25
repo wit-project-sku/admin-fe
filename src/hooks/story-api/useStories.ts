@@ -2,14 +2,17 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 import { APIService } from '../../utils/axios';
 import type { StoryDto, StoryListParams, StoryStatus } from './storyTypes';
 
+/** 올린 날짜 기간 — 둘 다 선택(하나만 주면 그쪽만 제한). */
+export type StoryDateRange = { startDate?: string; endDate?: string };
+
 const BASE = '/admin/stories';
 
 /** 상태 변경·순서 저장 뒤 이 접두어 전체(목록·건수·순서 창)를 다시 받는다. */
 export const storyKeys = {
   all: ['admin-stories'] as const,
   list: (params: StoryListParams) => ['admin-stories', 'list', params] as const,
-  count: (status: StoryStatus | undefined, kioskId: number | undefined) =>
-    ['admin-stories', 'count', status ?? 'ALL', kioskId ?? 0] as const,
+  count: (status: StoryStatus | undefined, kioskId: number | undefined, range: StoryDateRange) =>
+    ['admin-stories', 'count', status ?? 'ALL', kioskId ?? 0, range.startDate ?? '', range.endDate ?? ''] as const,
   approved: (kioskId: number) => ['admin-stories', 'approved', kioskId] as const,
 };
 
@@ -25,6 +28,8 @@ const fetchPage = async (params: StoryListParams) =>
         pageSize: params.pageSize,
         ...(params.status ? { status: params.status } : {}),
         ...(params.kioskId ? { kioskId: params.kioskId } : {}),
+        ...(params.startDate ? { startDate: params.startDate } : {}),
+        ...(params.endDate ? { endDate: params.endDate } : {}),
       },
     }),
   );
@@ -49,11 +54,18 @@ export const useStoryList = (params: StoryListParams, enabled = true) => {
 
 /**
  * 탭 건수. 서버에 건수 API 가 없어 `pageSize=1` 로 목록을 받아 `totalElements` 만 쓴다.
+ * 기간을 고르면 건수도 그 기간만 센다(목록과 같은 조건).
  */
-export const useStoryCount = (status: StoryStatus | undefined, kioskId: number | undefined, enabled = true) => {
+export const useStoryCount = (
+  status: StoryStatus | undefined,
+  kioskId: number | undefined,
+  range: StoryDateRange = {},
+  enabled = true,
+) => {
   const { data } = useQuery({
-    queryKey: storyKeys.count(status, kioskId),
-    queryFn: async () => Number((await fetchPage({ status, kioskId, pageNum: 1, pageSize: 1 }))?.totalElements) || 0,
+    queryKey: storyKeys.count(status, kioskId, range),
+    queryFn: async () =>
+      Number((await fetchPage({ status, kioskId, ...range, pageNum: 1, pageSize: 1 }))?.totalElements) || 0,
     enabled,
     staleTime: 30 * 1000,
   });
