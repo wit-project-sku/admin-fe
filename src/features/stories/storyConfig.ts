@@ -58,4 +58,6 @@ export const STORY_MESSAGES = {
   statusFailed: '상태를 바꾸지 못했습니다.',
   orderFailed: '순서를 저장하지 못했습니다.',
   orderNeedsBranch: '순서는 지점마다 따로 정합니다. 위에서 지점을 고르세요.',
+  badRange: '시작일이 종료일보다 늦습니다.',
+  emptyInRange: '이 기간에 올라온 사연이 없습니다.',
 } as const;

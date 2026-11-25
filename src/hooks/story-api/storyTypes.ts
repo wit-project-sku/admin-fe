@@ -25,12 +25,18 @@ export type StoryDto = {
   createdAt: string;
   approvedAt: string | null;
   reviewedBy: number | null;
+  /** 처리한 관리자 이름 — 서버가 채운다. 옛 응답·탈퇴 관리자는 null */
+  reviewedByName?: string | null;
   reviewedAt: string | null;
 };
 
 export type StoryListParams = {
   status?: StoryStatus;
   kioskId?: number;
+  /** 올린 시각(createdAt, KST) 기준 시작일 yyyy-MM-dd — 선택 */
+  startDate?: string;
+  /** 종료일(포함) yyyy-MM-dd — 선택 */
+  endDate?: string;
   pageNum: number;
   pageSize: number;
 };
