@@ -694,6 +694,11 @@
 }
 
 /* ── 기간 선택기 ── */
+/* 촬영 주체 줄 — 기간 선택기 바로 위, 같은 카드 모양 */
+.channelBar {
+  margin-bottom: 10px;
+}
+
 .periodBar {
   display: flex;
   flex-wrap: wrap;

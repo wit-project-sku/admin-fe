@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { APIService } from '../../utils/axios';
+import { useStatsChannel } from '@/stores/statsChannelStore';
 import {
   emptyWeeklyStats,
   normalizeWeeklyStatsPayload,
@@ -13,9 +14,10 @@ export type { MarketShareRow, NormalizedWeeklyStats, WeeklyTrendRow } from '../.
  * `select` always returns a stable object on success; check `isError` for network/API failures.
  */
 export const useGetWeeklyStats = () => {
+  const channel = useStatsChannel();
   return useQuery({
-    queryKey: ['weekly-stats'],
-    queryFn: async () => APIService.private.get('/admin/stats/total'),
+    queryKey: ['weekly-stats', channel],
+    queryFn: async () => APIService.private.get('/admin/stats/total', { params: { channel } }),
     select: (raw: unknown): NormalizedWeeklyStats => normalizeWeeklyStatsPayload(raw) ?? emptyWeeklyStats(),
   });
 };

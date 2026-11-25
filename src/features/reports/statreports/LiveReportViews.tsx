@@ -15,6 +15,7 @@ import { isHomeButton } from './reportButtonRules';
 import type { KioskButtonDto } from '@/hooks/kiosk-api/kioskButtonsTypes';
 import { fmtMD, type KpiItem } from './statReportsMockData';
 import { NewOutfitsSection } from './NewOutfitsSection';
+import { statsChannelLabel, useStatsChannel } from '@/stores/statsChannelStore';
 import {
   diffBadge,
   fmtDurationSec,
@@ -373,6 +374,13 @@ function LiveOutfitGallery({ cards }: { cards: LiveOutfitCard[] }) {
  * 주간 촬영 리포트. 월간과 같이 지점을 고르면(kioskSel) 그 지점만의 리포트가 되고 PDF 도 그 지점으로 나간다
  * (2026-11-02 사용자 요청). 지점 목록은 그 주 촬영이 있는 지점(성별 집계 응답)에서 올려 준다.
  */
+/** 리포트 머리글·PDF 파일명에 들어갈 촬영 주체 표기. 키오스크(기본)는 파일명에 붙이지 않는다. */
+function useChannelTag(): { text: string; file: string } {
+  const channel = useStatsChannel();
+  const text = statsChannelLabel(channel);
+  return { text, file: channel === 'KIOSK' ? '' : `_${text.replace(/\s+/g, '')}` };
+}
+
 export function ShootingWeeklyLiveView({
   anchor,
   kioskSel = 'ALL',
@@ -384,6 +392,7 @@ export function ShootingWeeklyLiveView({
 }) {
   const r = weekRangesOf(anchor);
   const kioskId = kioskSel === 'ALL' ? undefined : kioskSel;
+  const channelTag = useChannelTag();
   const cur = useShootingDailyLive(r.start, r.end, true);
   const prev = useShootingDailyLive(r.prevStart, r.prevEnd, true);
   const monthly = useShootingMonthlyLive(true);
@@ -467,14 +476,14 @@ export function ShootingWeeklyLiveView({
   });
 
   return (
-    <div className={s.report} data-report-root data-report-title={`주간 촬영 통계 리포트${selName ? `_${selName}` : ''}`}>
+    <div className={s.report} data-report-root data-report-title={`주간 촬영 통계 리포트${selName ? `_${selName}` : ''}${channelTag.file}`}>
       <div data-report-page>
       <div className={s.head}>
         <div className={s.headRow}>
           <div>
             <h2 className={s.headTitle}>주간 촬영 통계 리포트{selName ? ` — ${selName}` : ''}</h2>
             <p className={s.headSub}>
-              대상 기간: {r.start} ~ {r.end} · {selName ? '지점 리포트' : `${kioskNames.length}개 지점`} · 실데이터
+              대상 기간: {r.start} ~ {r.end} · {selName ? '지점 리포트' : `${kioskNames.length}개 지점`} · 촬영 주체 {channelTag.text} · 실데이터
             </p>
           </div>
           <div className={s.headMeta}><b>주간 촬영 통계 리포트</b></div>
@@ -621,6 +630,7 @@ export function ShootingMonthlyLiveView({
 }) {
   const r = monthRangesOf(ym);
   const kioskId = kioskSel === 'ALL' ? undefined : kioskSel;
+  const channelTag = useChannelTag();
   const cur = useShootingDailyLive(r.start, r.end, true);
   const monthly = useShootingMonthlyLive(true);
   const outfits = useOutfitTopLive(r.start, r.end, true, kioskId);
@@ -700,14 +710,14 @@ export function ShootingMonthlyLiveView({
   });
 
   return (
-    <div className={s.report} data-report-root data-report-title={`월간 촬영 통계 리포트${selName ? `_${selName}` : ''}`}>
+    <div className={s.report} data-report-root data-report-title={`월간 촬영 통계 리포트${selName ? `_${selName}` : ''}${channelTag.file}`}>
       <div data-report-page>
       <div className={s.head}>
         <div className={s.headRow}>
           <div>
             <h2 className={s.headTitle}>월간 촬영 통계 리포트{selName ? ` — ${selName}` : ''}</h2>
             <p className={s.headSub}>
-              대상: {r.label} ({r.start} ~ {r.end}) · {selName ? '지점 리포트' : `${kioskNames.length}개 지점`} · 실데이터
+              대상: {r.label} ({r.start} ~ {r.end}) · {selName ? '지점 리포트' : `${kioskNames.length}개 지점`} · 촬영 주체 {channelTag.text} · 실데이터
             </p>
           </div>
           <div className={s.headMeta}><b>월간 촬영 통계 리포트</b></div>

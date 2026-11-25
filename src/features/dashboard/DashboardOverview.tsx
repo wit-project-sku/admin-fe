@@ -21,6 +21,8 @@ import { DashboardTodayShootBreakdownCard } from './DashboardTodayShootBreakdown
 import { DashboardWeekdayAxisTick } from './DashboardWeekdayAxisTick';
 import { resolveYesterdayTotal, type ShootingSummary } from './dashboardSummary';
 import type { DashboardPieSlice, NormalizedWeeklyStats } from '@/utils/weeklyStatsNormalize';
+import { StatsChannelSwitch } from '@commons/StatsChannelSwitch';
+import { useStatsChannel } from '@/stores/statsChannelStore';
 
 type DashboardOverviewProps = {
   summary: ShootingSummary | null;
@@ -59,6 +61,7 @@ export function DashboardOverview({
   onDrillToday,
   onDrillMonthly,
 }: DashboardOverviewProps) {
+  const channel = useStatsChannel();
   const lineData = weekly.weeklyTrend;
   const todayVal = shootingTotalPreferSummary(summary, 'todayTotal', weekly.todayTotal);
   const todayShootAbandonCount = Math.max(0, weekly.todayMainCameraClicks - weekly.todayTotal);
@@ -165,6 +168,7 @@ export function DashboardOverview({
           <h1 className={shared.pageTitle}>실시간 운영 대시보드</h1>
           <p className={shared.pageSubtitle}>Wit AR Service Insights</p>
         </div>
+        <StatsChannelSwitch />
       </div>
 
       <div className={s.statsGrid}>
@@ -225,18 +229,22 @@ export function DashboardOverview({
         />
       </div>
 
-      <div className={s.todayShootBreakdownWrap}>
-        <DashboardTodayShootBreakdownCard
-          loading={weeklyLoading}
-          error={weeklyError}
-          items={[
-            { label: '메인 카메라 버튼 터치', value: weekly.todayMainCameraClicks },
-            { label: '혼자찍기 버튼 터치', value: weekly.todaySoloClicks },
-            { label: '같이찍기 버튼 터치', value: weekly.todayTogetherClicks },
-            { label: '촬영 포기 횟수', value: todayShootAbandonCount },
-          ]}
-        />
-      </div>
+      {/* 버튼 터치는 키오스크 화면에만 있다 — 앱만 볼 때는 숨기고,
+          전체일 때는 '촬영 포기'(= 키오스크 터치 − 촬영)가 앱 촬영까지 빼 버려 틀리므로 뺀다. */}
+      {channel !== 'APP' ? (
+        <div className={s.todayShootBreakdownWrap}>
+          <DashboardTodayShootBreakdownCard
+            loading={weeklyLoading}
+            error={weeklyError}
+            items={[
+              { label: '메인 카메라 버튼 터치', value: weekly.todayMainCameraClicks },
+              { label: '혼자찍기 버튼 터치', value: weekly.todaySoloClicks },
+              { label: '같이찍기 버튼 터치', value: weekly.todayTogetherClicks },
+              ...(channel === 'KIOSK' ? [{ label: '촬영 포기 횟수', value: todayShootAbandonCount }] : []),
+            ]}
+          />
+        </div>
+      ) : null}
 
       <div className={s.chartsGrid}>
         <div className={`${shared.card} ${s.lineChartCard}`}>

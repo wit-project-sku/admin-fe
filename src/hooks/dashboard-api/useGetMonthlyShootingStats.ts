@@ -1,5 +1,6 @@
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { APIService } from '../../utils/axios';
+import { useStatsChannel } from '@/stores/statsChannelStore';
 
 export type MonthlyShootingSort = 'latest' | 'oldest';
 
@@ -23,9 +24,10 @@ export const useGetMonthlyShootingStats = (options?: UseGetMonthlyShootingStatsO
   const pageSize = options?.pageSize ?? 10;
   const monthSort: MonthlyShootingSort = options?.monthSort ?? 'latest';
   const sort = monthSortToApiSort(monthSort);
+  const channel = useStatsChannel();
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['monthlyShootingStats', pageNum, pageSize, sort],
+    queryKey: ['monthlyShootingStats', pageNum, pageSize, sort, channel],
     enabled: options?.enabled ?? true,
     placeholderData: keepPreviousData,
     queryFn: async () => {
@@ -34,6 +36,7 @@ export const useGetMonthlyShootingStats = (options?: UseGetMonthlyShootingStatsO
           pageNum,
           pageSize,
           sort,
+          channel,
         },
       });
     },

@@ -8,6 +8,7 @@ import { ButtonReportView } from './ButtonReportView';
 import { ButtonLiveView, ShootingMonthlyLiveView, ShootingWeeklyLiveView, type ReportKioskOption } from './LiveReportViews';
 import { ShootingMonthlyView, ShootingWeeklyView } from './ShootingReportView';
 import { monthRangesOf, weekRangesOf } from './useStatReportLive';
+import { StatsChannelSwitch } from '@commons/StatsChannelSwitch';
 
 type ReportKind = 'shoot-weekly' | 'shoot-monthly' | 'button-weekly' | 'button-monthly';
 
@@ -86,6 +87,17 @@ export function StatReportsTabPanel({ exportMode = false }: { exportMode?: boole
           </button>
         </div>
       </div>
+
+      {/* 촬영 주체 — 촬영 리포트만. 버튼 사용은 키오스크 화면 터치라 앱·전체 구분이 없다. */}
+      {mode === 'live' ? (
+        <div className={`${s.periodBar} ${s.channelBar}`}>
+          {isButton ? (
+            <span className={s.filterHint}>버튼 사용 리포트는 키오스크 화면 터치 집계라 촬영 주체(키오스크·WITS 앱) 구분이 없습니다.</span>
+          ) : (
+            <StatsChannelSwitch align='start' />
+          )}
+        </div>
+      ) : null}
 
       {/* 기간 선택기 — 실데이터 모드에서만. 주간=주(날짜), 월간=월. 표본은 고정 데이터라 숨김. */}
       {mode === 'live' ? (
