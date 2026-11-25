@@ -1,5 +1,6 @@
 import shared from '@commons/shared.module.css';
 import type { ReportTab } from './reportTypes';
+import { StatsChannelSwitch } from '@commons/StatsChannelSwitch';
 
 type ReportPageHeaderProps = {
   activeTab: ReportTab;
@@ -16,6 +17,8 @@ export function ReportPageHeader({ activeTab, onExcelDownload, excelDisabled }: 
         <h1 className={shared.pageTitle}>지점 성과 리포트</h1>
         <p className={shared.pageSubtitle}>Analytics Report</p>
       </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+      <StatsChannelSwitch />
       {showExcelShortcut ? (
         <button
           type="button"
@@ -31,6 +34,7 @@ export function ReportPageHeader({ activeTab, onExcelDownload, excelDisabled }: 
           EXCEL 다운로드
         </button>
       ) : null}
+      </div>
     </div>
   );
 }

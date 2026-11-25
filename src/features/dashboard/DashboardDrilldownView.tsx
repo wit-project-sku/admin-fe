@@ -2,6 +2,7 @@ import shared from '@commons/shared.module.css';
 import s from '@pages/DashboardPage.module.css';
 import { DashboardKioskBreakdownCard } from './DashboardKioskBreakdownCard';
 import type { KioskCountRow, ShootingSummary } from './dashboardSummary';
+import { statsChannelLabel, useStatsChannel } from '@/stores/statsChannelStore';
 
 export type DashboardDrillMode = 'today' | 'monthly';
 
@@ -21,6 +22,7 @@ export function DashboardDrilldownView({
   onBack,
 }: DashboardDrilldownViewProps) {
   const isToday = mode === 'today';
+  const channel = useStatsChannel();
   const totalVal = isToday ? (summary?.todayTotal ?? 0) : (summary?.monthlyTotal ?? 0);
   const locationData: KioskCountRow[] = isToday ? (summary?.todayByKiosk ?? []) : (summary?.monthlyByKiosk ?? []);
   const label = isToday ? '오늘 지점별 현황' : '이번 달 지점별 현황';
@@ -38,7 +40,7 @@ export function DashboardDrilldownView({
       <div className={shared.pageHeader} style={{ marginTop: 16 }}>
         <div>
           <h1 className={shared.pageTitle}>{label}</h1>
-          <p className={shared.pageSubtitle}>Location Breakdown</p>
+          <p className={shared.pageSubtitle}>Location Breakdown · 촬영 주체 {statsChannelLabel(channel)}</p>
         </div>
       </div>
       <div className={s.drillBreakdownStack}>

@@ -2,10 +2,12 @@
 //   촬영: GET /admin/stats/daily (일×지점) · GET /admin/stats/monthly (월×지점)
 //   의상: GET /admin/stats/outfit-ranking (실물 사진 imageUrl 포함)
 //   버튼: GET /admin/stats/buttons/summary (지점·버튼별 클릭/사용시간/평균체류)
+// 촬영·의상 API 는 전부 촬영 주체(channel: KIOSK·APP·ALL)를 받는다 — 버튼 API 는 키오스크 전용이라 받지 않는다.
 // 키오스크 표시명은 kioskLabel(=뒤)로 변환. 테스트 단말은 서버 집계에서 제외됨.
 
 import { useQuery } from '@tanstack/react-query';
 import { APIService } from '@/utils/axios';
+import { useStatsChannel, type StatsChannel } from '@/stores/statsChannelStore';
 import { kioskLabel } from '@/utils/kioskHelpers'; // 행사 촬영 통계와 함께 쓰는 표시명 변환
 import { buildShootingStatsTableModel } from '../shootingStatsMappers';
 import type { KioskButtonDto } from '@/hooks/kiosk-api/kioskButtonsTypes';
@@ -107,10 +109,10 @@ function daysBetween(start: string, end: string): number {
 /* ── 촬영: 일별(일×지점) ── */
 type ShootingDaily = { rows: Record<string, string | number>[]; kioskNames: string[] };
 
-async function fetchShootingDaily(start: string, end: string): Promise<ShootingDaily> {
+async function fetchShootingDaily(start: string, end: string, channel: StatsChannel): Promise<ShootingDaily> {
   // pageSize 를 안 넘기면 서버 기본값 10 이 적용돼 최근 10일만 온다(월간 31일 → 21일 누락).
   const res = await APIService.private.get('/admin/stats/daily', {
-    params: { start, end, pageNum: 1, pageSize: daysBetween(start, end) + 1 },
+    params: { start, end, pageNum: 1, pageSize: daysBetween(start, end) + 1, channel },
   });
   const { rows, kioskNames, totalElements } = buildShootingStatsTableModel(res, 'date');
   warnIfTruncated(`촬영 일별 ${start}~${end}`, rows.length, totalElements);
@@ -126,9 +128,10 @@ async function fetchShootingDaily(start: string, end: string): Promise<ShootingD
 }
 
 export function useShootingDailyLive(start: string, end: string, enabled: boolean) {
+  const channel = useStatsChannel();
   return useQuery({
-    queryKey: ['stat-report-shooting-daily', start, end],
-    queryFn: () => fetchShootingDaily(start, end),
+    queryKey: ['stat-report-shooting-daily', start, end, channel],
+    queryFn: () => fetchShootingDaily(start, end, channel),
     enabled,
     staleTime: 60_000,
   });
@@ -136,11 +139,12 @@ export function useShootingDailyLive(start: string, end: string, enabled: boolea
 
 /* ── 촬영: 월별(월×지점, 누적 계산용 전체) ── */
 export function useShootingMonthlyLive(enabled: boolean) {
+  const channel = useStatsChannel();
   return useQuery({
-    queryKey: ['stat-report-shooting-monthly'],
+    queryKey: ['stat-report-shooting-monthly', channel],
     queryFn: async () => {
       const res = await APIService.private.get('/admin/stats/monthly', {
-        params: { pageNum: 1, pageSize: 60, sort: 'DESC' },
+        params: { pageNum: 1, pageSize: 60, sort: 'DESC', channel },
       });
       const { rows, kioskNames, totalPages, totalElements } = buildShootingStatsTableModel(res, 'month');
       warnIfTruncated('촬영 월별', rows.length, totalElements);
@@ -182,11 +186,12 @@ function readRankingRows(raw: unknown): LiveOutfitCard[] {
 }
 
 export function useOutfitTopLive(start: string, end: string, enabled: boolean, kioskId?: number) {
+  const channel = useStatsChannel();
   return useQuery({
-    queryKey: ['stat-report-outfit-top', start, end, kioskId ?? ''],
+    queryKey: ['stat-report-outfit-top', start, end, kioskId ?? '', channel],
     queryFn: async () => {
       const res = await APIService.private.get('/admin/stats/outfit-ranking', {
-        params: { sort: 'POPULAR', pageNum: 1, pageSize: 10, start, end, ...(kioskId ? { kioskId } : {}) },
+        params: { sort: 'POPULAR', pageNum: 1, pageSize: 10, start, end, channel, ...(kioskId ? { kioskId } : {}) },
       });
       return readRankingRows(res);
     },
@@ -278,11 +283,12 @@ export type HourlyData = { hourly: { hour: number; count: number }[]; amCount: n
 
 /** 시간대별 촬영 분포 + 오전/오후 */
 export function useShotsHourly(start: string, end: string, enabled: boolean, kioskId?: number) {
+  const channel = useStatsChannel();
   return useQuery({
-    queryKey: ['stat-report-hourly', start, end, kioskId ?? ''],
+    queryKey: ['stat-report-hourly', start, end, kioskId ?? '', channel],
     queryFn: async () => {
       const res = await APIService.private.get('/admin/stats/shots/hourly', {
-        params: { start, end, ...(kioskId ? { kioskId } : {}) },
+        params: { start, end, channel, ...(kioskId ? { kioskId } : {}) },
       });
       return unwrap<HourlyData>(res);
     },
@@ -295,11 +301,12 @@ export type WeekdayRow = { weekday: string; total: number; avg: number };
 
 /** 요일별 일평균 촬영 */
 export function useShotsWeekday(start: string, end: string, enabled: boolean, kioskId?: number) {
+  const channel = useStatsChannel();
   return useQuery({
-    queryKey: ['stat-report-weekday', start, end, kioskId ?? ''],
+    queryKey: ['stat-report-weekday', start, end, kioskId ?? '', channel],
     queryFn: async () => {
       const res = await APIService.private.get('/admin/stats/shots/weekday', {
-        params: { start, end, ...(kioskId ? { kioskId } : {}) },
+        params: { start, end, channel, ...(kioskId ? { kioskId } : {}) },
       });
       return unwrap<WeekdayRow[]>(res) ?? [];
     },
@@ -315,11 +322,12 @@ export type ShotGenderData = GenderCounts & {
 
 /** 성별(고른 의상 기준 — 남자 의상=남, 여자 의상=여) 촬영 집계 · 전체와 키오스크별 */
 export function useShotsGender(start: string, end: string, enabled: boolean, kioskId?: number) {
+  const channel = useStatsChannel();
   return useQuery({
-    queryKey: ['stat-report-gender', start, end, kioskId ?? ''],
+    queryKey: ['stat-report-gender', start, end, kioskId ?? '', channel],
     queryFn: async () => {
       const res = await APIService.private.get('/admin/stats/shots/gender', {
-        params: { start, end, ...(kioskId ? { kioskId } : {}) },
+        params: { start, end, channel, ...(kioskId ? { kioskId } : {}) },
       });
       const data = unwrap<ShotGenderData>(res);
       return { ...data, kiosks: (data?.kiosks ?? []).map((k) => ({ ...k, kioskName: kioskLabel(k.kioskName) })) };
@@ -338,11 +346,12 @@ export type ShotLanguageData = {
 
 /** 언어권(촬영 때 키오스크 화면 언어 기준) 촬영 집계 · 전체와 키오스크별 */
 export function useShotsLanguage(start: string, end: string, enabled: boolean, kioskId?: number) {
+  const channel = useStatsChannel();
   return useQuery({
-    queryKey: ['stat-report-language', start, end, kioskId ?? ''],
+    queryKey: ['stat-report-language', start, end, kioskId ?? '', channel],
     queryFn: async () => {
       const res = await APIService.private.get('/admin/stats/shots/language', {
-        params: { start, end, ...(kioskId ? { kioskId } : {}) },
+        params: { start, end, channel, ...(kioskId ? { kioskId } : {}) },
       });
       const data = unwrap<ShotLanguageData>(res);
       return {
@@ -364,10 +373,11 @@ export type CategoryTop = {
 
 /** 카테고리별 1위 의상 (전체·키오스크별) */
 export function useOutfitCategoryTop(start: string, end: string, enabled: boolean) {
+  const channel = useStatsChannel();
   return useQuery({
-    queryKey: ['stat-report-cat-top', start, end],
+    queryKey: ['stat-report-cat-top', start, end, channel],
     queryFn: async () => {
-      const res = await APIService.private.get('/admin/stats/outfit-category-top', { params: { start, end } });
+      const res = await APIService.private.get('/admin/stats/outfit-category-top', { params: { start, end, channel } });
       const rows = unwrap<CategoryTop[]>(res) ?? [];
       return rows.map((r) => ({ ...r, byKiosk: r.byKiosk.map((k) => ({ ...k, kioskName: kioskLabel(k.kioskName) })) }));
     },
@@ -384,10 +394,11 @@ export type OutfitByKioskData = {
 
 /** 의상 × 키오스크 촬영 매트릭스 */
 export function useOutfitByKiosk(start: string, end: string, enabled: boolean) {
+  const channel = useStatsChannel();
   return useQuery({
-    queryKey: ['stat-report-outfit-kiosk', start, end],
+    queryKey: ['stat-report-outfit-kiosk', start, end, channel],
     queryFn: async () => {
-      const res = await APIService.private.get('/admin/stats/outfit-by-kiosk', { params: { start, end } });
+      const res = await APIService.private.get('/admin/stats/outfit-by-kiosk', { params: { start, end, channel } });
       const data = unwrap<OutfitByKioskData>(res);
       return data ? { ...data, kiosks: data.kiosks.map((k) => ({ ...k, name: kioskLabel(k.name) })) } : data;
     },
@@ -403,11 +414,12 @@ export type OutfitMonthlyData = {
 
 /** 의상 × 월(1~12) 매트릭스 */
 export function useOutfitMonthly(year: number, enabled: boolean, kioskId?: number) {
+  const channel = useStatsChannel();
   return useQuery({
-    queryKey: ['stat-report-outfit-monthly', year, kioskId ?? ''],
+    queryKey: ['stat-report-outfit-monthly', year, kioskId ?? '', channel],
     queryFn: async () => {
       const res = await APIService.private.get('/admin/stats/outfit-monthly', {
-        params: { year, ...(kioskId ? { kioskId } : {}) },
+        params: { year, channel, ...(kioskId ? { kioskId } : {}) },
       });
       return unwrap<OutfitMonthlyData>(res);
     },

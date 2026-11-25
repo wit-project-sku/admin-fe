@@ -1,9 +1,15 @@
 import { APIService } from '../../utils/axios';
+import { getStatsChannel, statsChannelLabel, type StatsChannel } from '@/stores/statsChannelStore';
 import { downloadXlsx, type XlsxColumn } from '../../utils/xlsxExport';
 import type { MonthlyShootingSort } from '../../hooks/dashboard-api/useGetMonthlyShootingStats';
 import { buildShootingStatsTableModel } from './shootingStatsMappers';
 
 type Row = Record<string, string | number>;
+
+/** 키오스크(기존 기본값)가 아니면 파일 이름에 주체를 붙여 섞이지 않게 한다. */
+function channelSuffix(channel: StatsChannel): string {
+  return channel === 'KIOSK' ? '' : `_${statsChannelLabel(channel).replace(/\s+/g, '')}`;
+}
 
 /** 시간열 + 지점(키오스크)별 열 + 합계 열 정의. */
 function buildColumns(timeKey: 'month' | 'date', timeHeader: string, kioskNames: string[]): XlsxColumn<Row>[] {
@@ -23,12 +29,13 @@ export async function downloadMonthlyShootingXlsx(
   totalElements: number,
 ): Promise<void> {
   const sort = monthSort === 'latest' ? 'DESC' : 'ASC';
+  const channel = getStatsChannel();
   const raw = await APIService.private.get('/admin/stats/monthly', {
-    params: { pageNum: 1, pageSize: Math.max(1, totalElements), sort },
+    params: { pageNum: 1, pageSize: Math.max(1, totalElements), sort, channel },
   });
   const { rows, kioskNames } = buildShootingStatsTableModel(raw, 'month');
   if (rows.length === 0) return;
-  downloadXlsx('지점_월별_상세.xlsx', '월별 상세', buildColumns('month', '월', kioskNames), rows);
+  downloadXlsx(`지점_월별_상세${channelSuffix(channel)}.xlsx`, '월별 상세', buildColumns('month', '월', kioskNames), rows);
 }
 
 /**
@@ -40,13 +47,14 @@ export async function downloadDailyShootingXlsx(
   totalElements: number,
 ): Promise<void> {
   if (!range.start || !range.end) return;
+  const channel = getStatsChannel();
   const raw = await APIService.private.get('/admin/stats/daily', {
-    params: { start: range.start, end: range.end, pageNum: 1, pageSize: Math.max(1, totalElements) },
+    params: { start: range.start, end: range.end, pageNum: 1, pageSize: Math.max(1, totalElements), channel },
   });
   const { rows, kioskNames } = buildShootingStatsTableModel(raw, 'date');
   if (rows.length === 0) return;
   downloadXlsx(
-    `지점_일별_상세_${range.start}_${range.end}.xlsx`,
+    `지점_일별_상세${channelSuffix(channel)}_${range.start}_${range.end}.xlsx`,
     '일별 상세',
     buildColumns('date', '일자', kioskNames),
     rows,

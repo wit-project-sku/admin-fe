@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { APIService } from '../../utils/axios';
+import { useStatsChannel } from '@/stores/statsChannelStore';
 
 export type OutfitRankingStatsParams = {
   kioskId?: string;
@@ -46,12 +47,13 @@ export const useGetOutfitRankingStats = (
   const queryParams = useMemo(() => (params == null ? null : toOutfitRankingStatsQueryParams(params)), [params]);
 
   const enabled = (options?.enabled ?? true) && queryParams != null;
+  const channel = useStatsChannel();
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['outfit-ranking-stats', queryParams],
+    queryKey: ['outfit-ranking-stats', queryParams, channel],
     queryFn: async () => {
       return await APIService.private.get('/admin/stats/outfit-ranking', {
-        params: queryParams!,
+        params: { ...queryParams!, channel },
       });
     },
     enabled,
